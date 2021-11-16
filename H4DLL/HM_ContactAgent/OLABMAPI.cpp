@@ -303,14 +303,14 @@ BOOL OL_GetAddress(IMAPIProp *msg_item, WCHAR *buff, DWORD buf_len, DWORD type)
 	if (!msg_item)
 		return FALSE;
 
-	if (OL_GetPropertyString(msg_item, temp_buf, sizeof(temp_buf), ContactAddressTag[type][3]) && temp_buf[0]!=L'')
+	if (OL_GetPropertyString(msg_item, temp_buf, sizeof(temp_buf), ContactAddressTag[type][3]) && temp_buf[0]!= 0)
 		_snwprintf_s(buff, buf_len/sizeof(WCHAR), _TRUNCATE, L"%s", temp_buf);
-	if (OL_GetPropertyString(msg_item, temp_buf, sizeof(temp_buf), ContactAddressTag[type][0]) && temp_buf[0]!=L'')
+	if (OL_GetPropertyString(msg_item, temp_buf, sizeof(temp_buf), ContactAddressTag[type][0]) && temp_buf[0]!= 0)
 		_snwprintf_s(buff, buf_len/sizeof(WCHAR), _TRUNCATE, L"%s, %s", buff, temp_buf);
-	if (OL_GetPropertyString(msg_item, temp_buf, sizeof(temp_buf), ContactAddressTag[type][1]) && temp_buf[0]!=L'')
+	if (OL_GetPropertyString(msg_item, temp_buf, sizeof(temp_buf), ContactAddressTag[type][1]) && temp_buf[0]!= 0)
 		_snwprintf_s(buff, buf_len/sizeof(WCHAR), _TRUNCATE, L"%s (%s)", buff, temp_buf);
 
-	if (buff[0] != L'')
+	if (buff[0] != 0)
 		return TRUE;
 	return FALSE;
 }

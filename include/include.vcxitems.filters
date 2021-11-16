@@ -1,0 +1,58 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="mapi">
+      <UniqueIdentifier>{29adaeec-80c0-4e98-8461-d28f0bc4549d}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="$(MSBuildThisFileDirectory)mapi\mapi.h">
+      <Filter>mapi</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)mapi\mapicode.h">
+      <Filter>mapi</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)mapi\mapidbg.h">
+      <Filter>mapi</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)mapi\mapidefs.h">
+      <Filter>mapi</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)mapi\mapiform.h">
+      <Filter>mapi</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)mapi\mapiguid.h">
+      <Filter>mapi</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)mapi\mapihook.h">
+      <Filter>mapi</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)mapi\mapinls.h">
+      <Filter>mapi</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)mapi\mapioid.h">
+      <Filter>mapi</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)mapi\mapispi.h">
+      <Filter>mapi</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)mapi\mapitags.h">
+      <Filter>mapi</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)mapi\mapiutil.h">
+      <Filter>mapi</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)mapi\mapival.h">
+      <Filter>mapi</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)mapi\mapiwin.h">
+      <Filter>mapi</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)mapi\mapiwz.h">
+      <Filter>mapi</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)mapi\mapix.h">
+      <Filter>mapi</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>

@@ -1,4 +1,4 @@
-#include <mapix.h>
+#include <mapi/mapix.h>
 #include "../common.h"
 #include "iconverter.h"
 #include "MailAgent.h"

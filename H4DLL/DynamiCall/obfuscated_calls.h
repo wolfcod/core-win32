@@ -23,9 +23,16 @@
 #define obfuscated_PSAPIDLL "QTBQJ/EMM"
 #define obfuscated_GetModuleFileNameExA "HfuNpevmfGjmfObnfFyB"
 #define obfuscated_GetDeviceDriverBaseNameW "HfuEfwjdfEsjwfsCbtfObnfX"
+#define obfuscated_K32GetDeviceDriverBaseNameW obfuscated_GetDeviceDriverBaseNameW
 #define obfuscated_EnumDeviceDrivers "FovnEfwjdfEsjwfst"
+
+#define obfuscated_K32EnumDeviceDrivers obfuscated_EnumDeviceDrivers
+
 #define obfuscated_GetModuleFileNameExW "HfuNpevmfGjmfObnfFyX"
+#define obfuscated_K32GetModuleFileNameExW obfuscated_GetModuleFileNameExW
+
 #define obfuscated_EnumProcessModules "FovnQspdfttNpevmft"
+#define obfuscated_K32EnumProcessModules obfuscated_EnumProcessModules
 
 #define obfuscated_SHLWAPIDLL "TIMXBQJ/EMM"
 #define obfuscated_StrRChrA "TusSDisB"
@@ -198,7 +205,9 @@
 #define obfuscated_EnterCriticalSection "FoufsDsjujdbmTfdujpo"
 #define obfuscated_LeaveCriticalSection "MfbwfDsjujdbmTfdujpo"
 #define obfuscated_InterlockedIncrement "JoufsmpdlfeJodsfnfou"
+#define obfuscated__InterlockedIncrement obfuscated_InterlockedIncrement
 #define obfuscated_InterlockedDecrement "JoufsmpdlfeEfdsfnfou"
+#define obfuscated__InterlockedDecrement obfuscated_InterlockedDecrement
 #define obfuscated_GetACP "HfuBDQ"
 #define obfuscated_GetOEMCP "HfuPFNDQ"
 #define obfuscated_IsValidCodePage "JtWbmjeDpefQbhf"

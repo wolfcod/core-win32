@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup Label="Globals">
     <MSBuildAllProjects Condition="'$(MSBuildVersion)' == '' Or '$(MSBuildVersion)' &lt; '16.0'">$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
@@ -12,5 +12,23 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ProjectCapability Include="SourceItemsFromImports" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="$(MSBuildThisFileDirectory)mapi\mapi.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)mapi\mapicode.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)mapi\mapidbg.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)mapi\mapidefs.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)mapi\mapiform.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)mapi\mapiguid.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)mapi\mapihook.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)mapi\mapinls.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)mapi\mapioid.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)mapi\mapispi.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)mapi\mapitags.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)mapi\mapiutil.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)mapi\mapival.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)mapi\mapiwin.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)mapi\mapiwz.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)mapi\mapix.h" />
   </ItemGroup>
 </Project>
