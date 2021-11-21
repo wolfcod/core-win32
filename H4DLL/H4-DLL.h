@@ -22,8 +22,10 @@ typedef struct {
 extern void HM_InsertRegistryKey(char *, BOOL);
 extern char *HM_CompletePath(char *, char *);
 extern WCHAR *HM_CompletePathW(WCHAR *, WCHAR *);
-extern void HM_WipeFileA(char *);
-extern void HM_WipeFileW(WCHAR *);
+
+void HM_WipeFileA(LPCSTR lpFileName);
+void HM_WipeFileW(LPCWSTR lpFileName);
+
 extern void HM_RemoveRegistryKey(void);
 extern void HM_RemoveDriver();
 extern void HM_RemoveCore(void);
