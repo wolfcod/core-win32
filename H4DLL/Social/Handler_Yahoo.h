@@ -1,7 +1,7 @@
 #ifndef _YAHOO_H
 #define _YAHOO_H
 
-#include "..\\JSON\\JSON.h"
+#include <json/JSON.h>
 
 #define YAHOO_GLOBAL_IDENTIFIER "%253f.rand="
 #define YAHOO_MAIL_IDENTIFIER ",[\"^all\",\""

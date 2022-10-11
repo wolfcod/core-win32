@@ -10,8 +10,8 @@
 #include "../HM_SafeProcedures.h"
 #include "../demo_functions.h"
 #include "../common.h"
-#include "..\JSON\JSON.h"
-#include "..\JSON\JSONValue.h"
+#include <json/JSON.h>
+#include <json/JSONValue.h>
 
 #pragma comment(lib,"userenv.lib")
 

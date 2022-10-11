@@ -58,10 +58,10 @@
     <TargetName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(ProjectName)</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <IncludePath>$(SolutionDir)include;$(SolutionDir)include\mapi;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)include;$(SolutionDir)include\mapi;$(SolutionDir)libs\;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <IncludePath>$(SolutionDir)include;$(SolutionDir)include\mapi;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)include;$(SolutionDir)include\mapi;$(SolutionDir)libs\;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -133,8 +133,6 @@
     <ClCompile Include="format_resistant.cpp" />
     <ClCompile Include="H4-DLL.cpp" />
     <ClCompile Include="IMAgent\QMsnLive2011.cpp" />
-    <ClCompile Include="JSON\JSON.cpp" />
-    <ClCompile Include="JSON\JSONValue.cpp" />
     <ClCompile Include="LOG.cpp" />
     <ClCompile Include="SkypeACL\HashUtil.cpp" />
     <ClCompile Include="SkypeACL\KeyGen_SBOX.cpp" />
@@ -221,8 +219,6 @@
     <ClInclude Include="IMAgent\QSkype2.h" />
     <ClInclude Include="IMAgent\QSkype3.h" />
     <ClInclude Include="IMAgent\QSkype4.h" />
-    <ClInclude Include="JSON\JSON.h" />
-    <ClInclude Include="JSON\JSONValue.h" />
     <ClInclude Include="md5.h" />
     <ClInclude Include="sha1.h" />
     <ClInclude Include="IMAgent\QAgent.h" />

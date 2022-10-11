@@ -10,7 +10,7 @@
 #include <time.h>
 #include "..\common.h"
 #include "..\LOG.h"
-#include "..\JSON\JSON.h"
+#include <json/JSON.h>
 #include "..\bin_string.h"
 #include "CookieHandler.h"
 #include "SocialMain.h"

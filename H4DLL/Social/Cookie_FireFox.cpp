@@ -1,8 +1,8 @@
 #include <windows.h>
 #define _CRT_SECURE_NO_WARNINGS 1
 #include <stdio.h>
-#include "..\JSON\JSON.h"
-#include "..\JSON\JSONValue.h"
+#include <json/JSON.h>
+#include <json/JSONValue.h>
 #include "..\\common.h"
 #include "CookieHandler.h"
 

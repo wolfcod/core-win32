@@ -3,7 +3,7 @@
 #include "H4-DLL.h"
 #include "AM_Core.h"
 #include "LOG.h"
-#include "JSON\JSON.h"
+#include <json/json.h>
 
 // XXX Definita in HM_IpcModule!!!!
 #define MAX_MSG_LEN 512 // Lunghezza di un messaggio
