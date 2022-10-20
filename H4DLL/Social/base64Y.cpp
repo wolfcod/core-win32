@@ -1,60 +1,30 @@
 #include <Windows.h>
-//#include "base64.h"
+#include <string>
+#include "../HM_PWDAgent/base64.h"
 
-const char base64_chars[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
-
-char *
-base64_encodeY(const unsigned char *input, int length)
+char *base64_encodeY(const unsigned char* input, int length)
 {
-    int i=0, j=0, s=0;
-    unsigned char char_array_3[3], char_array_4[4];
+    if (input == NULL)
+        return NULL;
 
-    int b64len = (length+2 - ((length+2)%3))*4/3;
-    char *b64str = (char *) malloc(b64len + 1);
-	if(b64str == NULL)
-		return NULL;
+    std::string str = base64_encode(input, length);
 
-    while (length--) {
-        char_array_3[i++] = *(input++);
-        if (i == 3) {
-            char_array_4[0] = (char_array_3[0] & 0xfc) >> 2;
-            char_array_4[1] = ((char_array_3[0] & 0x03) << 4) + ((char_array_3[1] & 0xf0) >> 4);
-            char_array_4[2] = ((char_array_3[1] & 0x0f) << 2) + ((char_array_3[2] & 0xc0) >> 6);
-            char_array_4[3] = char_array_3[2] & 0x3f;
-
-            for (i = 0; i < 4; i++)
-                b64str[s++] = base64_chars[char_array_4[i]];
-
-            i = 0;
-        }
+    char* dst = (char*)malloc(str.size() + 1);
+    if (dst != NULL) {
+        memset(dst, 0, str.size() + 1);
+        memcpy(dst, str.c_str(), str.size());
     }
-    if (i) {
-        for (j = i; j < 3; j++)
-            char_array_3[j] = '\0';
-
-        char_array_4[0] = (char_array_3[0] & 0xfc) >> 2;
-        char_array_4[1] = ((char_array_3[0] & 0x03) << 4) + ((char_array_3[1] & 0xf0) >> 4);
-        char_array_4[2] = ((char_array_3[1] & 0x0f) << 2) + ((char_array_3[2] & 0xc0) >> 6);
-        char_array_4[3] = char_array_3[2] & 0x3f;
-
-        for (j = 0; j < i + 1; j++)
-            b64str[s++] = base64_chars[char_array_4[j]];
-
-        while (i++ < 3)
-            b64str[s++] = '=';
-    }
-    b64str[b64len] = '\0';
-
-    return b64str;
+    return dst;
 }
 
 inline bool is_base64(unsigned char c) {
     return (isalnum(c) || (c == '+') || (c == '/'));
 }
 
-unsigned char *
-base64_decodeY(const char *input, int length, int *outlen)
+unsigned char *base64_decodeY(const char *input, int length, int *outlen)
 {
+    std::string str = base64_decode(input);
+
     int i = 0;
     int j = 0;
     int r = 0;

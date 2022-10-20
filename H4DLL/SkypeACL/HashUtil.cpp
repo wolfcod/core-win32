@@ -1,45 +1,50 @@
 #include <windows.h>
+#include <stdint.h>
 #include "sha256.h"
 #include "../md5.h"
 
+static const char ascii[] = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd' ,'e', 'f' };
 
-void hex2ascii(char *lpOutput, char *lpInput, int size)
+#define char2hex(dst, src) *dst++ = ascii[(src & 0xf0) >> 4]; *dst++ = ascii[(src & 0x0f)]
+
+union word {
+	uint16_t value;
+	struct {
+		uint8_t lower;
+		uint8_t higher;
+	};
+};
+
+void hex2ascii(char *dst, const uint8_t *src, size_t size)
 {
-	char *ascii = "0123456789abcdef";
-
-	while(size-- > 0)
-	{
-		*lpOutput++ = ascii[(*lpInput & 0xf0) >> 4];
-		*lpOutput++ = ascii[(*lpInput & 0x0f)];
-		*lpInput++;
-	}
-
-	*lpOutput = 0x00;
-}
-
-void hex2ascii(char *lpOutput, wchar_t *lpInput, int size)
-{
-	char *ascii = "0123456789abcdef";
-
-	while(size-- > 0)
-	{
-		unsigned short c = (unsigned short) *lpInput;
-
-		if ((c & 0xff00) != 0)
+	if (dst != NULL && src != NULL) {
+		while (size-- > 0)
 		{
-			if ((c & 0xf000) != 0)
-				*lpOutput++ = ascii[(c & 0xf000) >> 12];
-
-			*lpOutput++ = ascii[(c & 0x0f00) >> 8];
+			char2hex(dst, *src);
+			*src++;
 		}
 
-		*lpOutput++ = ascii[(c & 0xf0) >> 4];
-		*lpOutput++ = ascii[(c & 0x0f)];
+		*dst = 0x00;
+	}
+}
+
+void hex2ascii(char *dst, uint16_t *src, size_t size)
+{
+	if (dst == NULL || src == NULL)
+		return;
+
+	while(size-- > 0) {
+		word c; c.value = *src;
 		
-		lpInput++;
+		if (c.higher != 0) {
+			char2hex(dst, c.higher);
+		}
+		char2hex(dst, c.lower);
+
+		src++;
 	}
 
-	*lpOutput = 0x00;
+	*dst= 0x00;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -61,7 +66,7 @@ BOOL SHA256_Array(char *lpOutChecksum, void *array, int size)
 
 	Sha256_Final(&context, sha256_digest);
 
-	hex2ascii(lpOutChecksum, (char *) sha256_digest, sizeof(sha256_digest));
+	hex2ascii(lpOutChecksum, (uint8_t *) sha256_digest, sizeof(sha256_digest));
 
 	return TRUE;
 }
@@ -89,7 +94,8 @@ BOOL MD5_Plugin(char *lpFileName, char *lpOutChecksum)
 	MD5Init(&context);
 
 	void *buffer = malloc(64000);
-
+	if (buffer == NULL)
+		return FALSE;
 	DWORD dwBytesRead = 0;
 
 	while(ReadFile(hFile, buffer, 64000, &dwBytesRead, NULL) == TRUE)
@@ -105,7 +111,7 @@ BOOL MD5_Plugin(char *lpFileName, char *lpOutChecksum)
 
 
 	MD5Final(&context);
-	hex2ascii(lpOutChecksum, (char *) context.digest, sizeof(context.digest));
+	hex2ascii(lpOutChecksum, (uint8_t *) context.digest, sizeof(context.digest));
 
 	return TRUE;
 }
@@ -126,7 +132,7 @@ BOOL MD5_Array(char *lpOutChecksum, char *array, int size)
 	MD5Update(&context, (byte *) array, (size_t) size);
 
 	MD5Final(&context);
-	hex2ascii(lpOutChecksum, (char *) context.digest, sizeof(context.digest));
+	hex2ascii(lpOutChecksum, (uint8_t *) context.digest, sizeof(context.digest));
 
 	return TRUE;
 }
@@ -176,9 +182,9 @@ BOOL SHA256_Plugin(char *lpFileName, char *lpOutChecksum, BOOL isOld)
 	wchar_t unicodesha[32];
 	if (isOld) {
 		MultiByteToWideChar(CP_ACP, 0, (LPCSTR) sha256_digest, sizeof(sha256_digest), unicodesha, 32);
-		hex2ascii(lpOutChecksum, unicodesha, 32);
+		hex2ascii(lpOutChecksum, (uint16_t *) unicodesha, 32);
 	} else {
-		hex2ascii(lpOutChecksum, (char *)sha256_digest, 32);
+		hex2ascii(lpOutChecksum, (uint8_t *)sha256_digest, 32);
 	}
 	return TRUE;
 }
