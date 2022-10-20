@@ -12,9 +12,9 @@ typedef unsigned char byte;
 
 typedef struct
 {
-  ulong32 state[8];
-  ulong64 count;
-  byte buffer[64];
+	ulong32 state[8];
+	ulong64 count;
+	byte buffer[64];
 } SHA256Context;
 
 void Sha256_Init(SHA256Context *p);
