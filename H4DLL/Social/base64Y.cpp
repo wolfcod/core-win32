@@ -2,6 +2,10 @@
 #include <string>
 #include "../HM_PWDAgent/base64.h"
 
+static const char *base64_chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+    "abcdefghijklmnopqrstuvwxyz"
+    "0123456789+/";
+
 char *base64_encodeY(const unsigned char* input, int length)
 {
     if (input == NULL)

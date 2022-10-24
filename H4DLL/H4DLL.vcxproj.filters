@@ -523,8 +523,8 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <CustomBuild Include="procedures.asm">
-      <Filter>Header Files</Filter>
-    </CustomBuild>
+    <MASM Include="procedures.asm">
+      <Filter>Source Files</Filter>
+    </MASM>
   </ItemGroup>
 </Project>

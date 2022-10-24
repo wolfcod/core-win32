@@ -30,5 +30,11 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)mapi\mapiwin.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)mapi\mapiwz.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)mapi\mapix.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)scramblestring.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)speex\speex.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)speex\speex_bits.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)speex\speex_callbacks.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)speex\speex_header.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)speex\speex_stereo.h" />
   </ItemGroup>
 </Project>

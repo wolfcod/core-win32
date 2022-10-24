@@ -2,53 +2,7 @@
 #include "LOG.h"
 #include "AM_Core.h"
 #include "ASP.h"
-
-class ScrambleString
-{
-	public:
-	char *get_str()
-	{
-		if (string)
-			return string;
-		return "NIL";
-	}
-
-	WCHAR *get_wstr()
-	{
-		return string_w;
-	}
-
-	ScrambleString(char *ob_str) 
-	{
-		string = LOG_ScrambleName(ob_str, 2, FALSE);
-		if (string)
-			_snwprintf_s(string_w, 64, _TRUNCATE, L"%S", string);		
-		else
-			_snwprintf_s(string_w, 64, _TRUNCATE, L"NIL");		
-	}
-
-	ScrambleString(char *ob_str, BOOL is_demo) 
-	{
-		string = NULL;
-		if (is_demo) {
-			string = LOG_ScrambleName(ob_str, 2, FALSE);
-			if (string)
-				_snwprintf_s(string_w, 64, _TRUNCATE, L"%S", string);		
-			else
-				_snwprintf_s(string_w, 64, _TRUNCATE, L"NIL");		
-		} else
-			_snwprintf_s(string_w, 64, _TRUNCATE, L"");		
-	}
-
-	~ScrambleString(void)
-	{
-		SAFE_FREE(string);
-	}
-	
-	private:
-	char *string;
-	WCHAR string_w[64];
-};
+#include <scramblestring.h>
 
 extern BOOL IsDeepFreeze();
 extern void UnlockConfFile();

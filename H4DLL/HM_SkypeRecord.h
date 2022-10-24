@@ -2,7 +2,7 @@
 #include <mmdeviceapi.h>
 #include <audioclient.h>
 
-#include "speex/speex.h"
+#include <speex/speex.h>
 #include "dsound.h"
 
 #define SAMPLE_RATE_DEFAULT	48000

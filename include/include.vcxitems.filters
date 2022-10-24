@@ -4,6 +4,9 @@
     <Filter Include="mapi">
       <UniqueIdentifier>{29adaeec-80c0-4e98-8461-d28f0bc4549d}</UniqueIdentifier>
     </Filter>
+    <Filter Include="speex">
+      <UniqueIdentifier>{f113198e-a3ea-4f9c-be70-8df823880f82}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="$(MSBuildThisFileDirectory)mapi\mapi.h">
@@ -53,6 +56,22 @@
     </ClInclude>
     <ClInclude Include="$(MSBuildThisFileDirectory)mapi\mapix.h">
       <Filter>mapi</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)scramblestring.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)speex\speex.h">
+      <Filter>speex</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)speex\speex_bits.h">
+      <Filter>speex</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)speex\speex_callbacks.h">
+      <Filter>speex</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)speex\speex_header.h">
+      <Filter>speex</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)speex\speex_stereo.h">
+      <Filter>speex</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

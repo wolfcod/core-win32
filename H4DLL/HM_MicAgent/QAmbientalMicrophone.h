@@ -1,6 +1,6 @@
 #pragma once
 
-#include "..\speex\speex.h"
+#include <speex/speex.h>
 
 typedef void *(*speex_encoder_init_t)(SpeexMode *);
 typedef int (*speex_encoder_ctl_t)(void *, int, void *);

