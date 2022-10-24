@@ -76,7 +76,7 @@
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>version.lib; winhttp.lib;WS2_32.lib;shlwapi.lib;Vfw32.lib;oleacc.lib;psapi.lib;Strmiids.lib;gdiplus.lib;Delayimp.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>$(OutDir)json.lib;version.lib;winhttp.lib;WS2_32.lib;shlwapi.lib;Vfw32.lib;oleacc.lib;psapi.lib;Strmiids.lib;gdiplus.lib;Delayimp.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>$(OutDir)H4DLL.dll</OutputFile>
       <ModuleDefinitionFile>H4-DLL.def</ModuleDefinitionFile>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -107,7 +107,7 @@
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>version.lib; winhttp.lib;WS2_32.lib;shlwapi.lib;Vfw32.lib;oleacc.lib;psapi.lib;Strmiids.lib;gdiplus.lib;Delayimp.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>$(OutDir)json.lib;version.lib;winhttp.lib;WS2_32.lib;shlwapi.lib;Vfw32.lib;oleacc.lib;psapi.lib;Strmiids.lib;gdiplus.lib;Delayimp.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>$(OutDir)core.dll</OutputFile>
       <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <ModuleDefinitionFile>H4-DLL.def</ModuleDefinitionFile>
@@ -300,7 +300,10 @@
     <ClInclude Include="HM_WiFiLocation.h" />
   </ItemGroup>
   <ItemGroup>
-    <MASM Include="procedures.asm" />
+    <MASM Include="procedures.asm">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    </MASM>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
