@@ -42,7 +42,7 @@
 #include "DeepFreeze.h"
 #include "HM_BitmapCommon.h"
 #include <time.h>
-#include "sha1.h"
+#include <crypto/sha1.h>
 #include "status_log.h"
 #include "format_resistant.h"
 

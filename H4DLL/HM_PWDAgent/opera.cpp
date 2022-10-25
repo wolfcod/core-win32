@@ -11,8 +11,8 @@
 #include <iostream>
 #include <memory>
 
-#include "../md5.h"
-#include "des.h"
+#include <crypto/md5.h>
+#include <crypto/des.h>
 #include "..\common.h"
 
 const unsigned char opera_salt[11] = { 0x83, 0x7D, 0xFC, 0x0F, 0x8E, 0xB3, 0xE8, 0x69, 0x73, 0xAF, 0xFF };

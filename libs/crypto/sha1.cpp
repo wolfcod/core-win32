@@ -38,7 +38,7 @@
  *
  */
 
-#include "sha1.h"
+#include <crypto/sha1.h>
 
 /*
  *  Define the circular shift macro

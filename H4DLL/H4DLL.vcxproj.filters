@@ -16,9 +16,6 @@
     <ClCompile Include="DeepFreeze.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="HM_PWDAgent\des.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="explore_directory.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -70,9 +67,6 @@
     <ClCompile Include="LOG.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="md5.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="HM_PWDAgent\msn.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -101,12 +95,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="HM_MicAgent\QVistaMicrophone.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="sha1.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="SkypeACL\sha256.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="SkypeACL\SkypeACL.cpp">

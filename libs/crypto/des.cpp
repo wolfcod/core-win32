@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "des.h"
+#include <crypto/des.h>
 
 const DES_LONG DES_SPtrans[8][64]={
 	{

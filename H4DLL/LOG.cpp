@@ -6,11 +6,11 @@
 #include "LOG.h"
 #include "H4-DLL.h"
 #include "aes_alg.h"
-#include "sha1.h"
-#include "md5.h"
+#include <crypto/sha1.h>
+#include <crypto/md5.h>
 #include "explore_directory.h"
 #include "x64.h"
-#include "JSON\JSON.h"
+#include <json/JSON.h>
 #include "UnHookClass.h"
 #include "DeepFreeze.h"
 #include "format_resistant.h"

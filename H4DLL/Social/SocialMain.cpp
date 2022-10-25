@@ -37,7 +37,7 @@ extern BOOL bPM_IMStarted; // variabili per vedere se gli agenti interessati son
 extern BOOL bPM_MailCapStarted;
 extern BOOL bPM_ContactsStarted;
 
-social_entry_struct social_entry[SOCIAL_ENTRY_COUNT];
+SOCIAL_ENTRY social_entry[SOCIAL_ENTRY_COUNT];
 
 // Simple ascii url decode
 void urldecode(char *src)

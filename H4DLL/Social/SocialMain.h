@@ -12,7 +12,7 @@ typedef struct {
 	BOOL wait_cookie;
 	BOOL is_new_cookie;
 	social_handler RequestHandler;
-} social_entry_struct;
+} SOCIAL_ENTRY;
 
 #define FACEBOOK_DOMAIN L"facebook.com"
 #define GMAIL_DOMAIN L"mail.google.com"
@@ -45,7 +45,7 @@ struct MailSerializedMessageHeader {
 };
 #pragma pack()
 
-extern social_entry_struct social_entry[SOCIAL_ENTRY_COUNT];
+extern SOCIAL_ENTRY social_entry[SOCIAL_ENTRY_COUNT];
 extern void urldecode(char *src);
 extern void JsonDecode(char *string);
 extern void CheckProcessStatus();

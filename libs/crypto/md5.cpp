@@ -36,7 +36,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "md5.h" 
+#include <crypto/md5.h>
 
 /* forward declaration */
 static void Transform(UINT4 *buf, UINT4 *in);

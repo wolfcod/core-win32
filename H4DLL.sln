@@ -13,6 +13,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "libs", "libs", "{5A389EED-A
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "json", "libs\json\json.vcxproj", "{6441D909-EEED-402B-BE33-D8E5065B28A6}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "crypto", "libs\crypto\crypto.vcxproj", "{C648D3E2-2CCE-465D-8CDB-06DC173F5330}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -43,12 +45,21 @@ Global
 		{6441D909-EEED-402B-BE33-D8E5065B28A6}.Release|x64.Build.0 = Release|x64
 		{6441D909-EEED-402B-BE33-D8E5065B28A6}.Release|x86.ActiveCfg = Release|Win32
 		{6441D909-EEED-402B-BE33-D8E5065B28A6}.Release|x86.Build.0 = Release|Win32
+		{C648D3E2-2CCE-465D-8CDB-06DC173F5330}.Debug|x64.ActiveCfg = Debug|x64
+		{C648D3E2-2CCE-465D-8CDB-06DC173F5330}.Debug|x64.Build.0 = Debug|x64
+		{C648D3E2-2CCE-465D-8CDB-06DC173F5330}.Debug|x86.ActiveCfg = Debug|Win32
+		{C648D3E2-2CCE-465D-8CDB-06DC173F5330}.Debug|x86.Build.0 = Debug|Win32
+		{C648D3E2-2CCE-465D-8CDB-06DC173F5330}.Release|x64.ActiveCfg = Release|x64
+		{C648D3E2-2CCE-465D-8CDB-06DC173F5330}.Release|x64.Build.0 = Release|x64
+		{C648D3E2-2CCE-465D-8CDB-06DC173F5330}.Release|x86.ActiveCfg = Release|Win32
+		{C648D3E2-2CCE-465D-8CDB-06DC173F5330}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{6441D909-EEED-402B-BE33-D8E5065B28A6} = {5A389EED-A6F2-4BCB-9441-6CF64BA29E45}
+		{C648D3E2-2CCE-465D-8CDB-06DC173F5330} = {5A389EED-A6F2-4BCB-9441-6CF64BA29E45}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {6D1E06D9-37BC-4A13-8F1B-0E249F80B002}
