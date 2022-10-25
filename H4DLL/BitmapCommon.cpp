@@ -4,6 +4,8 @@
 #include "demo_functions.h"
 #include "LOG.h"
 #include <gdiplus.h>
+#include "process.h"
+
 using namespace Gdiplus;
 
 BOOL IsAero()

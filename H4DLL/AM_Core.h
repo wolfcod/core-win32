@@ -9,7 +9,7 @@ typedef struct {
 
 typedef struct {
 	DWORD PID;
-} pid_hide_struct;
+} PID_HIDE;
 #define NULL_PID_HIDE_STRUCT {0}
 #define IS_SET_PID_HIDE_STRUCT(x) (x.PID ? TRUE : FALSE)
 #define SET_PID_HIDE_STRUCT(x,y) { x.PID=y; }

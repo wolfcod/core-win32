@@ -217,6 +217,12 @@
     <ClCompile Include="bss.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="fileutil.cpp">
+      <Filter>Source Files\core</Filter>
+    </ClCompile>
+    <ClCompile Include="process.cpp">
+      <Filter>Source Files\core</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="aes_alg.h">
@@ -502,6 +508,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="bss.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="process.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

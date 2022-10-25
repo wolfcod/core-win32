@@ -33,10 +33,7 @@ extern BOOL HM_GetIE32Browser(char *path_name);
 extern void HM_U2A(char *);
 extern void HM_A2U(char *src, char *dst);
 extern char *HM_memstr(char *, char *);
-extern char *HM_FindProc(DWORD);
-extern WCHAR *HM_FindProcW(DWORD);
-extern DWORD HM_FindPid(char *, BOOL);
-extern HWND HM_GetProcessWindow(char *procname);
+
 extern BOOL HM_CheckNewConf(char *);
 extern BOOL HM_GetDate(nanosec_time *);
 extern char *HM_ReadClearConf(char *);

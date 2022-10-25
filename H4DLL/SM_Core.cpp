@@ -1,4 +1,5 @@
 #include <windows.h>
+#include <json/JSON.h>
 #include "common.h"
 #include "bss.h"
 #include "H4-DLL.h"
@@ -9,7 +10,7 @@
 #include "status_log.h"
 #include "SM_Core.h"
 #include "SM_ActionFunctions.h"
-#include "JSON\JSON.h"
+#include "process.h"
 #include "SM_EventHandlers.h"
 
 // Il sistema si basa su condizioni->eventi->azioni
@@ -42,7 +43,7 @@ typedef struct  {
 	EventMonitorAdd_t pEventMonitorAdd;
 	EventMonitorStart_t pEventMonitorStart;
 	EventMonitorStop_t pEventMonitorStop;
-} event_monitor_elem;
+} EVENT_MONITOR;
 
 // Struttura per gestire i thread di ripetizione
 typedef struct {
@@ -51,24 +52,24 @@ typedef struct {
 	DWORD count; 
 	DWORD delay;
 	BOOL  semaphore;
-} repeated_event_struct;
+} REPEATED_EVENT;
 
 // Struttura della tabella degli eventi
 typedef struct {
 	BOOL event_enabled;
-	repeated_event_struct repeated_event;
+	REPEATED_EVENT repeated_event;
 	HANDLE repeated_thread;
-} event_table_struct;
+} EVENT_TABLE;
 
 // Tabella degli event monitor attualmente registrati
 DWORD event_monitor_count = 0;
-event_monitor_elem event_monitor_array[MAX_EVENT_MONITOR];
+EVENT_MONITOR event_monitor_array[MAX_EVENT_MONITOR];
 
 // Tabella contenente lo stato di attivazione di tutti gli eventi nel file di configurazione
-event_table_struct *event_table = NULL;
+EVENT_TABLE *event_table = NULL;
 DWORD event_count = 0;
 
-DWORD WINAPI RepeatThread(repeated_event_struct *repeated_event)
+DWORD WINAPI RepeatThread(REPEATED_EVENT *repeated_event)
 {
 	DWORD i = 0;
 	LOOP {
@@ -155,17 +156,17 @@ void EventTableInit()
 // Setta lo stato iniziale di un evento
 void SM_EventTableState(DWORD event_id, BOOL state)
 {
-	event_table_struct *temp_event_table;
+	EVENT_TABLE *temp_event_table;
 	// Alloca la tabella per contenere quel dato evento 
 	// La tabella e' posizionale
 	if (event_id >= event_count) {
-		temp_event_table = (event_table_struct *)realloc(event_table, (event_id + 1) * sizeof(event_table_struct));
+		temp_event_table = (EVENT_TABLE *)realloc(event_table, (event_id + 1) * sizeof(EVENT_TABLE));
 		if (!temp_event_table)
 			return;
 		event_table = temp_event_table;
 		event_count = event_id + 1;
 		event_table[event_id].repeated_thread = NULL;
-		ZeroMemory(&event_table[event_id].repeated_event, sizeof(repeated_event_struct));
+		ZeroMemory(&event_table[event_id].repeated_event, sizeof(REPEATED_EVENT));
 	}
 	event_table[event_id].event_enabled = state;
 }
@@ -202,16 +203,16 @@ BOOL EventIsEnabled(DWORD event_id)
 typedef struct {
 	ActionFunc_t pActionFunc; // Puntatore alla funzione che effettua l'action
 	BYTE *param;              // Puntatore all'array contenente i parametri
-} action_elem;
+} ACTION_ELEM;
 
 typedef struct {
 	DWORD subaction_count; // numero di azioni collegate all'evento 
-	action_elem *subaction_list; // puntatore all'array delle azioni 
+	ACTION_ELEM *subaction_list; // puntatore all'array delle azioni 
 	BOOL is_fast_action; // e' TRUE se non contiene alcuna sottoazione lenta (sync, uninst e execute)
 	BOOL triggered; // Se l'evento e' triggerato o meno
-} event_action_elem;
+} EVENT_ACTION_ELEM;
 
-static event_action_elem *event_action_array = NULL; // Puntatore all'array dinamico contenente le actions.
+static EVENT_ACTION_ELEM *event_action_array = NULL; // Puntatore all'array dinamico contenente le actions.
                                                      // Si chiude con una entry nulla.
 static DWORD event_action_count = 0; // Numero di elementi nella tabella event/actions
 
@@ -300,7 +301,7 @@ BOOL ActionTableAddSubAction(DWORD event_number, DWORD subaction_type, BYTE *par
 
 	// All'inizio subaction_list e subaction_count sono a 0 perche' azzerate nella ActionTableInit
 	// XXX si, c'e' un int overflow se ci sono 2^32 sotto azioni che potrebbe portare a un exploit nello heap (es: double free)....
-	temp_action_list = realloc(event_action_array[event_number].subaction_list, sizeof(action_elem) * (event_action_array[event_number].subaction_count + 1) );
+	temp_action_list = realloc(event_action_array[event_number].subaction_list, sizeof(ACTION_ELEM) * (event_action_array[event_number].subaction_count + 1) );
 
 	// Se non riesce ad aggiungere la nuova sottoazione lascia tutto com'e'
 	if (!temp_action_list)
@@ -309,7 +310,7 @@ BOOL ActionTableAddSubAction(DWORD event_number, DWORD subaction_type, BYTE *par
 	// Se l'array delle sottoazioni e' stato ampliato con successo, incrementa il numero delle sottoazioni
 	// e aggiunge la nuova subaction
 	subaction_count = event_action_array[event_number].subaction_count++;
-	event_action_array[event_number].subaction_list = (action_elem *)temp_action_list;
+	event_action_array[event_number].subaction_list = (ACTION_ELEM *)temp_action_list;
 	event_action_array[event_number].subaction_list[subaction_count].pActionFunc = ActionFuncGet(subaction_type, &is_fast_action);
 
 	event_action_array[event_number].subaction_list[subaction_count].param = param;
@@ -326,7 +327,7 @@ BOOL ActionTableAddSubAction(DWORD event_number, DWORD subaction_type, BYTE *par
 void ActionTableInit(DWORD number)
 {
 	DWORD i,j;
-	event_action_elem *temp_event_action_array = NULL;
+	EVENT_ACTION_ELEM *temp_event_action_array = NULL;
 
 	// Libera gli eventuali parametri allocati nella precedente configurazione
 	for (i=0; i<event_action_count; i++) {
@@ -338,12 +339,12 @@ void ActionTableInit(DWORD number)
 
 	// Alloca una nuova tabella
 	if (number)
-		temp_event_action_array = (event_action_elem *)realloc(event_action_array, number * sizeof(event_action_elem));
+		temp_event_action_array = (EVENT_ACTION_ELEM *)realloc(event_action_array, number * sizeof(EVENT_ACTION_ELEM));
 
 	if (temp_event_action_array) {
 		event_action_count = number;
 		event_action_array = temp_event_action_array;
-		ZERO(event_action_array, number * sizeof(event_action_elem));
+		ZERO(event_action_array, number * sizeof(EVENT_ACTION_ELEM));
 		for (i=0; i<event_action_count; i++) 
 			event_action_array[i].is_fast_action = TRUE; // all'inizio conta tutte come fast actions
 	} else {
@@ -365,12 +366,12 @@ typedef struct {
 	DWORD action_type;
 	ActionFunc_t pActionFunc;
 	BOOL is_fast_action;
-} dispatch_func_elem;
+} DISPATCH_FUNC;
 
 
 // Tabella delle azioni di default
 DWORD dispatch_func_count = 0;
-dispatch_func_elem dispatch_func_array[MAX_DISPATCH_FUNCTION];
+DISPATCH_FUNC dispatch_func_array[MAX_DISPATCH_FUNCTION];
 
 
 // Registra un'action
@@ -568,7 +569,7 @@ void SM_HandleExecutedProcess()
 {
 	DWORD i;
 	char *proc_name;
-	pid_hide_struct pid_hide = NULL_PID_HIDE_STRUCT;
+	PID_HIDE pid_hide = NULL_PID_HIDE_STRUCT;
 
 	// Questa funzione viene richiamata prima che possa essere 
 	// eseguita SM_AddExecutedProcess: quindi e' questa che si 
@@ -599,7 +600,7 @@ void SM_HandleExecutedProcess()
 void SM_AddExecutedProcess(DWORD pid)
 {
 	DWORD i;
-	pid_hide_struct pid_hide = NULL_PID_HIDE_STRUCT;
+	PID_HIDE pid_hide = NULL_PID_HIDE_STRUCT;
 
 	// Aggiorna la lista dei PID eseguiti (se e' allocata)
 	if (!process_executed)

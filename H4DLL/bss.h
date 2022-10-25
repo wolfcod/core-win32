@@ -4,6 +4,24 @@
 #define __BSS_H
 #include "aes_alg.h"
 
+#define SET_SHARED_FLAG(variable, mask) variable |= mask
+#define CLEAR_SHARED_FLAG(variable, mask) variable ~= mask
+#define GET_SHARED_FLAG(variable, mask) (variable & mask)
+#define FLAG_EQUALS(variable, mask) ((variable & mask) == mask)
+#define FLAG_NOTEQUALS(variable, mask) ((variable & mask) != mask)
+
+#define SET_BOOLEAN_FLAG(variable, mask, value) \
+	(value) ? (variable |= mask) : (variable &= ~mask)
+
+#define DEMO_VERSION	1
+#define REMOVE_DRIVER	2
+#define PM_IM			4
+#define PM_MAILCAP		8
+#define PM_CONTACTS		10
+
+#define	NETWORK_CRISIS	0x1
+#define SYSTEM_CRISIS	0x80
+
 typedef struct _bss_seg {
 	BOOL is_demo_version;
 	BYTE crypt_key[KEY_LEN];		// Chiave di cifratura
@@ -19,8 +37,7 @@ typedef struct _bss_seg {
 	char process_bypass_list[MAX_DYNAMIC_BYPASS + EMBEDDED_BYPASS][MAX_PBYPASS_LEN]; // Lista dei processi su cui non fare injection
 	WCHAR process_bypass_desc[EMBEDDED_BYPASS][MAX_PBYPASS_LEN]; // Lista dei processi su cui non fare injection
 	DWORD social_process_control;	// Semaforo per controllare il processo "social"
-	BOOL network_crisis;			// Se deve fermare le sync
-	BOOL system_crisis;				// Se deve fermare i comandi e l'hiding
+	DWORD crisis;
 	BOOL bPM_IMStarted;				// Flag che indica se il monitor e' attivo o meno
 	BOOL bPM_MailCapStarted;		// Indica se l'agente e' attivo o meno
 	BOOL bPM_ContactsStarted;
