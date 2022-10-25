@@ -2,7 +2,6 @@
 #include <Winioctl.h>
 #include "HM_SafeProcedures.h"
 
-#define DLLNAMELEN (_MAX_PATH + 1) // XXX Posso allungarlo per directory widechar...
 #define STUB_SIZE 24
 #define REDIR_SIZE 5
 #define MARK_SEARCH_LIMIT 20 // Numero di byte in cui cerca il marker di un hook

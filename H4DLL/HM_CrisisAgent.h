@@ -22,12 +22,12 @@ WCHAR process_crisis_network[MAX_DYNAMIC_CRISIS_NETWORK+EMBEDDED_CRISIS_NETWORK]
 // Funzione esportata per vedere se e' in un momento di crisi
 BOOL IsCrisisNetwork()
 {
-	return network_crisis;
+	return shared.network_crisis;
 }
 
 BOOL IsCrisisSystem()
 {
-	return system_crisis;
+	return shared.system_crisis;
 }
 
 #define CRISIS_SLEEPTIME 100
@@ -86,15 +86,15 @@ DWORD WINAPI MonitorCrisisThread(DWORD dummy)
 		// Se e' cambiato lo stato del crisis network, riporta un messaggio
 		// XXX Questo thread gira anche durante la sync, ma le probabilita' di una race sui log
 		// sono infinitesimali
-		if (!network_crisis && process_network_found)
+		if (!shared.network_crisis && process_network_found)
 			SendStatusLog(L"[Crisis]: Network activity inhibited");
-		else if (network_crisis && !process_network_found)
+		else if (shared.network_crisis && !process_network_found)
 			SendStatusLog(L"[Crisis]: Network activity restarted");
 
 		// Se ha trovato un processo pericoloso (perche' lo stava checkando) allora setta lo stato
-		system_crisis  = process_system_found;
-		network_crisis = process_network_found;
-		AM_IPCAgentStartStop(PM_CRISISAGENT, system_crisis); // l'hook per l'hiding dei file e' relatico a system crisis
+		shared.system_crisis  = process_system_found;
+		shared.network_crisis = process_network_found;
+		AM_IPCAgentStartStop(PM_CRISISAGENT, shared.system_crisis); // l'hook per l'hiding dei file e' relatico a system crisis
 
 		for (i=0; i<CRISIS_SLEEP_ITER; i++) {
 			Sleep(CRISIS_SLEEPTIME);
@@ -124,8 +124,8 @@ DWORD __stdcall PM_CrisisAgentStartStop(BOOL bStartFlag, BOOL bReset)
 	} else {
 		QUERY_CANCELLATION(hCrisisThread, bPM_crcp);
 		// Se stoppo l'agente azzero gli stati di crisi
-		network_crisis = FALSE;
-		system_crisis = FALSE;
+		shared.network_crisis = FALSE;
+		shared.system_crisis = FALSE;
 		AM_IPCAgentStartStop(PM_CRISISAGENT, FALSE);
 	}
 
@@ -177,8 +177,8 @@ DWORD __stdcall PM_CrisisAgentInit(JSONObject elem)
 		wcscpy(process_crisis_system[i+EMBEDDED_CRISIS_SYSTEM], hook_array[i]->AsString().c_str());
 
 	// All'inizio le crisi sono disattivate, sara' il thread ad attivarle
-	network_crisis = FALSE;
-	system_crisis = FALSE;
+	shared.network_crisis = FALSE;
+	shared.system_crisis = FALSE;
 	AM_IPCAgentStartStop(PM_CRISISAGENT, FALSE);
 
 	return 1;
@@ -187,7 +187,7 @@ DWORD __stdcall PM_CrisisAgentInit(JSONObject elem)
 
 void PM_CrisisAgentRegister()
 {
-	network_crisis = FALSE;
-	system_crisis = FALSE;		
+	shared.network_crisis = FALSE;
+	shared.system_crisis = FALSE;
 	AM_MonitorRegister(L"crisis", PM_CRISISAGENT, NULL, (BYTE *)PM_CrisisAgentStartStop, (BYTE *)PM_CrisisAgentInit, NULL);
 }

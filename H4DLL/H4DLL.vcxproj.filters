@@ -214,6 +214,9 @@
     <ClCompile Include="IMAgent\QYim10.cpp">
       <Filter>Source Files\chat</Filter>
     </ClCompile>
+    <ClCompile Include="bss.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="aes_alg.h">
@@ -496,6 +499,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="HM_MicAgent\XpMic.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="bss.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

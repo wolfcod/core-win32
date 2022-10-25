@@ -3,6 +3,7 @@
 #include "common.h"
 #include "bin_string.h"
 #include "LOG.h"
+#include "bss.h"
 
 typedef struct {
 #define DIR_EXP_VERSION 2010031501
@@ -52,7 +53,7 @@ BOOL ExploreDirectory(HANDLE hdest, WCHAR *start_path, DWORD depth)
 	if (depth==0)
 		return TRUE;
 
-	_snwprintf_s(hidden_path, MAX_PATH, _TRUNCATE, L"%S", H4_HOME_DIR);		
+	_snwprintf_s(hidden_path, MAX_PATH, _TRUNCATE, L"%S", shared.H4_HOME_DIR);		
 
 	// Bisogna partire dalla lista dei drive
 	if (!wcscmp(start_path, L"/")) {

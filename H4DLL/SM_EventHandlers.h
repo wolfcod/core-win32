@@ -195,7 +195,7 @@ void WINAPI EM_TimerAdd(JSONObject conf_json, event_param_struct *event_param, D
 	em_tm_timer_table[em_tm_timer_count].timer_type = timer_type;
 
 	if (timer_type == EM_TIMER_INST) {
-		if (GetFileDate(HM_CompletePath(H4DLLNAME, dll_path), &install_time)) {
+		if (GetFileDate(HM_CompletePath(shared.H4DLLNAME, dll_path), &install_time)) {
 			nanosec_time install_delay;
 			DWORD day_after;
 			INT64 nanosec;

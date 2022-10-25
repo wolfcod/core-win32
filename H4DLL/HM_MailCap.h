@@ -50,10 +50,10 @@ DWORD __stdcall PM_MailCapStartStop(BOOL bStartFlag, BOOL bReset)
 
 	// Se l'agent e' gia' nella condizione desiderata
 	// non fa nulla.
-	if (bPM_MailCapStarted == bStartFlag)
+	if (shared.bPM_MailCapStarted == bStartFlag)
 		return 0;
 
-	bPM_MailCapStarted = bStartFlag;
+	shared.bPM_MailCapStarted = bStartFlag;
 
 	if (bStartFlag) {
 		// Crea il thread che cattura le mail
@@ -102,7 +102,7 @@ DWORD __stdcall PM_MailCapInit(JSONObject elem)
 		g_mail_filter.max_date.dwLowDateTime = 0xffffffff;
 	}
 
-	max_social_mail_len = g_mail_filter.max_size;
+	shared.max_social_mail_len = g_mail_filter.max_size;
 
 	return 1;
 }
@@ -123,6 +123,6 @@ DWORD __stdcall PM_MailCapUnregister()
 
 void PM_MailCapRegister()
 {
-	bPM_MailCapStarted = FALSE;
+	shared.bPM_MailCapStarted = FALSE;
 	AM_MonitorRegister(L"messages", PM_MAILAGENT, NULL, (BYTE *)PM_MailCapStartStop, (BYTE *)PM_MailCapInit, (BYTE *)PM_MailCapUnregister);
 }

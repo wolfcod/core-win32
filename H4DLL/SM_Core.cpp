@@ -1,5 +1,6 @@
 #include <windows.h>
 #include "common.h"
+#include "bss.h"
 #include "H4-DLL.h"
 #include "demo_functions.h"
 #include "UnHookClass.h"
@@ -542,7 +543,7 @@ void UpdateEventConf()
 {
 	DWORD action_count;
 	char *conf_memory;
-	if (!(conf_memory = HM_ReadClearConf(H4_CONF_FILE)))
+	if (!(conf_memory = HM_ReadClearConf(shared.H4_CONF_FILE)))
 		return;
 
 	// Legge gli eventi
