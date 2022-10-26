@@ -1,6 +1,5 @@
 #include <Windows.h>
 #include "common.h"
-#include "aes_alg.h"
 
 #include "bss.h"
 

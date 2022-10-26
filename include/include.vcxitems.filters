@@ -92,5 +92,8 @@
       <Filter>crypto</Filter>
     </ClInclude>
     <ClInclude Include="$(MSBuildThisFileDirectory)listentry.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)crypto\aes_alg.h">
+      <Filter>crypto</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

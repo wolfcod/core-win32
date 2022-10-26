@@ -2,7 +2,7 @@
 
 #ifndef __BSS_H
 #define __BSS_H
-#include "aes_alg.h"
+#include <crypto/aes_alg.h>
 
 #define SET_SHARED_FLAG(variable, mask) variable |= mask
 #define CLEAR_SHARED_FLAG(variable, mask) variable ~= mask

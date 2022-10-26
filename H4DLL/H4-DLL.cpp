@@ -35,7 +35,6 @@
 #include "PEB.h"
 #include "HM_VistaSpecific.h"
 #include <Psapi.h>
-#include "aes_alg.h"
 #include "bin_string.h"
 #include "UnHookClass.h"
 #include "x64.h"

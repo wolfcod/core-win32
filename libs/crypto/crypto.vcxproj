@@ -151,6 +151,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="aes_alg.cpp" />
     <ClCompile Include="des.cpp" />
     <ClCompile Include="md5.cpp" />
     <ClCompile Include="sha1.cpp" />

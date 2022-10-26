@@ -7,7 +7,6 @@
 #include <stdio.h>
 #include <shlwapi.h>
 #include <crypto/sha1.h>
-#include "aes_alg.h"
 #include <string.h>
 #include "x64.h"
 #include "bss.h"

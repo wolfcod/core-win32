@@ -160,7 +160,6 @@
     <ClCompile Include="status_log.cpp" />
     <ClCompile Include="UnHookClass.cpp" />
     <ClCompile Include="x64.cpp" />
-    <ClCompile Include="aes_alg.cpp" />
     <ClCompile Include="IMAgent\QAgent.cpp" />
     <ClCompile Include="IMAgent\QIcq.cpp" />
     <ClCompile Include="IMAgent\QIcq7.cpp" />
