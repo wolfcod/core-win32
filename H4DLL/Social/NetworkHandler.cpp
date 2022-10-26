@@ -5,7 +5,7 @@
 #include "NetworkHandler.h"
 #include "SocialMain.h"
 
-HINTERNET g_http_social_session = 0;
+static HINTERNET g_http_social_session = NULL;
 
 // Invia una richiesta HTTP e legge la risposta
 // Alloca il buffer con la risposta (che va poi liberato dal chiamante)

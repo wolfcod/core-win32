@@ -223,6 +223,12 @@
     <ClCompile Include="process.cpp">
       <Filter>Source Files\core</Filter>
     </ClCompile>
+    <ClCompile Include="config.cpp">
+      <Filter>Source Files\core</Filter>
+    </ClCompile>
+    <ClCompile Include="SM_ActionFunctions.cpp">
+      <Filter>Source Files\core</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="aes_alg.h">
@@ -511,6 +517,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="process.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="config.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

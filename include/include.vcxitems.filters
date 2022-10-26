@@ -91,5 +91,6 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)crypto\RotateDefs.h">
       <Filter>crypto</Filter>
     </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)listentry.h" />
   </ItemGroup>
 </Project>

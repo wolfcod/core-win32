@@ -130,6 +130,7 @@
     <ClCompile Include="ASP.cpp" />
     <ClCompile Include="BitmapCommon.cpp" />
     <ClCompile Include="bss.cpp" />
+    <ClCompile Include="config.cpp" />
     <ClCompile Include="DeepFreeze.cpp" />
     <ClCompile Include="demo_functions.cpp" />
     <ClCompile Include="explore_directory.cpp" />
@@ -142,6 +143,7 @@
     <ClCompile Include="SkypeACL\HashUtil.cpp" />
     <ClCompile Include="SkypeACL\KeyGen_SBOX.cpp" />
     <ClCompile Include="SkypeACL\SkypeACL.cpp" />
+    <ClCompile Include="SM_ActionFunctions.cpp" />
     <ClCompile Include="SM_Core.cpp" />
     <ClCompile Include="Social\base64Y.cpp" />
     <ClCompile Include="Social\CookieHandler.cpp" />
@@ -207,6 +209,7 @@
   <ItemGroup>
     <ClInclude Include="aes_alg.h" />
     <ClInclude Include="bss.h" />
+    <ClInclude Include="config.h" />
     <ClInclude Include="IMAgent\QMsnLive2011.h" />
     <ClInclude Include="HM_Money.h" />
     <ClInclude Include="HM_SocialAgent.h" />

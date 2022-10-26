@@ -19,6 +19,7 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)crypto\RotateDefs.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)crypto\sha1.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)crypto\sha256.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)listentry.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)mapi\mapi.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)mapi\mapicode.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)mapi\mapidbg.h" />
