@@ -133,6 +133,14 @@
     <ClCompile Include="config.cpp" />
     <ClCompile Include="DeepFreeze.cpp" />
     <ClCompile Include="demo_functions.cpp" />
+    <ClCompile Include="event\netmon.cpp" />
+    <ClCompile Include="event\eventlog.cpp" />
+    <ClCompile Include="event\procmon.cpp" />
+    <ClCompile Include="event\quota.cpp" />
+    <ClCompile Include="event\screensaver.cpp" />
+    <ClCompile Include="event\timer.cpp" />
+    <ClCompile Include="event\useridle.cpp" />
+    <ClCompile Include="event\windows.cpp" />
     <ClCompile Include="explore_directory.cpp" />
     <ClCompile Include="fileutil.cpp" />
     <ClCompile Include="format_resistant.cpp" />

@@ -104,7 +104,7 @@ static BOOL EnumerateDirectory(HANDLE hDest, WCHAR* start_path, DWORD depth)
 		directory_header.path_len = wcslen(file_path) * 2;
 
 		if (directory_header.flags & PATH_IS_DIRECTORY)
-			if (!ExploreDirectory(hDest, RecurseDirectory(file_path, recurse_path), depth - 1))
+			if (!EnumerateDirectory(hDest, RecurseDirectory(file_path, recurse_path), depth - 1))
 				directory_header.flags |= PATH_IS_EMPTY;
 
 		bin_buf tolog;

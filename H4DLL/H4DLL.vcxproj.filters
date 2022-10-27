@@ -229,6 +229,30 @@
     <ClCompile Include="stubs.cpp">
       <Filter>Source Files\core</Filter>
     </ClCompile>
+    <ClCompile Include="event\timer.cpp">
+      <Filter>Source Files\events</Filter>
+    </ClCompile>
+    <ClCompile Include="event\windows.cpp">
+      <Filter>Source Files\events</Filter>
+    </ClCompile>
+    <ClCompile Include="event\quota.cpp">
+      <Filter>Source Files\events</Filter>
+    </ClCompile>
+    <ClCompile Include="event\eventlog.cpp">
+      <Filter>Source Files\events</Filter>
+    </ClCompile>
+    <ClCompile Include="event\useridle.cpp">
+      <Filter>Source Files\events</Filter>
+    </ClCompile>
+    <ClCompile Include="event\screensaver.cpp">
+      <Filter>Source Files\events</Filter>
+    </ClCompile>
+    <ClCompile Include="event\netmon.cpp">
+      <Filter>Source Files\events</Filter>
+    </ClCompile>
+    <ClCompile Include="event\procmon.cpp">
+      <Filter>Source Files\events</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="aes_alg.h">
@@ -541,6 +565,9 @@
     </Filter>
     <Filter Include="Source Files\chat">
       <UniqueIdentifier>{e94a63f5-e11e-41aa-9e94-722fb9d82049}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\events">
+      <UniqueIdentifier>{7d5a5dfc-ff39-40f4-975f-855659f922c9}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

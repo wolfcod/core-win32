@@ -196,9 +196,6 @@ BOOL EventIsEnabled(DWORD event_id)
 }
 //------------------------------------------------------------------
 
-
-
-
 // Tabella delle actions ------------------------------------------
 
 typedef struct {
