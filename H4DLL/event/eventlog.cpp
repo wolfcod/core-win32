@@ -18,22 +18,22 @@ typedef struct {
 	DWORD event_monitored;
 	DWORD event_triggered;
 	DWORD event_id;
-} monitored_event;
+} MONITORED_EVENT;
 
 typedef struct {
 	char* source_name;     // nome sorgente eventi
 	HANDLE source_handle;  // handle sorgente eventi
 	DWORD last_record_num; // numero di eventi presenti nella sorgente all'ultima lettura
 	DWORD event_count;     // numero di eventi da monitorare per quella sorgente
-	monitored_event* event_array; // array degli eventi da monitorare con relative azioni
-} monitored_source;
+	MONITORED_EVENT* event_array; // array degli eventi da monitorare con relative azioni
+} MONITORED_SOURCE;
 
 #define EM_ME_SLEEPTIME 300
 #define EM_ME_BUFFER_SIZE 2048
 
 HANDLE em_me_monevent_thread = 0;
 DWORD em_me_source_count = 0;
-monitored_source* em_me_source_table = NULL;
+MONITORED_SOURCE* em_me_source_table = NULL;
 
 BOOL em_me_cp = FALSE;
 
@@ -104,16 +104,16 @@ DWORD MonitorWindowsEvent(DWORD dummy)
 
 
 // Aggiunge un evento da monitorare a una sorgente
-void MonEventAddEvent(monitored_source* source_entry, DWORD event_monitored, DWORD event_triggered, DWORD event_id)
+void MonEventAddEvent(MONITORED_SOURCE* source_entry, DWORD event_monitored, DWORD event_triggered, DWORD event_id)
 {
 	void* temp_table;
 
 	// event_array e' inizializzato a 0 in EM_MonEventAdd
 	// XXX...altro piccolo ed improbabile int overflow
-	if (!(temp_table = realloc(source_entry->event_array, (source_entry->event_count + 1) * sizeof(monitored_event))))
+	if (!(temp_table = realloc(source_entry->event_array, (source_entry->event_count + 1) * sizeof(MONITORED_EVENT))))
 		return;
 
-	source_entry->event_array = (monitored_event*)temp_table;
+	source_entry->event_array = (MONITORED_EVENT*)temp_table;
 	source_entry->event_array[source_entry->event_count].event_monitored = event_monitored;
 	source_entry->event_array[source_entry->event_count].event_triggered = event_triggered;
 	source_entry->event_array[source_entry->event_count].event_id = event_id;
@@ -140,10 +140,10 @@ void WINAPI EM_MonEventAdd(JSONObject conf_json, EVENT_PARAM* event_param, DWORD
 
 	// ...altrimenti aggiunge la sorgente...
 	// (XXX...altro piccolo ed improbabile int overflow)
-	if (!(temp_table = realloc(em_me_source_table, (em_me_source_count + 1) * sizeof(monitored_source))))
+	if (!(temp_table = realloc(em_me_source_table, (em_me_source_count + 1) * sizeof(MONITORED_SOURCE))))
 		return;
 
-	em_me_source_table = (monitored_source*)temp_table;
+	em_me_source_table = (MONITORED_SOURCE*)temp_table;
 	em_me_source_table[em_me_source_count].event_count = 0;
 	em_me_source_table[em_me_source_count].event_array = NULL;
 	em_me_source_table[em_me_source_count].source_handle = 0;

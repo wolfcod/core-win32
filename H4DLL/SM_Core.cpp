@@ -25,7 +25,7 @@
 #define MAX_DISPATCH_FUNCTION 15 // Massimo numero di azioni registrabili
 #define SYNCM_SLEEPTIME 100
 
-typedef void (WINAPI *EventMonitorAdd_t) (JSONObject, event_param_struct *, DWORD);
+typedef void (WINAPI *EventMonitorAdd_t) (JSONObject, EVENT_PARAM *, DWORD);
 typedef void (WINAPI *EventMonitorStart_t) (void);
 typedef void (WINAPI *EventMonitorStop_t) (void);
 typedef BOOL (WINAPI *ActionFunc_t) (BYTE *);
@@ -173,7 +173,7 @@ void SM_EventTableState(DWORD event_id, BOOL state)
 }
 
 // Assegna una riga "evento" della configurazione al corretto event monitor
-void EventMonitorAddLine(const WCHAR *event_type, JSONObject conf_json, event_param_struct *event_param, DWORD event_id, BOOL event_state)
+void EventMonitorAddLine(const WCHAR *event_type, JSONObject conf_json, EVENT_PARAM *event_param, DWORD event_id, BOOL event_state)
 {
 	DWORD i;
 	// Inizializza lo stato attivo/disattivo dell'evento
@@ -392,11 +392,6 @@ void ActionTableInit(DWORD number)
 
 //----------------------------------------------------------------
 
-
-
-
-
-
 // Gestione delle action function registrate -----------------------------------------------------------
 typedef struct {
 	DWORD action_type;
@@ -444,7 +439,7 @@ ActionFunc_t ActionFuncGet(DWORD action_type, BOOL *is_fast_action)
 //-----------------------------------------------------------------------------------
 void WINAPI ParseEvents(JSONObject conf_json, DWORD counter)
 {
-	event_param_struct event_param;
+	EVENT_PARAM event_param;
 
 	if (conf_json[L"start"])
 		event_param.start_action = conf_json[L"start"]->AsNumber();
