@@ -147,6 +147,7 @@
     <ClCompile Include="H4-DLL.cpp" />
     <ClCompile Include="IMAgent\QMsnLive2011.cpp" />
     <ClCompile Include="LOG.cpp" />
+    <ClCompile Include="strings.cpp" />
     <ClCompile Include="stubs.cpp" />
     <ClCompile Include="process.cpp" />
     <ClCompile Include="SkypeACL\HashUtil.cpp" />
@@ -291,6 +292,7 @@
     <ClInclude Include="Social\NetworkHandler.h" />
     <ClInclude Include="Social\SocialMain.h" />
     <ClInclude Include="status_log.h" />
+    <ClInclude Include="strings.h" />
     <ClInclude Include="UnHookClass.h" />
     <ClInclude Include="x64.h" />
     <ClInclude Include="HM_AmbMic.h" />

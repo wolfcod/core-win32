@@ -198,3 +198,81 @@ void WINAPI EM_MonEventStop()
 	SAFE_FREE(em_me_source_table);
 	em_me_source_count = 0;
 }
+
+void EventMonitorLog::onStart()
+{
+	EM_MonEventStart();
+}
+void EventMonitorLog::onRun()
+{
+	DWORD j, k, new_record_count, oldest_event;
+	DWORD dwRead, dwNeeded;
+	EVENTLOGRECORD* pevlr;
+	BYTE bBuffer[EM_ME_BUFFER_SIZE];
+
+	pevlr = (EVENTLOGRECORD*)&bBuffer;
+
+	// Cicla fra le sorgenti
+	for (DWORD i = 0; i < em_me_source_count; i++) {
+		// Effettua il parsing dei nuovi eventi solo se l'handle alla sorgente e'
+		// valido e se riesce a leggere il numero di eventi
+		if (!em_me_source_table[i].source_handle ||
+			!FNC(GetNumberOfEventLogRecords)(em_me_source_table[i].source_handle, &new_record_count) ||
+			!FNC(GetOldestEventLogRecord)(em_me_source_table[i].source_handle, &oldest_event))
+			continue;
+
+		new_record_count += oldest_event;
+
+		// Cicla fra i nuovi eventi presenti nella sorgente i-esima
+		// (non consideriamo l'eventualita' in cui gli eventi possano essere cancellati 
+		// selettivamente).
+		for (j = em_me_source_table[i].last_record_num; j < new_record_count; j++) {
+			// Se non riesce a leggere l'evento j-esimo, passa al successivo
+			if (!FNC(ReadEventLogA)(em_me_source_table[i].source_handle, EVENTLOG_SEEK_READ | EVENTLOG_FORWARDS_READ,
+							  j , bBuffer, EM_ME_BUFFER_SIZE, &dwRead, &dwNeeded)) {
+				// Se non riesce a leggere potrebbe esserci stata una modifica al registro.
+				// Allora prova a chiuderlo e a riaprirlo.
+				SAFE_CLOSE(em_me_source_table[i].source_handle);
+				em_me_source_table[i].source_handle = FNC(OpenEventLogA)(NULL, em_me_source_table[i].source_name);
+
+				// Se fallisce la riapertura esce dal ciclo e non considera piu' la sorgente
+				if (!em_me_source_table[i].source_handle)
+					break;
+
+				// Se fallisce la seconda lettura allora c'e' un errore di tipo diverso.
+				if (!FNC(ReadEventLogA)(em_me_source_table[i].source_handle, EVENTLOG_SEEK_READ | EVENTLOG_FORWARDS_READ,
+							  j , bBuffer, EM_ME_BUFFER_SIZE, &dwRead, &dwNeeded))
+					continue;
+			}
+
+			// Cicla fra gli eventi da monitorare per la sorgente i-esima
+			for (k = 0; k < em_me_source_table[i].event_count; k++)
+				// Compara l'evento j-esimo nella sorgente con il k-esimo 
+				// elemento da monitorare per quella sorgente
+				if (pevlr->EventID == em_me_source_table[i].event_array[k].event_monitored) {
+					TriggerEvent(em_me_source_table[i].event_array[k].event_triggered, em_me_source_table[i].event_array[k].event_id);
+					break;
+				}
+		}
+
+		// Aggiorna il numero di eventi per la sorgente
+		em_me_source_table[i].last_record_num = new_record_count;
+	}
+}
+
+void EventMonitorLog::onStop()
+{
+	// Libera tutte le strutture allocate
+	for (DWORD i = 0; i < em_me_source_count; i++) {
+		SAFE_FREE(em_me_source_table[i].source_name);
+		SAFE_FREE(em_me_source_table[i].event_array);
+		SAFE_CLOSE(em_me_source_table[i].source_handle);
+	}
+	SAFE_FREE(em_me_source_table);
+	em_me_source_count = 0;
+}
+
+void EventMonitorLog::onAdd(JSONObject json, EVENT_PARAM* event_param, DWORD event_id)
+{
+	EM_MonEventAdd(json, event_param, event_id);
+}

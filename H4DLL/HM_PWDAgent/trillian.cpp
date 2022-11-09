@@ -41,9 +41,8 @@ int decode_pass_trillian(char *pass, char *decoded)
 	return 0;
 }
 
-WCHAR *GetTRPath()
+WCHAR *GetTRPath(WCHAR *FullPath, size_t size)
 {
-	static WCHAR FullPath[MAX_PATH];
 	char regSubKey[]    = "SOFTWARE\\Clients\\IM\\Trillian\\DefaultIcon";
 	char path[MAX_PATH];
 	char *p;
@@ -78,13 +77,13 @@ WCHAR *GetTRPath()
 	if (!p)
 		return NULL;
 
-	_snwprintf_s(FullPath, MAX_PATH, L"%S\\users\\default", p);		
+	_snwprintf_s(FullPath, size, _TRUNCATE, L"%S\\users\\default", p);		
 
 	return FullPath;
 }
 
 
-int DumpTR(WCHAR *trillPath, WCHAR *signonFile)
+static int DumpTR(WCHAR *trillPath, WCHAR *signonFile)
 {
 	WCHAR iniFile[MAX_PATH];
 	WCHAR name[64];
@@ -132,11 +131,11 @@ int DumpTR(WCHAR *trillPath, WCHAR *signonFile)
 
 int DumpTrillian(void)
 {
-	WCHAR *TRDir = NULL;   		//Trillian main installation path
+	WCHAR TRDir[MAX_PATH] = {};   		//Trillian main installation path
 
-	TRDir = GetTRPath();
+	GetTRPath(TRDir, MAX_PATH);
 
-	if (TRDir && !DirectoryExists(TRDir)) 
+	if (!DirectoryExists(TRDir)) 
 		return 0;
 
 	DumpTR(TRDir, L"aim.ini");

