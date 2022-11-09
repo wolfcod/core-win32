@@ -64,7 +64,6 @@ void UnlockConfFile();
 #include "HM_CrisisAgent.h" // XXX da modificare 
 #include "HM_SkypeRecord.h" // XXX da modificare 
 #include "HM_UrlLog.h" // XXX da modificare 
-#include "HM_ClipBoard.h" // XXX da modificare 
 #include "HM_WebCam.h" // XXX da modificare 
 #include "HM_AmbMic.h" // XXX da modificare 
 #include "HM_MailCap.h" // XXX da modificare 

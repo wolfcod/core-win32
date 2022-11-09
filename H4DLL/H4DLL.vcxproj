@@ -78,7 +78,7 @@
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>$(OutDir)crypto.lib;$(OutDir)json.lib;version.lib;winhttp.lib;WS2_32.lib;shlwapi.lib;Vfw32.lib;oleacc.lib;psapi.lib;Strmiids.lib;gdiplus.lib;Delayimp.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>$(OutDir)crypto.lib;$(OutDir)json.lib;$(OutDir)clipboard.lib;version.lib;winhttp.lib;WS2_32.lib;shlwapi.lib;Vfw32.lib;oleacc.lib;psapi.lib;Strmiids.lib;gdiplus.lib;Delayimp.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>$(OutDir)H4DLL.dll</OutputFile>
       <ModuleDefinitionFile>H4-DLL.def</ModuleDefinitionFile>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -109,7 +109,7 @@
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>$(OutDir)crypto.lib;$(OutDir)json.lib;version.lib;winhttp.lib;WS2_32.lib;shlwapi.lib;Vfw32.lib;oleacc.lib;psapi.lib;Strmiids.lib;gdiplus.lib;Delayimp.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>$(OutDir)crypto.lib;$(OutDir)json.lib;$(OutDir)clipboard.lib;version.lib;winhttp.lib;WS2_32.lib;shlwapi.lib;Vfw32.lib;oleacc.lib;psapi.lib;Strmiids.lib;gdiplus.lib;Delayimp.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>$(OutDir)core.dll</OutputFile>
       <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <ModuleDefinitionFile>H4-DLL.def</ModuleDefinitionFile>
@@ -216,7 +216,6 @@
     <None Include="H4-DLL.def" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="aes_alg.h" />
     <ClInclude Include="bss.h" />
     <ClInclude Include="config.h" />
     <ClInclude Include="IMAgent\QMsnLive2011.h" />
@@ -254,7 +253,6 @@
     <ClInclude Include="HM_MicAgent\QVistaMicrophone.h" />
     <ClInclude Include="HM_MicAgent\XpMic.h" />
     <ClInclude Include="HM_PWDAgent\base64.h" />
-    <ClInclude Include="HM_PWDAgent\des.h" />
     <ClInclude Include="HM_MailAgent\MailAgent.h" />
     <ClInclude Include="HM_ContactAgent\OLABMAPI.h" />
     <ClInclude Include="DynamiCall\dynamic_import.h" />
@@ -297,7 +295,6 @@
     <ClInclude Include="x64.h" />
     <ClInclude Include="HM_AmbMic.h" />
     <ClInclude Include="HM_Application.h" />
-    <ClInclude Include="HM_ClipBoard.h" />
     <ClInclude Include="HM_Contacts.h" />
     <ClInclude Include="HM_CrisisAgent.h" />
     <ClInclude Include="IMAgent.h" />

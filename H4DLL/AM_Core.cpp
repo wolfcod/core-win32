@@ -278,7 +278,7 @@ void AM_IPCAgentStartStop(DWORD dwTag, BOOL bStartFlag)
 
 // Registra il Monitor con le funzioni di Init, StartStop e Dispatch
 // Viene richiamata dalle funzioni di registrazione dei monitor.
-DWORD AM_MonitorRegister(WCHAR *agent_name, DWORD agent_tag, BYTE * pDispatch, BYTE * pStartStop, BYTE * pInit, BYTE *pUnRegister)
+DWORD AM_MonitorRegister(const WCHAR *agent_name, DWORD agent_tag, BYTE * pDispatch, BYTE * pStartStop, BYTE * pInit, BYTE *pUnRegister)
 {
 	LPAMDISPATCH dispatchArray = AllocateDispatchElement();
 	if (dispatchArray == NULL) {

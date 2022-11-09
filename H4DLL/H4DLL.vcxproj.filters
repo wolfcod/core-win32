@@ -258,9 +258,6 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="aes_alg.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="AM_Core.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -291,9 +288,6 @@
     <ClInclude Include="demo_functions.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="HM_PWDAgent\des.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="DynamiCall\dynamic_import.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -319,9 +313,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="HM_BitmapCommon.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="HM_ClipBoard.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="HM_CodeAlign.h">

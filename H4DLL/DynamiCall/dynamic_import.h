@@ -26,7 +26,7 @@ typedef struct _XREF_DLL
 
 #define END_IMPORTING { NULL, { NULL } }
 
-ULONG_PTR dynamic_call(TCHAR* name);
+ULONG_PTR dynamic_call(const TCHAR* name);
 
 // #define FNC(x) ((PROTO_##x) dynamic_call( STRINGIFY(x) ))
 #define FNC(x) ((PROTO_##x) dynamic_call( OBFUSCATED(x) ))

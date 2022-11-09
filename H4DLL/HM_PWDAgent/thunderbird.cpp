@@ -151,7 +151,7 @@ static int DumpTB(WCHAR *profilePath, WCHAR *signonFile)
 	return 1;
 }
 
-static WCHAR *GetTBLibPath(WCHAR *FullPath, size_t size)
+WCHAR *GetTBLibPath(WCHAR *FullPath, size_t size)
 {
 	char regSubKey[]    = "Software\\Classes\\Thunderbird.Url.mailto\\shell\\open\\command";
 	char path[MAX_PATH];

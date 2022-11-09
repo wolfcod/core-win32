@@ -404,7 +404,7 @@ ULONG_PTR resolve_call(char* dll, char* call)
 	return ptr;
 }
 
-ULONG_PTR dynamic_call(TCHAR* name)
+ULONG_PTR dynamic_call(const TCHAR* name)
 {
 	XREFDLL *dll = dll_imports;
 	

