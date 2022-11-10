@@ -977,28 +977,6 @@ void __stdcall HM_sInBundleService(DWORD dwPid, HMServiceStruct *pServiceData)
 //    Funzioni di supporto
 //
 
-// Converte Unicode in ascii
-void HM_U2A(char *buffer)
-{
-	DWORD i=0, j=0;
-	if (!buffer || buffer[1]!=0)
-		return;
-
-	do {
-		i++;
-		j+=2;
-		buffer[i]=buffer[j];
-	} while(buffer[i]!=0);
-}
-
-void HM_A2U(char *src, char *dst)
-{
-	DWORD i=0;
-	do {
-		dst[i*2] = src[i];
-		dst[i*2+1] = 0;
-	} while(src[i++]);
-}
 
 
 
@@ -1760,19 +1738,6 @@ void HM_RemoveRegistryKey()
 	FNC(DeleteFileA)(dll_path);
 }
 
-// Ritorna il puntatore a dopo una stringa trovata in memoria
-char *HM_memstr(char *memory, char *string)
-{
-	char *ptr;
-	ptr = memory;
-
-	LOOP {
-		if (!strcmp(ptr, string))
-			return (ptr + strlen(string) + 1);
-		ptr++;
-	}
-}
-
 // Verifica se c'e' una copia integra del file di configurazione.
 // Se e' integra la rimpiazza sull'originale. In ogni caso la cancella (se esiste).
 // Se rimpiazza l'originale ritorna TRUE.
@@ -2190,50 +2155,6 @@ void HM_ClearCommand()
 		*ptrW = 0;
 		ptrW++;
 	}
-}
-
-/* Return the first occurrence of NEEDLE in HAYSTACK. */
-#define __builtin_expect(expr, val)   (expr)
-void *memmem (const void *haystack, size_t haystack_len, const void *needle, size_t needle_len)
-{
-  /* not really Rabin-Karp, just using additive hashing */
-  char* haystack_ = (char*)haystack;
-  char* needle_ = (char*)needle;
-  int hash = 0;		/* this is the static hash value of the needle */
-  int hay_hash = 0;	/* rolling hash over the haystack */
-  char* last;
-  size_t i;
-
-  if (haystack_len < needle_len)
-    return NULL;
-
-  if (!needle_len)
-    return haystack_;
-
-  /* initialize hashes */
-  for (i = needle_len; i; --i)
-    {
-      hash += *needle_++;
-      hay_hash += *haystack_++;
-    }
-
-  /* iterate over the haystack */
-  haystack_ = (char*)haystack;
-  needle_ = (char*)needle;
-  last = haystack_+(haystack_len - needle_len + 1);
-  for (; haystack_ < last; ++haystack_)
-    {
-      if (__builtin_expect(hash == hay_hash, 0) &&
-	  *haystack_ == *needle_ &&	/* prevent calling memcmp, was a optimization from existing glibc */
-	  !memcmp (haystack_, needle_, needle_len))
-	return haystack_;
-
-      /* roll the hash */
-      hay_hash -= *haystack_;
-      hay_hash += *(haystack_+needle_len);
-    }
-
-  return NULL;
 }
 
 void HM_CalcDateDelta(long long server_time, nanosec_time *delta)
