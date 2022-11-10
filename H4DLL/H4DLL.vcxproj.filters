@@ -16,21 +16,6 @@
     <ClCompile Include="H4-DLL.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Social\Handler_Facebook.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Social\Handler_GMail.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Social\Handler_Outlook.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Social\Handler_Twitter.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Social\Handler_Yahoo.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="SkypeACL\HashUtil.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -52,9 +37,6 @@
     <ClCompile Include="LOG.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Social\NetworkHandler.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="HM_ContactAgent\OLABMAPI.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -74,9 +56,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="SM_Core.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Social\SocialMain.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="status_log.cpp">
@@ -102,18 +81,6 @@
     </ClCompile>
     <ClCompile Include="ASP.cpp">
       <Filter>Source Files\core</Filter>
-    </ClCompile>
-    <ClCompile Include="Social\Cookie_Chrome.cpp">
-      <Filter>Source Files\browser</Filter>
-    </ClCompile>
-    <ClCompile Include="Social\Cookie_FireFox.cpp">
-      <Filter>Source Files\browser</Filter>
-    </ClCompile>
-    <ClCompile Include="Social\Cookie_IExplorer.cpp">
-      <Filter>Source Files\browser</Filter>
-    </ClCompile>
-    <ClCompile Include="Social\CookieHandler.cpp">
-      <Filter>Source Files\browser</Filter>
     </ClCompile>
     <ClCompile Include="demo_functions.cpp">
       <Filter>Source Files\core</Filter>
@@ -472,9 +439,6 @@
     </Filter>
     <Filter Include="Source Files\core">
       <UniqueIdentifier>{996891b9-07a1-4e87-9f34-735ee269be48}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\browser">
-      <UniqueIdentifier>{3d8015f5-b156-4fcb-9f03-0531569b4524}</UniqueIdentifier>
     </Filter>
     <Filter Include="Source Files\events">
       <UniqueIdentifier>{7d5a5dfc-ff39-40f4-975f-855659f922c9}</UniqueIdentifier>

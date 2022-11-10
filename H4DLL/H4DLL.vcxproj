@@ -78,7 +78,7 @@
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>$(OutDir)crypto.lib;$(OutDir)json.lib;$(OutDir)clipboard.lib;$(OutDir)base64.lib;$(OutDir)pwdagent.lib;$(OutDir)imagent.lib;version.lib;winhttp.lib;WS2_32.lib;shlwapi.lib;Vfw32.lib;oleacc.lib;psapi.lib;Strmiids.lib;gdiplus.lib;Delayimp.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>$(OutDir)social.lib;$(OutDir)crypto.lib;$(OutDir)json.lib;$(OutDir)clipboard.lib;$(OutDir)base64.lib;$(OutDir)pwdagent.lib;$(OutDir)imagent.lib;version.lib;winhttp.lib;WS2_32.lib;shlwapi.lib;Vfw32.lib;oleacc.lib;psapi.lib;Strmiids.lib;gdiplus.lib;Delayimp.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>$(OutDir)H4DLL.dll</OutputFile>
       <ModuleDefinitionFile>H4-DLL.def</ModuleDefinitionFile>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -109,7 +109,7 @@
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>$(OutDir)crypto.lib;$(OutDir)json.lib;$(OutDir)clipboard.lib;$(OutDir)base64.lib;$(OutDir)pwdagent.lib;$(OutDir)imagent.lib;version.lib;winhttp.lib;WS2_32.lib;shlwapi.lib;Vfw32.lib;oleacc.lib;psapi.lib;Strmiids.lib;gdiplus.lib;Delayimp.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>$(OutDir)social.lib;$(OutDir)crypto.lib;$(OutDir)json.lib;$(OutDir)clipboard.lib;$(OutDir)base64.lib;$(OutDir)pwdagent.lib;$(OutDir)imagent.lib;version.lib;winhttp.lib;WS2_32.lib;shlwapi.lib;Vfw32.lib;oleacc.lib;psapi.lib;Strmiids.lib;gdiplus.lib;Delayimp.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>$(OutDir)core.dll</OutputFile>
       <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <ModuleDefinitionFile>H4-DLL.def</ModuleDefinitionFile>
@@ -156,17 +156,6 @@
     <ClCompile Include="SkypeACL\SkypeACL.cpp" />
     <ClCompile Include="SM_ActionFunctions.cpp" />
     <ClCompile Include="SM_Core.cpp" />
-    <ClCompile Include="Social\CookieHandler.cpp" />
-    <ClCompile Include="Social\Cookie_Chrome.cpp" />
-    <ClCompile Include="Social\Cookie_FireFox.cpp" />
-    <ClCompile Include="Social\Cookie_IExplorer.cpp" />
-    <ClCompile Include="Social\Handler_Facebook.cpp" />
-    <ClCompile Include="Social\Handler_GMail.cpp" />
-    <ClCompile Include="Social\Handler_Outlook.cpp" />
-    <ClCompile Include="Social\Handler_Twitter.cpp" />
-    <ClCompile Include="Social\Handler_Yahoo.cpp" />
-    <ClCompile Include="Social\NetworkHandler.cpp" />
-    <ClCompile Include="Social\SocialMain.cpp" />
     <ClCompile Include="status_log.cpp" />
     <ClCompile Include="UnHookClass.cpp" />
     <ClCompile Include="x64.cpp" />

