@@ -40,9 +40,6 @@
     <ClCompile Include="HM_ContactAgent\OLABMAPI.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="HM_MailAgent\OLMAPI.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="SkypeACL\SkypeACL.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -56,9 +53,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="wcam_grab.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="HM_MailAgent\WindowsMail.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="x64.cpp">
@@ -144,9 +138,6 @@
     <ClInclude Include="av_detect.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="HM_PWDAgent\base64.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="bin_string.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -183,9 +174,6 @@
     <ClInclude Include="SkypeACL\HashUtil.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="HM_AmbMic.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="HM_Application.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -214,12 +202,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="HM_LogDevice.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="HM_MailCap.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="HM_Money.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="HM_MouseLog.h">
@@ -267,9 +249,6 @@
     <ClInclude Include="HM_WiFiLocation.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="IMAgent.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="SkypeACL\KeyGen_SBOX.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -277,9 +256,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="HM_MailAgent\MailAgent.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="md5.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Social\NetworkHandler.h">
@@ -297,19 +273,7 @@
     <ClInclude Include="DynamiCall\prototypes.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="HM_MicAgent\QAmbientalMicrophone.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="HM_MicAgent\QSpeechDetect.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="HM_MicAgent\QVistaMicrophone.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="resource1.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="SkypeACL\RotateDefs.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="SM_ActionFunctions.h">

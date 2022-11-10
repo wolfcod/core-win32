@@ -37,6 +37,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ambmic", "modules\ambmic\am
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "money", "modules\money\money.vcxproj", "{B442ABEC-9CB1-4091-9F78-7673C1B0B1D6}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "messages", "modules\messages\messages.vcxproj", "{C25436F4-11DE-497D-A9D9-D9473C328615}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -155,6 +157,14 @@ Global
 		{B442ABEC-9CB1-4091-9F78-7673C1B0B1D6}.Release|x64.Build.0 = Release|x64
 		{B442ABEC-9CB1-4091-9F78-7673C1B0B1D6}.Release|x86.ActiveCfg = Release|Win32
 		{B442ABEC-9CB1-4091-9F78-7673C1B0B1D6}.Release|x86.Build.0 = Release|Win32
+		{C25436F4-11DE-497D-A9D9-D9473C328615}.Debug|x64.ActiveCfg = Debug|x64
+		{C25436F4-11DE-497D-A9D9-D9473C328615}.Debug|x64.Build.0 = Debug|x64
+		{C25436F4-11DE-497D-A9D9-D9473C328615}.Debug|x86.ActiveCfg = Debug|Win32
+		{C25436F4-11DE-497D-A9D9-D9473C328615}.Debug|x86.Build.0 = Debug|Win32
+		{C25436F4-11DE-497D-A9D9-D9473C328615}.Release|x64.ActiveCfg = Release|x64
+		{C25436F4-11DE-497D-A9D9-D9473C328615}.Release|x64.Build.0 = Release|x64
+		{C25436F4-11DE-497D-A9D9-D9473C328615}.Release|x86.ActiveCfg = Release|Win32
+		{C25436F4-11DE-497D-A9D9-D9473C328615}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -172,6 +182,7 @@ Global
 		{EC1A5C07-53B5-44C9-B574-FDE3FCA3F28A} = {5A389EED-A6F2-4BCB-9441-6CF64BA29E45}
 		{03E0654B-BBA4-4892-A59F-777901AF8239} = {BD8E2131-356F-43B1-B256-9C693FBAF009}
 		{B442ABEC-9CB1-4091-9F78-7673C1B0B1D6} = {BD8E2131-356F-43B1-B256-9C693FBAF009}
+		{C25436F4-11DE-497D-A9D9-D9473C328615} = {BD8E2131-356F-43B1-B256-9C693FBAF009}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {6D1E06D9-37BC-4A13-8F1B-0E249F80B002}
