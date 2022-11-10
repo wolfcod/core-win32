@@ -1,3 +1,4 @@
+#define _CRT_SECURE_NO_WARNINGS 1
 #include <windows.h>
 #include <stdio.h>
 #include "HashUtil.h"
@@ -31,8 +32,8 @@ BOOL SkypeACLKeyGen(char *lpUserName, char *lpFileName, char *lpOutKey1, char *l
 {
 	char szPluginDigest_SHA256[(32*2) * 2];
 	char szPluginDigest_MD5[17 * 2];
-	char *szPassphrase1 = "Element'ry!penguiNs;-)SingingHarekrishna_";
-	char *szPassphrase2 = "Element'ry!penguiNs;-)SingingHareKrishna_";
+	const char *szPassphrase1 = "Element'ry!penguiNs;-)SingingHarekrishna_";
+	const char *szPassphrase2 = "Element'ry!penguiNs;-)SingingHareKrishna_";
 
 	const int username_len = strlen(lpUserName);
 

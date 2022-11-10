@@ -13,6 +13,12 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Source Files\SkypeACL">
+      <UniqueIdentifier>{1951ac07-1d43-4cf8-886b-5a2d8be4590a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\SkypeACL">
+      <UniqueIdentifier>{78021dbb-c837-4bc6-8e1b-b7d01da22415}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="QAgent.cpp">
@@ -84,6 +90,18 @@
     <ClCompile Include="HM_IMAgent.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="HM_SkypeRecord.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="SkypeACL\HashUtil.cpp">
+      <Filter>Source Files\SkypeACL</Filter>
+    </ClCompile>
+    <ClCompile Include="SkypeACL\KeyGen_SBOX.cpp">
+      <Filter>Source Files\SkypeACL</Filter>
+    </ClCompile>
+    <ClCompile Include="SkypeACL\SkypeACL.cpp">
+      <Filter>Source Files\SkypeACL</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="QAgent.h">
@@ -151,6 +169,15 @@
     </ClInclude>
     <ClInclude Include="QYim10.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="HM_SkypeRecord.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="SkypeACL\HashUtil.h">
+      <Filter>Header Files\SkypeACL</Filter>
+    </ClInclude>
+    <ClInclude Include="SkypeACL\KeyGen_SBOX.h">
+      <Filter>Header Files\SkypeACL</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

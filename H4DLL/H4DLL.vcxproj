@@ -147,16 +147,12 @@
     <ClCompile Include="format_resistant.cpp" />
     <ClCompile Include="H4-DLL.cpp" />
     <ClCompile Include="HM_IpcModule.cpp" />
-    <ClCompile Include="HM_SkypeRecord.cpp" />
     <ClCompile Include="LOG.cpp" />
     <ClCompile Include="procedures.cpp" />
     <ClCompile Include="socialmain.cpp" />
     <ClCompile Include="strings.cpp" />
     <ClCompile Include="stubs.cpp" />
     <ClCompile Include="process.cpp" />
-    <ClCompile Include="SkypeACL\HashUtil.cpp" />
-    <ClCompile Include="SkypeACL\KeyGen_SBOX.cpp" />
-    <ClCompile Include="SkypeACL\SkypeACL.cpp" />
     <ClCompile Include="SM_ActionFunctions.cpp" />
     <ClCompile Include="SM_Core.cpp" />
     <ClCompile Include="status_log.cpp" />
@@ -176,7 +172,6 @@
   <ItemGroup>
     <ClInclude Include="bss.h" />
     <ClInclude Include="config.h" />
-    <ClInclude Include="HM_SocialAgent.h" />
     <ClInclude Include="process.h" />
     <ClInclude Include="HM_PreamblePatch.h" />
     <ClInclude Include="HM_Reloc.h" />
@@ -212,10 +207,7 @@
     <ClInclude Include="SM_ActionFunctions.h" />
     <ClInclude Include="SM_Core.h" />
     <ClInclude Include="SM_EventHandlers.h" />
-    <ClInclude Include="Social\CookieHandler.h" />
-    <ClInclude Include="Social\Handler_Yahoo.h" />
     <ClInclude Include="Social\NetworkHandler.h" />
-    <ClInclude Include="Social\SocialMain.h" />
     <ClInclude Include="status_log.h" />
     <ClInclude Include="strings.h" />
     <ClInclude Include="UnHookClass.h" />
@@ -226,11 +218,9 @@
     <ClInclude Include="HM_KeyLog.h" />
     <ClInclude Include="HM_LogDevice.h" />
     <ClInclude Include="HM_MouseLog.h" />
-    <ClInclude Include="HM_PDAAgent.h" />
     <ClInclude Include="HM_PrintPool.h" />
     <ClInclude Include="HM_ProcessMonitors.h" />
     <ClInclude Include="HM_Pstorage.h" />
-    <ClInclude Include="HM_SkypeRecord.h" />
     <ClInclude Include="HM_SnapShot.h" />
     <ClInclude Include="HM_UrlLog.h" />
     <ClInclude Include="HM_WebCam.h" />
