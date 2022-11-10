@@ -39,6 +39,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "money", "modules\money\mone
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "messages", "modules\messages\messages.vcxproj", "{C25436F4-11DE-497D-A9D9-D9473C328615}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "contacts", "modules\contacts\contacts.vcxproj", "{32712842-2AAD-4642-9947-D3D821B58A97}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -165,6 +167,14 @@ Global
 		{C25436F4-11DE-497D-A9D9-D9473C328615}.Release|x64.Build.0 = Release|x64
 		{C25436F4-11DE-497D-A9D9-D9473C328615}.Release|x86.ActiveCfg = Release|Win32
 		{C25436F4-11DE-497D-A9D9-D9473C328615}.Release|x86.Build.0 = Release|Win32
+		{32712842-2AAD-4642-9947-D3D821B58A97}.Debug|x64.ActiveCfg = Debug|x64
+		{32712842-2AAD-4642-9947-D3D821B58A97}.Debug|x64.Build.0 = Debug|x64
+		{32712842-2AAD-4642-9947-D3D821B58A97}.Debug|x86.ActiveCfg = Debug|Win32
+		{32712842-2AAD-4642-9947-D3D821B58A97}.Debug|x86.Build.0 = Debug|Win32
+		{32712842-2AAD-4642-9947-D3D821B58A97}.Release|x64.ActiveCfg = Release|x64
+		{32712842-2AAD-4642-9947-D3D821B58A97}.Release|x64.Build.0 = Release|x64
+		{32712842-2AAD-4642-9947-D3D821B58A97}.Release|x86.ActiveCfg = Release|Win32
+		{32712842-2AAD-4642-9947-D3D821B58A97}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -183,6 +193,7 @@ Global
 		{03E0654B-BBA4-4892-A59F-777901AF8239} = {BD8E2131-356F-43B1-B256-9C693FBAF009}
 		{B442ABEC-9CB1-4091-9F78-7673C1B0B1D6} = {BD8E2131-356F-43B1-B256-9C693FBAF009}
 		{C25436F4-11DE-497D-A9D9-D9473C328615} = {BD8E2131-356F-43B1-B256-9C693FBAF009}
+		{32712842-2AAD-4642-9947-D3D821B58A97} = {BD8E2131-356F-43B1-B256-9C693FBAF009}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {6D1E06D9-37BC-4A13-8F1B-0E249F80B002}

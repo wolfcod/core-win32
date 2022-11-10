@@ -162,7 +162,6 @@
     <ClCompile Include="HM_PreamblePatch.cpp" />
     <ClCompile Include="HM_Reloc.cpp" />
     <ClCompile Include="HM_SafeProcedures.cpp" />
-    <ClCompile Include="HM_ContactAgent\OLABMAPI.cpp" />
     <ClCompile Include="wcam_grab.cpp" />
     <ClCompile Include="DynamiCall\dynamic_import.cpp" />
   </ItemGroup>
@@ -203,7 +202,6 @@
     <ClInclude Include="PEB.h" />
     <ClInclude Include="resource1.h" />
     <ClInclude Include="SkypeACL\HashUtil.h" />
-    <ClInclude Include="SkypeACL\KeyGen_SBOX.h" />
     <ClInclude Include="SM_ActionFunctions.h" />
     <ClInclude Include="SM_Core.h" />
     <ClInclude Include="SM_EventHandlers.h" />

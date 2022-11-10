@@ -31,9 +31,6 @@
     <ClCompile Include="LOG.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="HM_ContactAgent\OLABMAPI.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="SM_Core.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -220,9 +217,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="HM_WiFiLocation.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="SkypeACL\KeyGen_SBOX.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="LOG.h">
