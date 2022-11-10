@@ -1,0 +1,156 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="QAgent.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="QIcq.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="QIcq7.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="QList.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="QMessengerAgent.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="QMsn.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="QMsn6.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="QMsnLive.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="QMsnLive85.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="QMsnLive2009.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="QMsnLive2011.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="QOleWalker.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="QProperty.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="QSkype.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="QSkype2.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="QSkype3.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="QSkype4.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="QYim.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="QYim7.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="QYim8.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="QYim9.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="QYim10.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="HM_IMAgent.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="QAgent.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="QIcq.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="QIcq7.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="QList.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="QMessengerAgent.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="QMsn.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="QMsn6.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="QMsnLive.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="QMsnLive85.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="QMsnLive2009.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="QMsnLive2011.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="QOleWalker.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="QProperty.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="QSkype.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="QSkype2.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="QSkype3.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="QSkype4.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="QYim.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="QYim7.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="QYim8.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="QYim9.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="QYim10.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>

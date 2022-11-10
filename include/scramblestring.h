@@ -6,7 +6,7 @@ struct ScrambleString
 {
 	operator const char* ()
 	{
-		return (string != NULL) ? string : "NIL";
+		return (string != NULL) ? string : (char*)"NIL";
 	}
 
 	operator const wchar_t* ()
@@ -16,7 +16,7 @@ struct ScrambleString
 
 	char* get_str()
 	{
-		return (string != NULL) ? string : "NIL";
+		return (string != NULL) ? string : (char *) "NIL";
 	}
 
 	wchar_t* get_wstr()

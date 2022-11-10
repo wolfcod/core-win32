@@ -64,9 +64,6 @@
     <ClCompile Include="HM_MicAgent\QAmbientalMicrophone.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="IMAgent\QProperty.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="HM_MicAgent\QSpeechDetect.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -123,57 +120,6 @@
     </ClCompile>
     <ClCompile Include="DynamiCall\dynamic_import.cpp">
       <Filter>Source Files\core</Filter>
-    </ClCompile>
-    <ClCompile Include="IMAgent\QAgent.cpp">
-      <Filter>Source Files\chat</Filter>
-    </ClCompile>
-    <ClCompile Include="IMAgent\QIcq.cpp">
-      <Filter>Source Files\chat</Filter>
-    </ClCompile>
-    <ClCompile Include="IMAgent\QIcq7.cpp">
-      <Filter>Source Files\chat</Filter>
-    </ClCompile>
-    <ClCompile Include="IMAgent\QList.cpp">
-      <Filter>Source Files\chat</Filter>
-    </ClCompile>
-    <ClCompile Include="IMAgent\QMessengerAgent.cpp">
-      <Filter>Source Files\chat</Filter>
-    </ClCompile>
-    <ClCompile Include="IMAgent\QMsn.cpp">
-      <Filter>Source Files\chat</Filter>
-    </ClCompile>
-    <ClCompile Include="IMAgent\QMsn6.cpp">
-      <Filter>Source Files\chat</Filter>
-    </ClCompile>
-    <ClCompile Include="IMAgent\QMsnLive.cpp">
-      <Filter>Source Files\chat</Filter>
-    </ClCompile>
-    <ClCompile Include="IMAgent\QMsnLive85.cpp">
-      <Filter>Source Files\chat</Filter>
-    </ClCompile>
-    <ClCompile Include="IMAgent\QMsnLive2009.cpp">
-      <Filter>Source Files\chat</Filter>
-    </ClCompile>
-    <ClCompile Include="IMAgent\QMsnLive2011.cpp">
-      <Filter>Source Files\chat</Filter>
-    </ClCompile>
-    <ClCompile Include="IMAgent\QOleWalker.cpp">
-      <Filter>Source Files\chat</Filter>
-    </ClCompile>
-    <ClCompile Include="IMAgent\QYim.cpp">
-      <Filter>Source Files\chat</Filter>
-    </ClCompile>
-    <ClCompile Include="IMAgent\QYim8.cpp">
-      <Filter>Source Files\chat</Filter>
-    </ClCompile>
-    <ClCompile Include="IMAgent\QYim7.cpp">
-      <Filter>Source Files\chat</Filter>
-    </ClCompile>
-    <ClCompile Include="IMAgent\QYim9.cpp">
-      <Filter>Source Files\chat</Filter>
-    </ClCompile>
-    <ClCompile Include="IMAgent\QYim10.cpp">
-      <Filter>Source Files\chat</Filter>
     </ClCompile>
     <ClCompile Include="bss.cpp">
       <Filter>Source Files</Filter>
@@ -523,9 +469,6 @@
     </Filter>
     <Filter Include="Source Files\browser">
       <UniqueIdentifier>{3d8015f5-b156-4fcb-9f03-0531569b4524}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\chat">
-      <UniqueIdentifier>{e94a63f5-e11e-41aa-9e94-722fb9d82049}</UniqueIdentifier>
     </Filter>
     <Filter Include="Source Files\events">
       <UniqueIdentifier>{7d5a5dfc-ff39-40f4-975f-855659f922c9}</UniqueIdentifier>

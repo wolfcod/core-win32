@@ -12,8 +12,8 @@
 using namespace std;
 
 #include "QOleWalker.h"
-#include "..\HM_SafeProcedures.h"
-#include "..\common.h"
+#include "../../H4DLL/HM_SafeProcedures.h"
+#include "../../H4DLL/common.h"
 
 QOleWalker::QOleWalker()
 {

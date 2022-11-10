@@ -189,7 +189,7 @@ static DWORD IPCClientWrite_setup(DWORD dummy)
 	HANDLE h_file;
 
 	h_krn = GetModuleHandle("kernel32.dll");
-	IPCClientWrite_data.pGetSystemTimeAsFileTime = (GetSystemTimeAsFileTime_t)HM_SafeGetProcAddress(h_krn, "GetSystemTimeAsFileTime");
+	IPCClientWrite_data.pGetSystemTimeAsFileTime = (GetSystemTimeAsFileTime_t)HM_SafeGetProcAddress(h_krn, (char*)"GetSystemTimeAsFileTime");
 
 	h_file = FNC(OpenFileMappingA)(FILE_MAP_ALL_ACCESS, FALSE, shared.SHARE_MEMORY_WRITE_NAME);
 	IPCClientWrite_data.mem_addr = 0;

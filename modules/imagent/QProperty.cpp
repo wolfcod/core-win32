@@ -49,7 +49,7 @@ void QProperty::SetHandle(const HWND hw) {
 
 const PWCHAR QProperty::GetId() {
 	if(pwId == NULL)
-		return L"";
+		return (PWCHAR)L"";
 
 	return pwId;
 }
@@ -99,7 +99,7 @@ BOOL QProperty::SetHistory(PWCHAR pHistory) {
 
 const PWCHAR QProperty::GetUsers() {
 	if(pwUsers == NULL)
-		return L"";
+		return (PWCHAR)L"";
 
 	return pwUsers;
 }
@@ -130,7 +130,7 @@ BOOL QProperty::SetUsers(PWCHAR pUsersList) {
 const PWCHAR QProperty::GetType()
 {
 	if(pwIm == NULL)
-		return L"";
+		return (PWCHAR)L"";
 
 	return pwIm;
 }
@@ -190,7 +190,7 @@ const PWCHAR QProperty::GetLastLine()
 	register UINT i;
 
 	if(pwHistory == NULL)
-		return L"";
+		return (PWCHAR)L"";
 
 	len = GetHistoryLength();
 

