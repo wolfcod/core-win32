@@ -1,1 +1,1 @@
-extern void SendStatusLog(WCHAR *status_log);
+extern void SendStatusLog(const WCHAR *status_log);

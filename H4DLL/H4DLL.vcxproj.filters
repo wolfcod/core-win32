@@ -139,6 +139,12 @@
     <ClCompile Include="HM_IpcModule.cpp">
       <Filter>Source Files\core</Filter>
     </ClCompile>
+    <ClCompile Include="socialmain.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="procedures.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AM_Core.h">

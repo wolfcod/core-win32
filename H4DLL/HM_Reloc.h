@@ -140,13 +140,12 @@ struct MZHeader
 	unsigned long offsetToPE;
 };
 
-extern BOOL readPEInfo(char *modulePos, MZHeader *outMZ, PE_Header *outPE, PE_ExtHeader *outpeXH, SectionHeader **outSecHdr);
 extern DWORD GetHeaders(PCHAR ibase,
                  PIMAGE_FILE_HEADER *pFH,
                  PIMAGE_OPTIONAL_HEADER *pOH,
                  PIMAGE_SECTION_HEADER *pSH);
 extern DWORD FindKiServiceTable(HMODULE hModule,DWORD dwKSDT);
 extern BOOL RelocImage(PVOID exeAddr, PVOID newAddr);
-extern LPVOID loadDLL(char *dllName);
+LPVOID loadDLL(char *dllName);
 DWORD myStrlenA(char *ptr);
 

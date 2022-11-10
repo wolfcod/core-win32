@@ -4,7 +4,7 @@
 
 #define PM_STATUSLOG 0x0241
 
-void SendStatusLog(WCHAR *status_log)
+void SendStatusLog(const WCHAR *status_log)
 {
 	HANDLE hfile;
 	hfile = Log_CreateFile(PM_STATUSLOG, NULL, 0);

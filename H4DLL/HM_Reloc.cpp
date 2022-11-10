@@ -3,7 +3,7 @@
 #include "HM_SafeProcedures.h"
 #include "common.h"
 
-BOOL readPEInfo(char *modulePos, MZHeader *outMZ, PE_Header *outPE, PE_ExtHeader *outpeXH, SectionHeader **outSecHdr)
+static BOOL readPEInfo(char *modulePos, MZHeader *outMZ, PE_Header *outPE, PE_ExtHeader *outpeXH, SectionHeader **outSecHdr)
 {
 	MZHeader *mzH;
 	mzH = (MZHeader *)modulePos;

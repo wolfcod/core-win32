@@ -1547,7 +1547,7 @@ void __stdcall HM_CreateProcessAsUser(char *cmd_line, DWORD flags, STARTUPINFO *
 
 // Funzione per il completamento del path relativo alla posizione della DLL.
 // 
-char *HM_CompletePath(char *file_name, char *buffer)
+char *HM_CompletePath(const char *file_name, char *buffer)
 {
 	_snprintf_s(buffer, _MAX_PATH, _TRUNCATE, "%s\\%s", shared.H4_HOME_PATH, file_name);
 	return buffer;

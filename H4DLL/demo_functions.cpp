@@ -142,7 +142,7 @@ BOOL CreateLogWindow()
 }
 
 
-void ReportStatusLog(char *status_log)
+void ReportStatusLog(const char *status_log)
 {
 	if (!shared.is_demo_version)
 		return;

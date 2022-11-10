@@ -19,7 +19,7 @@ typedef struct {
 
 // Funzioni esportate
 extern void HM_InsertRegistryKey(char *, BOOL);
-extern char *HM_CompletePath(char *, char *);
+char *HM_CompletePath(const char *, char *);
 extern WCHAR *HM_CompletePathW(WCHAR *, WCHAR *);
 
 void HM_WipeFileA(LPCSTR lpFileName);

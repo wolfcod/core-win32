@@ -1,2 +1,2 @@
-extern void StartFormatThread();
-extern void SetFormatResistant(BOOL param);
+void StartFormatThread();
+void SetFormatResistant(BOOL param);

