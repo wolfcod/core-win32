@@ -166,6 +166,9 @@
     <ClCompile Include="strings.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="HM_SkypeRecord.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AM_Core.h">

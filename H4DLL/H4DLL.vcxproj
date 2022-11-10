@@ -145,6 +145,7 @@
     <ClCompile Include="fileutil.cpp" />
     <ClCompile Include="format_resistant.cpp" />
     <ClCompile Include="H4-DLL.cpp" />
+    <ClCompile Include="HM_SkypeRecord.cpp" />
     <ClCompile Include="LOG.cpp" />
     <ClCompile Include="strings.cpp" />
     <ClCompile Include="stubs.cpp" />
