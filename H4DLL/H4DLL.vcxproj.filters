@@ -1,12 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <ClCompile Include="HM_PWDAgent\base64.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Social\base64Y.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="BitmapCommon.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -14,9 +8,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="explore_directory.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="HM_PWDAgent\firefox.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="format_resistant.cpp">
@@ -55,16 +46,10 @@
     <ClCompile Include="HM_SafeProcedures.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="HM_PWDAgent\iexplorer.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="SkypeACL\KeyGen_SBOX.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="LOG.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="HM_PWDAgent\msn.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Social\NetworkHandler.cpp">
@@ -74,12 +59,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="HM_MailAgent\OLMAPI.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="HM_PWDAgent\opera.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="HM_PWDAgent\outlook.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="HM_MicAgent\QAmbientalMicrophone.cpp">
@@ -106,12 +85,6 @@
     <ClCompile Include="status_log.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="HM_PWDAgent\thunderbird.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="HM_PWDAgent\trillian.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="UnHookClass.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -133,9 +106,6 @@
     <ClCompile Include="ASP.cpp">
       <Filter>Source Files\core</Filter>
     </ClCompile>
-    <ClCompile Include="HM_PWDAgent\chrome.cpp">
-      <Filter>Source Files\browser</Filter>
-    </ClCompile>
     <ClCompile Include="Social\Cookie_Chrome.cpp">
       <Filter>Source Files\browser</Filter>
     </ClCompile>
@@ -153,12 +123,6 @@
     </ClCompile>
     <ClCompile Include="DynamiCall\dynamic_import.cpp">
       <Filter>Source Files\core</Filter>
-    </ClCompile>
-    <ClCompile Include="HM_PWDAgent\gtalk.cpp">
-      <Filter>Source Files\chat</Filter>
-    </ClCompile>
-    <ClCompile Include="HM_PWDAgent\paltalk.cpp">
-      <Filter>Source Files\chat</Filter>
     </ClCompile>
     <ClCompile Include="IMAgent\QAgent.cpp">
       <Filter>Source Files\chat</Filter>

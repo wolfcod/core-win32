@@ -1,6 +1,6 @@
 #include <Windows.h>
 #include <string>
-#include "../HM_PWDAgent/base64.h"
+#include "base64.h"
 
 static const char *base64_chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
     "abcdefghijklmnopqrstuvwxyz"

