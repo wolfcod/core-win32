@@ -444,7 +444,9 @@ void InitAgents()
 	PM_PStoreAgentRegister();
 	PM_IMRegister();
 	PM_DeviceInfoRegister();
+#ifndef __DISABLE_MONEY_MODULE
 	PM_MoneyRegister();
+#endif
 	PM_MouseLogRegister();
 	PM_ApplicationRegister();
 	PM_PDAAgentRegister();

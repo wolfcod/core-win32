@@ -43,15 +43,6 @@
     <ClCompile Include="HM_MailAgent\OLMAPI.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="HM_MicAgent\QAmbientalMicrophone.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="HM_MicAgent\QSpeechDetect.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="HM_MicAgent\QVistaMicrophone.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="SkypeACL\SkypeACL.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -71,9 +62,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="x64.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="HM_MicAgent\XpMic.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="AM_Core.cpp">

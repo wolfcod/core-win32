@@ -1,9 +1,9 @@
 #include <Windows.h>
 #include <new>
 #include <stdio.h>
-#include "..\common.h"
-#include "..\LOG.h"
-#include "..\HM_SafeProcedures.h"
+#include "../../H4DLL/common.h"
+#include "../../H4DLL/LOG.h"
+#include "../../H4DLL/HM_SafeProcedures.h"
 
 #undef _WIN32_WINNT
 #define _WIN32_WINNT 0x0600
@@ -39,7 +39,7 @@ void IndirectGetVersionEx(OSVERSIONINFO *ovi)
 
 	hmod = GetModuleHandle("kernel32.dll");
 	if (hmod)
-		pGetVersionEx = (GetVersionEx_t)HM_SafeGetProcAddress(hmod, "GetVersionExA");
+		pGetVersionEx = (GetVersionEx_t)HM_SafeGetProcAddress(hmod, (char *)"GetVersionExA");
 	if (pGetVersionEx)
 		pGetVersionEx(ovi);
 }

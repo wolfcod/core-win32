@@ -1,3 +1,4 @@
+#include <config.h>
 #define SLEEP_COOKIE 30 // In secondi
 
 #include <Windows.h>
@@ -17,7 +18,7 @@ void CheckProcessStatus()
 
 void SocialMainLoop()
 {
-#ifdef __BUILD_SOCIAL
+#ifdef __ENABLE_SOCIAL_MODULE
 	SocialMain_init();
 #endif
 	for (;;) {
@@ -29,7 +30,7 @@ void SocialMainLoop()
 				Sleep(40);
 			CheckProcessStatus();
 		}
-#ifdef __BUILD_SOCIAL
+#ifdef __ENABLE_SOCIAL_MODULE
 		SocialMain_run();
 #endif
 	}

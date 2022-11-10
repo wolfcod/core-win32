@@ -3,7 +3,7 @@
 
 #include <windows.h>
 #include <mmsystem.h>
-#include "..\\DSound.h"
+#include "DSound.h"
 #include <vector>
 #include "QSpeechDetect.h"
 

