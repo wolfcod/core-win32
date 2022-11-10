@@ -15,27 +15,25 @@
 #include "format_resistant.h"
 #include "bss.h"
 
-extern BOOL IsDriverRunning(WCHAR *driver_name);
-
 typedef struct {
 	DWORD agent_tag;
 	HANDLE h_file;
-} log_entry_struct;
+} LOG_ENTRY_STRUCT;
 
-typedef struct log_list {
+typedef struct _log_list {
 	nanosec_time ftime;
 	char *file_name;
 	DWORD size;
-	struct log_list* next;
-} log_list_struct;
+	struct _log_list* next;
+} LOG_LIST_STRUCT;
 
-log_list_struct *log_list_head = NULL;
+LOG_LIST_STRUCT *log_list_head = NULL;
 
 //
 // Struttura dei log file
 //
 // C'e' una dword in chiaro che indica: sizeof(LogStruct) + uDeviceIdLen + uUserIdLen + uSourceIdLen + uAdditionalData
-typedef struct _LogStruct{
+typedef struct _log_struct {
 	UINT uVersion;			// Versione della struttura
 		#define LOG_VERSION	2008121901
 	UINT uLogType;			// Tipo di log
@@ -45,12 +43,12 @@ typedef struct _LogStruct{
 	UINT uUserIdLen;		// IMSI/Username len
 	UINT uSourceIdLen;		// Numero del caller/IP len	
 	UINT uAdditionalData;	// Lunghezza della struttura addizionale, se presente
-}LogStruct, *pLogStruct;
+} LOGSTRUCT, *PLOGSTRUCT;
 
 #define NO_TAG_ENTRY 0xFFFFFFFF
 #define MAX_LOG_ENTRIES 70
 #define MIN_CREATION_SPACE 307200 // Numero di byte che devono essere rimasti per creare ancora nuovi file di log
-log_entry_struct log_table[MAX_LOG_ENTRIES];
+LOG_ENTRY_STRUCT log_table[MAX_LOG_ENTRIES];
 
 // Dichiarato in SM_EventHandlers.h
 extern BOOL IsGreaterDate(nanosec_time *, nanosec_time *);
@@ -87,12 +85,12 @@ DWORD GetLogSize(char *path)
 }
 
 // Inserisce un elemento nella lista dei log da spedire in ordine di tempo
-BOOL InsertLogList(log_list_struct **log_list, WIN32_FIND_DATA *log_elem)
+BOOL InsertLogList(LOG_LIST_STRUCT **log_list, WIN32_FIND_DATA *log_elem)
 {
-	log_list_struct *new_elem;
+	LOG_LIST_STRUCT *new_elem;
 
 	// Alloca e inizializza il nuovo elemento
-	if ( !(new_elem = (log_list_struct *)malloc(sizeof(log_list_struct))) )
+	if ( !(new_elem = (LOG_LIST_STRUCT *)malloc(sizeof(LOG_LIST_STRUCT))) )
 		return FALSE;
 	if ( !(new_elem->file_name = (char *)strdup(log_elem->cFileName)) ) {
 		SAFE_FREE(new_elem);
@@ -118,9 +116,9 @@ BOOL InsertLogList(log_list_struct **log_list, WIN32_FIND_DATA *log_elem)
 }
 
 // Libera la lista dei log
-void FreeLogList(log_list_struct **log_list)
+void FreeLogList(LOG_LIST_STRUCT **log_list)
 {
-	log_list_struct *list_ptr, *tmp_ptr;
+	LOG_LIST_STRUCT *list_ptr, *tmp_ptr;
 	list_ptr = *log_list;
 	while(list_ptr) {
 		SAFE_FREE(list_ptr->file_name);
@@ -319,7 +317,7 @@ BYTE *Log_CreateHeader(DWORD agent_tag, BYTE *additional_data, DWORD additional_
 	DWORD padded_len;
 	BYTE iv[BLOCK_LEN];
 	BYTE *final_header, *ptr;
-	LogStruct log_header;
+	LOGSTRUCT log_header;
 
 	if (out_len)
 		*out_len = 0;
@@ -347,7 +345,7 @@ BYTE *Log_CreateHeader(DWORD agent_tag, BYTE *additional_data, DWORD additional_
 	log_header.uLogType = agent_tag;
 
 	// Calcola la lunghezza totale dell'header e il padding
-	header_len = sizeof(LogStruct) + log_header.uDeviceIdLen + log_header.uUserIdLen + log_header.uSourceIdLen + log_header.uAdditionalData;
+	header_len = sizeof(LOGSTRUCT) + log_header.uDeviceIdLen + log_header.uUserIdLen + log_header.uSourceIdLen + log_header.uAdditionalData;
 	padded_len = header_len;
 	if (padded_len % BLOCK_LEN) {
 		padded_len /= BLOCK_LEN;
@@ -1430,7 +1428,7 @@ BOOL LOG_SendLogQueue(DWORD band_limit, DWORD min_sleep, DWORD max_sleep)
 	char DirSpec[DLLNAMELEN];  
 	char *scrambled_search;
 	char search_mask[64];
-	log_list_struct *log_list;
+	LOG_LIST_STRUCT *log_list;
 	HANDLE hFind = INVALID_HANDLE_VALUE;
 	DWORD tmp_free_space;
 	DWORD log_count = 0;

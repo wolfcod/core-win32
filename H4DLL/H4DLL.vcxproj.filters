@@ -309,58 +309,7 @@
     <ClInclude Include="DynamiCall\prototypes.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="IMAgent\QAgent.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="HM_MicAgent\QAmbientalMicrophone.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="IMAgent\QIcq.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="IMAgent\QIcq7.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="IMAgent\QList.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="IMAgent\QMessengerAgent.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="IMAgent\QMsn.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="IMAgent\QMsn6.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="IMAgent\QMsnLive.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="IMAgent\QMsnLive85.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="IMAgent\QMsnLive2009.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="IMAgent\QMsnLive2011.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="IMAgent\QOleWalker.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="IMAgent\QProperty.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="IMAgent\QSkype.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="IMAgent\QSkype2.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="IMAgent\QSkype3.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="IMAgent\QSkype4.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="HM_MicAgent\QSpeechDetect.h">
@@ -369,31 +318,10 @@
     <ClInclude Include="HM_MicAgent\QVistaMicrophone.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="IMAgent\QYim.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="IMAgent\QYim7.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="IMAgent\QYim8.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="IMAgent\QYim9.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="IMAgent\QYim10.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="resource1.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="SkypeACL\RotateDefs.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="sha1.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="SkypeACL\sha256.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="SM_ActionFunctions.h">

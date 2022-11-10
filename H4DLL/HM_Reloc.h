@@ -120,26 +120,6 @@ struct SectionHeader
 	unsigned long characteristics;
 };
 
-struct MZHeader
-{
-	unsigned short signature;
-	unsigned short partPag;
-	unsigned short pageCnt;
-	unsigned short reloCnt;
-	unsigned short hdrSize;
-	unsigned short minMem;
-	unsigned short maxMem;
-	unsigned short reloSS;
-	unsigned short exeSP;
-	unsigned short chksum;
-	unsigned short exeIP;
-	unsigned short reloCS;
-	unsigned short tablOff;
-	unsigned short overlay;
-	unsigned char reserved[32];
-	unsigned long offsetToPE;
-};
-
 extern DWORD GetHeaders(PCHAR ibase,
                  PIMAGE_FILE_HEADER *pFH,
                  PIMAGE_OPTIONAL_HEADER *pOH,

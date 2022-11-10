@@ -33,15 +33,15 @@ typedef struct {
 	BOOL triggered;
 } monitored_timer;
 
-DWORD em_tm_timer_count = 0;
-HANDLE em_tm_montime_thread = 0;
-monitored_timer* em_tm_timer_table = NULL;
+static DWORD em_tm_timer_count = 0;
+static HANDLE em_tm_montime_thread = 0;
+static monitored_timer* em_tm_timer_table = NULL;
 
-BOOL em_tm_cp = FALSE;
+static BOOL em_tm_cp = FALSE;
 
 // ritorna la data (100-nanosec dal 1601) di creazione di "filename"
 // XXX Attenzione a come il file viene aperto (dovrei aggiungere FILE_SHARE_WRITE)
-BOOL GetFileDate(char* filename, nanosec_time* time)
+static BOOL GetFileDate(char* filename, nanosec_time* time)
 {
 	HANDLE fileh;
 	FILETIME filetime;

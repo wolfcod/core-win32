@@ -1,3 +1,4 @@
+#include <mutex>
 #include <windows.h>
 #include <json/JSON.h>
 #include <listentry.h>
@@ -673,8 +674,6 @@ void SM_MonitorEvents(DWORD dummy)
 {
 	DWORD event_id;
 	DWORD dummy2;
-
-	InitializeCriticalSection(&action_critic_sec);
 
 	// Registrazione degli EM e delle AF. 
 	EventMonitorRegister(L"timer", EM_TimerAdd, EM_TimerStart, EM_TimerStop);

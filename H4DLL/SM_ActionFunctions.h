@@ -22,9 +22,6 @@ void UpdateEventConf(void);
 void EventMonitorStartAll(void);    
 void SM_AddExecutedProcess(DWORD);
 
-// Impedisce la concorrenza fra piu' azioni (tranne la sync, che protegge solo un pezzettino)
-extern CRITICAL_SECTION action_critic_sec;
-
 // Dichiarazione delle possibili azioni
 BOOL WINAPI DA_Uninstall(BYTE *dummy_param);
 BOOL WINAPI DA_Syncronize(BYTE *action_param);
