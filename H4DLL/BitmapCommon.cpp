@@ -8,7 +8,7 @@
 
 using namespace Gdiplus;
 
-BOOL IsAero()
+static BOOL IsAero()
 {
 	HKEY hKey;
 	DWORD composition=0, len=sizeof(DWORD);

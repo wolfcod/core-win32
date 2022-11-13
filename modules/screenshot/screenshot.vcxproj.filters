@@ -18,11 +18,11 @@
     <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="HM_SnapShot.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="HM_SnapShot.cpp">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="screenshot.h">
       <Filter>Header Files</Filter>
     </ClInclude>

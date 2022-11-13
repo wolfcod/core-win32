@@ -21,5 +21,8 @@
     <ClCompile Include="HM_PrintPool.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="LOG_PrintPool.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

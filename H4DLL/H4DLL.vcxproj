@@ -208,8 +208,6 @@
     <ClInclude Include="strings.h" />
     <ClInclude Include="UnHookClass.h" />
     <ClInclude Include="x64.h" />
-    <ClInclude Include="HM_ProcessMonitors.h" />
-    <ClInclude Include="HM_Pstorage.h" />
   </ItemGroup>
   <ItemGroup>
     <MASM Include="procedures.asm">

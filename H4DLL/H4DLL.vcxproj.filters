@@ -174,12 +174,6 @@
     <ClInclude Include="HM_PreamblePatch.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="HM_ProcessMonitors.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="HM_Pstorage.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="HM_Reloc.h">
       <Filter>Header Files</Filter>
     </ClInclude>

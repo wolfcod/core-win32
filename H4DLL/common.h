@@ -148,7 +148,6 @@
 #define PM_WEBCAMAGENT        0xE9E9
 #define PM_MONEY              0xB1C0
 #define PM_CLIPBOARDAGENT     0xD9D9
-#define PM_PSTOREAGENT        0xFAFA
 #define PM_IMAGENT            0xC6C6
 #define PM_MAILAGENT          0x1001      
 #define PM_APPLICATIONAGENT   0x1011

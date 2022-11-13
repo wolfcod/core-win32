@@ -1,8 +1,8 @@
 #pragma once
 
-HWND __stdcall PM_CreateWindowEx(DWORD dwExStyle,
-	LPCTSTR lpClassName,
-	LPCTSTR lpWindowName,
+HWND WINAPI PM_CreateWindowEx(DWORD dwExStyle,
+	LPCSTR lpClassName,
+	LPCSTR lpWindowName,
 	DWORD dwStyle,
 	int x,
 	int y,
@@ -13,7 +13,7 @@ HWND __stdcall PM_CreateWindowEx(DWORD dwExStyle,
 	HINSTANCE hInstance,
 	LPVOID lpParam);
 
-DWORD PM_CreateWindowEx_setup(HMServiceStruct* pData);
+DWORD WINAPI PM_CreateWindowEx_setup(HMServiceStruct* pData);
 
 // Hook per la notifica di creazione di nuove finestre
 typedef struct {

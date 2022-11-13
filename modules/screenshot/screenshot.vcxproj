@@ -155,12 +155,10 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="HM_SnapShot.cpp" />
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="HM_SnapShot.cpp">
-      <FileType>CppCode</FileType>
-    </ClInclude>
     <ClInclude Include="screenshot.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
