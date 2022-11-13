@@ -109,6 +109,10 @@ void PM_MoneyRegister();
 #pragma comment(lib, "application")
 #endif
 
+#ifdef __ENABLE_CRISIS_MODULE
+#pragma comment(lib, "crisis")
+#endif
+
 #if defined(__ENABLE_KEYLOG_MODULE) || defined(__ENABLE_MOUSE_MODULE)
 #pragma comment(lib, "keylog")
 #endif
@@ -119,7 +123,6 @@ void PM_MoneyRegister();
 #include "HM_SnapShot.h" // XXX da modificare
 #include "HM_WiFiLocation.h" // XXX da modificare
 void PM_PrintAgentRegister();
-#include "HM_CrisisAgent.h" // XXX da modificare 
 #include "../modules/imagent/HM_SkypeRecord.h"
 #include "HM_UrlLog.h" // XXX da modificare 
 #include "HM_WebCam.h" // XXX da modificare 

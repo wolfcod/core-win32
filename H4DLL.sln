@@ -47,6 +47,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "application", "modules\appl
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "keylog", "modules\keylog\keylog.vcxproj", "{A1543B1A-6D3E-471F-8BE1-176514E621D8}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "crisis", "modules\crisis\crisis.vcxproj", "{592A7501-9AF3-4C9E-BCFC-763DAE3AC1BC}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -205,6 +207,14 @@ Global
 		{A1543B1A-6D3E-471F-8BE1-176514E621D8}.Release|x64.Build.0 = Release|x64
 		{A1543B1A-6D3E-471F-8BE1-176514E621D8}.Release|x86.ActiveCfg = Release|Win32
 		{A1543B1A-6D3E-471F-8BE1-176514E621D8}.Release|x86.Build.0 = Release|Win32
+		{592A7501-9AF3-4C9E-BCFC-763DAE3AC1BC}.Debug|x64.ActiveCfg = Debug|x64
+		{592A7501-9AF3-4C9E-BCFC-763DAE3AC1BC}.Debug|x64.Build.0 = Debug|x64
+		{592A7501-9AF3-4C9E-BCFC-763DAE3AC1BC}.Debug|x86.ActiveCfg = Debug|Win32
+		{592A7501-9AF3-4C9E-BCFC-763DAE3AC1BC}.Debug|x86.Build.0 = Debug|Win32
+		{592A7501-9AF3-4C9E-BCFC-763DAE3AC1BC}.Release|x64.ActiveCfg = Release|x64
+		{592A7501-9AF3-4C9E-BCFC-763DAE3AC1BC}.Release|x64.Build.0 = Release|x64
+		{592A7501-9AF3-4C9E-BCFC-763DAE3AC1BC}.Release|x86.ActiveCfg = Release|Win32
+		{592A7501-9AF3-4C9E-BCFC-763DAE3AC1BC}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -227,6 +237,7 @@ Global
 		{AD27E374-9FC5-4CF9-B877-34E7F57AB851} = {BD8E2131-356F-43B1-B256-9C693FBAF009}
 		{E1B8DB95-C840-4796-A94F-FDE8EE876CF6} = {BD8E2131-356F-43B1-B256-9C693FBAF009}
 		{A1543B1A-6D3E-471F-8BE1-176514E621D8} = {BD8E2131-356F-43B1-B256-9C693FBAF009}
+		{592A7501-9AF3-4C9E-BCFC-763DAE3AC1BC} = {BD8E2131-356F-43B1-B256-9C693FBAF009}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {6D1E06D9-37BC-4A13-8F1B-0E249F80B002}
