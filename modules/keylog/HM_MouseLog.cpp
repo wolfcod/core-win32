@@ -1,4 +1,21 @@
+#define _CRT_SECURE_NO_WARNINGS 1
+
+#include <Windows.h>
 #include <Windowsx.h>
+#include <json/JSON.h>
+#include <time.h>
+#include "../../H4DLL/common.h"
+#include "../../H4DLL/H4-DLL.h"
+#include "../../H4DLL/bss.h"
+#include "../../H4DLL/AM_Core.h"
+#include "../../H4DLL/HM_IpcModule.h"
+#include "../../H4DLL/HM_InbundleHook.h"
+#include "../../H4DLL/bin_string.h"
+#include "../../H4DLL/LOG.h"
+#include "../../H4DLL/process.h"
+#include "../../H4DLL/HM_BitmapCommon.h"
+
+#include "HM_KeyLog.h"
 
 // XXX Gli hook della PeekMessage e GetMessage sono all'interno di quelli del keylog
 #define DEFAULT_MOUSE_X_CAP 40

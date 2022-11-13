@@ -112,6 +112,9 @@
     <ClCompile Include="procedures.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="HM_InbundleHook.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AM_Core.h">
@@ -153,9 +156,6 @@
     <ClInclude Include="SkypeACL\HashUtil.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="HM_Application.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="HM_BitmapCommon.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -172,9 +172,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="HM_IpcModule.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="HM_KeyLog.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="HM_LogDevice.h">

