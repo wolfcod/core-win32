@@ -210,7 +210,6 @@
     <ClInclude Include="x64.h" />
     <ClInclude Include="HM_ProcessMonitors.h" />
     <ClInclude Include="HM_Pstorage.h" />
-    <ClInclude Include="HM_WebCam.h" />
   </ItemGroup>
   <ItemGroup>
     <MASM Include="procedures.asm">

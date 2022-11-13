@@ -189,9 +189,6 @@
     <ClInclude Include="HM_VistaSpecific.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="HM_WebCam.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="LOG.h">
       <Filter>Header Files</Filter>
     </ClInclude>

