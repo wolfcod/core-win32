@@ -32,13 +32,13 @@ typedef struct {
 	DWORD old_hi_part;
 } IPCClientWrite_data_struct;
 
-typedef BOOL (__stdcall *IPCClientWrite_t)(DWORD wrapper_tag, IPCClientWrite_data_struct *pData, BYTE *message, DWORD msg_len, DWORD flags, DWORD priority);
-typedef BYTE *(__stdcall *IPCClientRead_t)(DWORD wrapper_tag, IPCClientRead_data_struct *pData);
+typedef BOOL (WINAPI *IPCClientWrite_t)(DWORD wrapper_tag, IPCClientWrite_data_struct *pData, BYTE *message, DWORD msg_len, DWORD flags, DWORD priority);
+typedef BYTE *(WINAPI *IPCClientRead_t)(DWORD wrapper_tag, IPCClientRead_data_struct *pData);
 
 extern void IPCClientWrite_setup(IPCClientWrite_data_struct *data);
 extern void IPCClientRead_setup(IPCClientRead_data_struct *data);
-extern BOOL __stdcall IPCClientWrite(DWORD wrapper_tag, IPCClientWrite_data_struct *pData, BYTE *message, DWORD msg_len, DWORD flags, DWORD priority);
-extern BYTE * __stdcall IPCClientRead(DWORD wrapper_tag, IPCClientRead_data_struct *pData);
+extern BOOL WINAPI IPCClientWrite(DWORD wrapper_tag, IPCClientWrite_data_struct *pData, BYTE *message, DWORD msg_len, DWORD flags, DWORD priority);
+extern BYTE * WINAPI IPCClientRead(DWORD wrapper_tag, IPCClientRead_data_struct *pData);
 
 #define SHARE_MEMORY_WRITE_SIZE ((MAX_MSG_NUM * sizeof(message_struct))+2)
 #define SHARE_MEMORY_READ_SIZE (WRAPPER_COUNT*WRAPPER_MAX_SHARED_MEM) // Dimensione spazio per la lettura delle configurazioni da parte dei wrapper                                

@@ -60,7 +60,7 @@ typedef struct _SYSTEM_HANDLE_INFORMATION {
 #ifdef __cplusplus
 extern "C" {
 #endif
-typedef NTSTATUS (__stdcall *NtQuerySystemInformation_t) (unsigned int, PVOID, ULONG, PULONG);
+typedef NTSTATUS (WINAPI *NtQuerySystemInformation_t) (unsigned int, PVOID, ULONG, PULONG);
 typedef DWORD (WINAPI *ZWQUERYSYSTEMINFORMATION)(
    PROCESSINFOCLASS ProcessInformationClass,
    PVOID ProcessInformation,

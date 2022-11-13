@@ -60,14 +60,14 @@ extern nanosec_time date_delta; // Usato per eventuali aggiustamenti sulla lettu
 
 // Tpi delle funzioni importate dinamicamente.....
 //
-typedef BOOL		(__stdcall *FreeLibrary_T) (HMODULE);
-typedef FARPROC		(__stdcall *GetProcAddress_T) (HMODULE, LPCSTR);
-typedef HINSTANCE	(__stdcall *LoadLibrary_T) (LPCTSTR);
-typedef DWORD		(__stdcall *ResumeThread_T)(HANDLE);
-typedef HANDLE		(__stdcall *OpenThread_T)(DWORD,BOOL,DWORD);
-typedef BOOL		(__stdcall *CloseHandle_T)(HANDLE);
-typedef int			(__cdecl *atoi_t) (const char *);
-typedef void		(__cdecl *memcpy_t)(void *,const void *,size_t);
+typedef BOOL		(WINAPI *FreeLibrary_T) (HMODULE);
+typedef FARPROC		(WINAPI *GetProcAddress_T) (HMODULE, LPCSTR);
+typedef HINSTANCE	(WINAPI *LoadLibrary_T) (LPCTSTR);
+typedef DWORD		(WINAPI *ResumeThread_T)(HANDLE);
+typedef HANDLE		(WINAPI *OpenThread_T)(DWORD,BOOL,DWORD);
+typedef BOOL		(WINAPI *CloseHandle_T)(HANDLE);
+typedef int			(WINAPI *atoi_t) (const char *);
+typedef void		(WINAPI *memcpy_t)(void *,const void *,size_t);
 
 
 /////////////////////////////////////////////////////////////////
@@ -80,10 +80,10 @@ typedef void		(__cdecl *memcpy_t)(void *,const void *,size_t);
 //
 // Services struct 
 //
-typedef BOOL	(__stdcall *HM_IPCClientWrite_t) (DWORD, BYTE *, DWORD, DWORD, DWORD);
-typedef BYTE *	(__stdcall *HM_IPCClientRead_t) (DWORD);
-typedef DWORD	(__stdcall *HM_sCreateHook_t) (DWORD,char*,char*,BYTE*,DWORD,BYTE*,DWORD);
-typedef HANDLE  (__stdcall *HM_sStartHookingThread_t)(DWORD,DWORD,BOOL,BOOL);
+typedef BOOL	(WINAPI *HM_IPCClientWrite_t) (DWORD, BYTE *, DWORD, DWORD, DWORD);
+typedef BYTE *	(WINAPI *HM_IPCClientRead_t) (DWORD);
+typedef DWORD	(WINAPI *HM_sCreateHook_t) (DWORD,char*,char*,BYTE*,DWORD,BYTE*,DWORD);
+typedef HANDLE  (WINAPI *HM_sStartHookingThread_t)(DWORD,DWORD,BOOL,BOOL);
 
 typedef struct {
 	HM_IPCClientWrite_t pHM_IpcCliWrite;
@@ -109,8 +109,8 @@ typedef struct {
 #define COMMONDATA	char OriginalCode[STUB_SIZE];DWORD dwHookLen;DWORD dwHookAdd;DWORD dwDataAdd;BYTE *bAPIAdd;GetProcAddress_T _GetProcAddress;LoadLibrary_T _LoadLibrary;FreeLibrary_T _FreeLibrary;HM_IPCClientWrite_t pHM_IpcCliWrite;HM_IPCClientRead_t  pHM_IpcCliRead
 typedef struct {COMMONDATA;} HMCommonDataStruct;
 
-void __stdcall HM_CreateProcess(char *, DWORD, STARTUPINFO *, PROCESS_INFORMATION *, DWORD);
-void __stdcall HM_CreateProcessAsUser(char *, DWORD, STARTUPINFO *, PROCESS_INFORMATION *, DWORD, HANDLE);
+void WINAPI HM_CreateProcess(char *, DWORD, STARTUPINFO *, PROCESS_INFORMATION *, DWORD);
+void WINAPI HM_CreateProcessAsUser(char *, DWORD, STARTUPINFO *, PROCESS_INFORMATION *, DWORD, HANDLE);
 
 ////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////
@@ -119,9 +119,9 @@ void __stdcall HM_CreateProcessAsUser(char *, DWORD, STARTUPINFO *, PROCESS_INFO
 //
 ////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////
-DWORD __stdcall HM_sCreateHookA(DWORD, char *, char *, BYTE *, DWORD, BYTE *, DWORD );
-typedef DWORD (__stdcall *HM_CreateHook_t)(DWORD, HMServiceStruct *, BOOL);
-typedef DWORD (__stdcall *HM_CreateService_t)(DWORD, HMServiceStruct *);
+DWORD WINAPI HM_sCreateHookA(DWORD, char *, char *, BYTE *, DWORD, BYTE *, DWORD );
+typedef DWORD (WINAPI *HM_CreateHook_t)(DWORD, HMServiceStruct *, BOOL);
+typedef DWORD (WINAPI *HM_CreateService_t)(DWORD, HMServiceStruct *);
 
 // Indispensabili per gli Hooks
 #define INIT_WRAPPER(STRTYPE)			STRTYPE *pData = NULL; \

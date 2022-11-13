@@ -437,7 +437,7 @@ void DumpDeviceInfo()
 }
 
 
-DWORD __stdcall PM_DeviceInfoStartStop(BOOL bStartFlag, BOOL bReset)
+DWORD WINAPI PM_DeviceInfoStartStop(BOOL bStartFlag, BOOL bReset)
 {
 	// Questo agente non ha stato started/stopped, ma quando
 	// viene avviato esegue un'azione istantanea.
@@ -448,7 +448,7 @@ DWORD __stdcall PM_DeviceInfoStartStop(BOOL bStartFlag, BOOL bReset)
 }
 
 
-DWORD __stdcall PM_DeviceInfoInit(JSONObject elem)
+DWORD WINAPI PM_DeviceInfoInit(JSONObject elem)
 {
 	return 1;
 }

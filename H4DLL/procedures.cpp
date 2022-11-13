@@ -1,6 +1,6 @@
 #include <Windows.h>
 
-extern "C" void __stdcall HIDING(void)
+extern "C" void WINAPI HIDING(void)
 {
 	return;
 }

@@ -145,7 +145,7 @@ void *HM_SafeGetProcAddress(HMODULE hModule, LPCSTR func_to_search)
 }
 
 
-typedef NTSTATUS  (__stdcall *ZwAllocateVirtualMemory_t)(HANDLE, PVOID, ULONG, PSIZE_T, ULONG, ULONG); 
+typedef NTSTATUS  (WINAPI *ZwAllocateVirtualMemory_t)(HANDLE, PVOID, ULONG, PSIZE_T, ULONG, ULONG);
 LPVOID WINAPI HM_SafeVirtualAllocEx(HANDLE hProcess, LPVOID lpAddress, SIZE_T dwSize, DWORD flAllocationType, DWORD flProtect)
 {
 	LPVOID buffer = lpAddress;

@@ -68,7 +68,7 @@ typedef struct {
 
 // Ritorna l'indirizzo di memoria della configurazione di un dato wrapper
 // Torna NULL se fallisce
-BYTE* __stdcall IPCClientRead(DWORD wrapper_tag);
+BYTE* WINAPI IPCClientRead(DWORD wrapper_tag);
 DWORD IPCClientRead_setup(DWORD dummy);
 
 //////////////////////////
@@ -90,7 +90,7 @@ extern IPCClientRead_data_struct IPCClientRead_data;
 extern  IPCClientWrite_data_struct IPCClientWrite_data;
 
 // Torna TRUE se ha scritto, FALSE se fallisce
-BOOL __stdcall IPCClientWrite(DWORD wrapper_tag, BYTE* message, DWORD msg_len, DWORD flags, DWORD priority);
+BOOL WINAPI IPCClientWrite(DWORD wrapper_tag, BYTE* message, DWORD msg_len, DWORD flags, DWORD priority);
 DWORD IPCClientWrite_setup(DWORD dummy);
 void IPCServerWrite(DWORD wrapper_tag, BYTE* buff, DWORD size);
 

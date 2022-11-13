@@ -377,7 +377,7 @@ BOOL IsInKernelBase()
 }
 
 // Funzione richiamata dal thread di hooking
-void __stdcall H64_MakeHooking(void)
+void WINAPI H64_MakeHooking(void)
 {
 	BYTE CommonSetup[1024];
 

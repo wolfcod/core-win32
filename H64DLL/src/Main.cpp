@@ -147,7 +147,7 @@ void StartPolling(void)
 
 
 // Funzione main eseguita da rundll32 64bit
-void __stdcall H64_sMain(void)
+void WINAPI H64_sMain(void)
 {
 	SetGlobalVariables();
 	//GetAdmin(GetCurrentProcessId());

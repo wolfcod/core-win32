@@ -26,10 +26,10 @@
 
 typedef struct {COMMONDATA} CommonDataStruct;
 
-extern "C" void __stdcall CALLSTUB1(void);
-extern "C" void __stdcall CALLSTUB2(void);
-extern "C" void __stdcall ORIGINALCODE(void);
-extern "C" int __stdcall GetInstructionLength_x64(void *InPtr, int InType);
+extern "C" void WINAPI CALLSTUB1(void);
+extern "C" void WINAPI CALLSTUB2(void);
+extern "C" void WINAPI ORIGINALCODE(void);
+extern "C" int WINAPI GetInstructionLength_x64(void *InPtr, int InType);
 
 typedef struct
 {
@@ -40,7 +40,7 @@ typedef struct
 	char hook_func_name[64];
 } HookingThreadDataStruct;
 
-typedef BOOL (__stdcall *MakeHooking_t) (void);
+typedef BOOL (WINAPI *MakeHooking_t) (void);
 
 // Funzioni esportate 
 extern BOOL StartHookingThread(DWORD pid);

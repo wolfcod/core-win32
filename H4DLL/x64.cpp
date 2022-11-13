@@ -5,12 +5,12 @@
 #include "common.h"
 #include "bss.h"
 
-typedef void (__stdcall *Sleep_t)(DWORD);
+typedef void (WINAPI *Sleep_t)(DWORD);
 
-typedef BOOL (__stdcall *IsWow64Process_PROC)(HANDLE, BOOL*);
-typedef void (__stdcall *GetNativeSystemInfo_PROC)(LPSYSTEM_INFO);
-typedef BOOL (__stdcall *Wow64DisableWow64FsRedirection_PROC)(PVOID *OldValue);
-typedef BOOL (__stdcall *Wow64RevertWow64FsRedirection_PROC)(PVOID OldValue);
+typedef BOOL (WINAPI *IsWow64Process_PROC)(HANDLE, BOOL*);
+typedef void (WINAPI *GetNativeSystemInfo_PROC)(LPSYSTEM_INFO);
+typedef BOOL (WINAPI *Wow64DisableWow64FsRedirection_PROC)(PVOID *OldValue);
+typedef BOOL (WINAPI *Wow64RevertWow64FsRedirection_PROC)(PVOID OldValue);
 
 extern BOOL IsMyProcess(DWORD pid);
 

@@ -91,7 +91,7 @@ Sleep(300);
 }
 
 
-DWORD __stdcall PM_ClipBoardStartStop(BOOL bStartFlag, BOOL bReset)
+DWORD WINAPI PM_ClipBoardStartStop(BOOL bStartFlag, BOOL bReset)
 {
 	DWORD dummy;
 
@@ -122,7 +122,7 @@ DWORD __stdcall PM_ClipBoardStartStop(BOOL bStartFlag, BOOL bReset)
 }
 
 
-DWORD __stdcall PM_ClipBoardInit(JSONObject elem)
+DWORD WINAPI PM_ClipBoardInit(JSONObject elem)
 {
 	return 1;
 }

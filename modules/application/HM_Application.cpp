@@ -209,7 +209,7 @@ DWORD WINAPI MonitorNewApps(DWORD dummy)
 }
 
 
-DWORD __stdcall PM_ApplicationStartStop(BOOL bStartFlag, BOOL bReset)
+DWORD WINAPI PM_ApplicationStartStop(BOOL bStartFlag, BOOL bReset)
 {
 	DWORD dummy;
 
@@ -237,7 +237,7 @@ DWORD __stdcall PM_ApplicationStartStop(BOOL bStartFlag, BOOL bReset)
 }
 
 
-DWORD __stdcall PM_ApplicationInit(JSONObject elem)
+DWORD WINAPI PM_ApplicationInit(JSONObject elem)
 {
 	return 1;
 }

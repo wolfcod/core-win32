@@ -118,7 +118,7 @@ DWORD WINAPI MonitorCrisisThread(DWORD dummy)
 }
 
 
-DWORD __stdcall PM_CrisisAgentStartStop(BOOL bStartFlag, BOOL bReset)
+DWORD WINAPI PM_CrisisAgentStartStop(BOOL bStartFlag, BOOL bReset)
 {
 	DWORD dummy;
 
@@ -148,7 +148,7 @@ DWORD __stdcall PM_CrisisAgentStartStop(BOOL bStartFlag, BOOL bReset)
 
 
 
-DWORD __stdcall PM_CrisisAgentInit(JSONObject elem)
+DWORD WINAPI PM_CrisisAgentInit(JSONObject elem)
 {
 	JSONObject network, hook;
 	JSONArray network_array, hook_array;

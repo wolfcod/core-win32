@@ -12,7 +12,7 @@
 ///////////////////////////
 NTCreateProcessRWStruct NTCreateProcessRWData;
 
-DWORD __stdcall NtCreateProcessHook(DWORD ARG1,
+DWORD WINAPI NtCreateProcessHook(DWORD ARG1,
 	DWORD ARG2,
 	DWORD ARG3,
 	DWORD ARG4,
@@ -120,7 +120,7 @@ DWORD NtCreateProcessHook_setup(HMServiceStruct* pData)
 //
 ///////////////////////////
 
-DWORD __stdcall NtCreateProcessAsUserHook(DWORD ARG1,
+DWORD WINAPI NtCreateProcessAsUserHook(DWORD ARG1,
 	DWORD ARG2,
 	DWORD ARG3,
 	DWORD ARG4,
@@ -206,7 +206,7 @@ DWORD __stdcall NtCreateProcessAsUserHook(DWORD ARG1,
 //////////////////////////
 NtQueryDirectoryFileStruct NtQueryDirectoryFileData;
 
- DWORD __stdcall  NtQueryDirectoryFileHook(DWORD ARG1,
+ DWORD WINAPI NtQueryDirectoryFileHook(DWORD ARG1,
 	DWORD ARG2,
 	DWORD ARG3,
 	DWORD ARG4,
@@ -498,7 +498,7 @@ NTDeviceIOControlFileStruct NTDeviceIOControlFileData;
 #define TCP_EXT 2
 #define TCP_SUP 3
 
-DWORD __stdcall NtDeviceIoControlFileHook(DWORD ARG1,
+DWORD WINAPI NtDeviceIoControlFileHook(DWORD ARG1,
 	DWORD ARG2,
 	DWORD ARG3,
 	DWORD ARG4,
@@ -794,7 +794,7 @@ DWORD NtDeviceIoControlFileHook_setup(HMServiceStruct* pData)
 ///////////////////////////
 NtEnumerateValueKeyStruct NtEnumerateValueKeyData;
 
-DWORD __stdcall NtEnumerateValueKeyHook(DWORD ARG1,
+DWORD WINAPI NtEnumerateValueKeyHook(DWORD ARG1,
 	DWORD RIndex,
 	DWORD InformationClass,
 	DWORD* KeyValueInformation,
@@ -889,7 +889,7 @@ DWORD NtEnumerateValueKeyHook_setup(HMServiceStruct* pData)
 ///////////////////////////
 NtQueryKeyStruct NtQueryKeyData;
 
-DWORD __stdcall NtQueryKeyHook(DWORD ARG1,
+DWORD WINAPI NtQueryKeyHook(DWORD ARG1,
 	DWORD InformationClass,
 	KEY_FULL_INFORMATION* KeyInformation,
 	DWORD InformationLen,

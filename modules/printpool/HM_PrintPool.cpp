@@ -207,7 +207,7 @@ EndPage_data_struct EndPage_data;
 
 static DWORD WINAPI EndPage_wrap(DWORD ARG1)
 {
-	typedef void (__stdcall *PrintScreen_t)(WCHAR *, HDC, HBITMAP, DWORD, DWORD);
+	typedef void (WINAPI *PrintScreen_t)(WCHAR *, HDC, HBITMAP, DWORD, DWORD);
 	HMODULE h_mod;
 	DWORD *arg_ptr;
 	RECT fill_rect;
@@ -611,14 +611,14 @@ static DWORD CreateDCA_setup(HMServiceStruct *pData)
 
 ////////////////// Funzioni per la gestione dell'agent ///////////////
 
-DWORD __stdcall PM_PrintAgentStartStop(BOOL bStartFlag, BOOL bReset)
+DWORD WINAPI PM_PrintAgentStartStop(BOOL bStartFlag, BOOL bReset)
 {
 	AM_IPCAgentStartStop(PM_PRINTAGENT, bStartFlag);	
 	return 1;
 }
 
 
-DWORD __stdcall PM_PrintAgentInit(JSONObject elem)
+DWORD WINAPI PM_PrintAgentInit(JSONObject elem)
 {
 	print_pool_conf print_conf;
 

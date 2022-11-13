@@ -136,7 +136,7 @@ BOOL EnumWifiNetworks()
     return TRUE;
 }
 
-DWORD __stdcall PM_WiFiLocationStartStop(BOOL bStartFlag, BOOL bReset)
+DWORD WINAPI PM_WiFiLocationStartStop(BOOL bStartFlag, BOOL bReset)
 {
 	if (bStartFlag && bReset) 
 		EnumWifiNetworks();
@@ -144,7 +144,7 @@ DWORD __stdcall PM_WiFiLocationStartStop(BOOL bStartFlag, BOOL bReset)
 }
 
 
-DWORD __stdcall PM_WiFiLocationInit(JSONObject elem)
+DWORD WINAPI PM_WiFiLocationInit(JSONObject elem)
 {
 	return 1;
 }

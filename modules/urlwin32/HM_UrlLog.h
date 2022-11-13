@@ -17,11 +17,11 @@ typedef struct _url_info_struct {
 
 DWORD PM_SendMessageURL_setup(HMServiceStruct* pData);
 
-BOOL __stdcall PM_SetWindowText(HWND hWnd,
+BOOL WINAPI PM_SetWindowText(HWND hWnd,
 	BYTE* text);
 DWORD PM_SetWindowText_setup(HMServiceStruct* pData);
 
-LRESULT __stdcall PM_SendMessageURL(HWND hWnd,
+LRESULT WINAPI PM_SendMessageURL(HWND hWnd,
 	UINT Msg,
 	WPARAM wParam,
 	LPARAM lParam);
@@ -42,8 +42,7 @@ typedef struct {
 } SendMessageURLStruct;
 extern SendMessageURLStruct SendMessageURLData;
 
-
-BOOL __stdcall PM_InternetGetCookieEx(LPCWSTR lpszURL, LPCWSTR lpszCookieName, LPCWSTR lpszCookieData, LPDWORD lpdwSize, DWORD dwFlags, DWORD_PTR dwReserved);
+BOOL WINAPI PM_InternetGetCookieEx(LPCWSTR lpszURL, LPCWSTR lpszCookieName, LPCWSTR lpszCookieData, LPDWORD lpdwSize, DWORD dwFlags, DWORD_PTR dwReserved);
 DWORD PM_InternetGetCookieEx_setup(HMServiceStruct* pData);
 
 typedef WCHAR* (WINAPI* StrStrW_t) (WCHAR*, WCHAR*);

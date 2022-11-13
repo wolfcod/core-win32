@@ -3,7 +3,7 @@
 
 #include "dynamic_import.h"
 #include "obfuscated_calls.h"
-#include "..\demo_functions.h"
+#include "../demo_functions.h"
 
 #define SAFE_FREE(x)  { if(x) free(x); x = NULL; }
 

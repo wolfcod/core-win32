@@ -159,6 +159,9 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="wcam_grab.cpp" />
   </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="qedit.h" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

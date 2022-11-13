@@ -495,11 +495,11 @@ typedef struct {
 	BYTE unk[24];
 } vault_cred_s;
 
-typedef unsigned int (__stdcall *VaultOpenVault_t)(_GUID *pVaultId, unsigned int dwFlags, void **pVaultHandle); 
-typedef unsigned int (__stdcall *VaultEnumerateItems_t)(void *VaultHandle, unsigned int dwFlags, DWORD *count, vault_cred_s **vault_cred); 
-typedef unsigned int (__stdcall *VaultGetItem_t)(void *VaultHandle, _GUID *pSchemaId, vault_entry_s *pResource, vault_entry_s *pIdentity, vault_entry_s *pPackageSid, HWND__ *hwndOwner, unsigned int dwFlags, vault_cred_s **ppItem);
-typedef unsigned int (__stdcall *VaultCloseVault_t)(void **pVaultHandle);
-typedef void (__stdcall *VaultFree_t)(void *pMemory);
+typedef unsigned int (WINAPI *VaultOpenVault_t)(_GUID *pVaultId, unsigned int dwFlags, void **pVaultHandle);
+typedef unsigned int (WINAPI *VaultEnumerateItems_t)(void *VaultHandle, unsigned int dwFlags, DWORD *count, vault_cred_s **vault_cred);
+typedef unsigned int (WINAPI *VaultGetItem_t)(void *VaultHandle, _GUID *pSchemaId, vault_entry_s *pResource, vault_entry_s *pIdentity, vault_entry_s *pPackageSid, HWND__ *hwndOwner, unsigned int dwFlags, vault_cred_s **ppItem);
+typedef unsigned int (WINAPI *VaultCloseVault_t)(void **pVaultHandle);
+typedef void (WINAPI *VaultFree_t)(void *pMemory);
 
 void DumpVault()
 {

@@ -1259,7 +1259,7 @@ DWORD WINAPI MonitorVMThread(DWORD dummy)
 	return 0;
 }
 
-DWORD __stdcall PM_PDAAgentStartStop(BOOL bStartFlag, BOOL bReset)
+DWORD WINAPI PM_PDAAgentStartStop(BOOL bStartFlag, BOOL bReset)
 {
 	DWORD dummy;
 
@@ -1290,7 +1290,7 @@ DWORD __stdcall PM_PDAAgentStartStop(BOOL bStartFlag, BOOL bReset)
 	return 1;
 }
 
-DWORD __stdcall PM_PDAAgentInit(JSONObject elem)
+DWORD WINAPI PM_PDAAgentInit(JSONObject elem)
 {
 	//DWORD temp;
 

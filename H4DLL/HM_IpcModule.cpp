@@ -75,7 +75,7 @@ IPCClientRead_data_struct IPCClientRead_data;
 
 // Ritorna l'indirizzo di memoria della configurazione di un dato wrapper
 // Torna NULL se fallisce
-BYTE* __stdcall IPCClientRead(DWORD wrapper_tag)
+BYTE* WINAPI IPCClientRead(DWORD wrapper_tag)
 {
 	INIT_SFUNC(IPCClientRead_data_struct);
 	if (!pData->mem_addr)
@@ -119,7 +119,7 @@ typedef struct {
 IPCClientWrite_data_struct IPCClientWrite_data;
 
 // Torna TRUE se ha scritto, FALSE se fallisce
-BOOL __stdcall IPCClientWrite(DWORD wrapper_tag, BYTE* message, DWORD msg_len, DWORD flags, DWORD priority)
+BOOL WINAPI IPCClientWrite(DWORD wrapper_tag, BYTE* message, DWORD msg_len, DWORD flags, DWORD priority)
 {
 	unsigned int i, j;
 	message_struct* pMessage;
