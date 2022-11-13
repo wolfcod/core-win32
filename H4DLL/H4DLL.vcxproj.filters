@@ -40,9 +40,6 @@
     <ClCompile Include="UnHookClass.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="wcam_grab.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="x64.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -113,6 +110,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="HM_InbundleHook.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="av_detect.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

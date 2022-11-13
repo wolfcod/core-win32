@@ -127,6 +127,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="av_detect.cpp" />
     <ClCompile Include="AM_Core.cpp" />
     <ClCompile Include="ASP.cpp" />
     <ClCompile Include="BitmapCommon.cpp" />
@@ -163,7 +164,6 @@
     <ClCompile Include="HM_PreamblePatch.cpp" />
     <ClCompile Include="HM_Reloc.cpp" />
     <ClCompile Include="HM_SafeProcedures.cpp" />
-    <ClCompile Include="wcam_grab.cpp" />
     <ClCompile Include="DynamiCall\dynamic_import.cpp" />
   </ItemGroup>
   <ItemGroup>

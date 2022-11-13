@@ -19,4 +19,5 @@ DWORD PM_CreateWindowEx_setup(HMServiceStruct* pData);
 typedef struct {
 	COMMONDATA;
 } CreateWindowExStruct;
+
 extern CreateWindowExStruct CreateWindowExData;

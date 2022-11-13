@@ -1,7 +1,7 @@
 #include <dshow.h>
-#include "Qedit.h"
-#include "common.h"
-#include "LOG.h"
+#include "../../H4DLL/qedit.h"
+#include "../../H4DLL/common.h"
+#include "../../H4DLL/LOG.h"
 
 #define CAM_COMPLETION_WAIT 1000 //Numero di millisecondi per ricevere il primo frame
 

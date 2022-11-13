@@ -21,5 +21,8 @@
     <ClCompile Include="HM_WebCam.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="wcam_grab.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

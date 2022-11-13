@@ -157,6 +157,7 @@
   <ItemGroup>
     <ClCompile Include="HM_WebCam.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="wcam_grab.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
