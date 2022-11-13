@@ -98,7 +98,7 @@ HANDLE WINAPI HM_SafeCreateThread(	LPSECURITY_ATTRIBUTES lpThreadAttributes,
 	return HM_SafeCreateRemoteThread(FNC(GetCurrentProcess)(), lpThreadAttributes, dwStackSize, lpStartAddress, lpParameter, dwCreationFlags, lpThreadId);
 }
 
-void *HM_SafeGetProcAddress(HMODULE hModule, char *func_to_search)
+void *HM_SafeGetProcAddress(HMODULE hModule, LPCSTR func_to_search)
 {
 	BYTE *ImageBase = (BYTE *)hModule;
 	WORD *PeOffs;

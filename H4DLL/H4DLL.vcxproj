@@ -211,12 +211,10 @@
     <ClInclude Include="UnHookClass.h" />
     <ClInclude Include="x64.h" />
     <ClInclude Include="HM_Application.h" />
-    <ClInclude Include="HM_Contacts.h" />
     <ClInclude Include="HM_CrisisAgent.h" />
     <ClInclude Include="HM_KeyLog.h" />
     <ClInclude Include="HM_LogDevice.h" />
     <ClInclude Include="HM_MouseLog.h" />
-    <ClInclude Include="HM_PrintPool.h" />
     <ClInclude Include="HM_ProcessMonitors.h" />
     <ClInclude Include="HM_Pstorage.h" />
     <ClInclude Include="HM_SnapShot.h" />

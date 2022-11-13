@@ -1,4 +1,5 @@
 #include <windows.h>
+#include <config.h>
 #include "common.h"
 #include "H4-DLL.h"
 #include "AM_Core.h"
@@ -444,12 +445,16 @@ void InitAgents()
 	PM_PStoreAgentRegister();
 	PM_IMRegister();
 	PM_DeviceInfoRegister();
-#ifndef __DISABLE_MONEY_MODULE
+#ifdef __ENABLE_MONEY_MODULE
 	PM_MoneyRegister();
 #endif
 	PM_MouseLogRegister();
+#ifdef __ENABLE_APPLICATION_MODULE
 	PM_ApplicationRegister();
+#endif
+#ifdef __ENABLE_PDAGENT_MODULE
 	PM_PDAAgentRegister();
+#endif
 	PM_ContactsRegister();
 	PM_AmbMicRegister();
 	PM_SocialAgentRegister();

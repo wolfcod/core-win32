@@ -17,6 +17,14 @@ public :
 		return TRUE;
 	}
 
+	BOOL add(const wchar_t* str) {
+		return add((void*)str, wcslen(str) * 2 + sizeof(wchar_t));
+	}
+
+	BOOL add(const char* str) {
+		return add((void*)str, strlen(str) + sizeof(char));
+	}
+
 	BYTE *get_buf(void) { return buf_ptr; }
 	DWORD get_len(void) { return buf_len; }
 private:
