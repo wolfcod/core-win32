@@ -9,7 +9,6 @@
 #include "UnHookClass.h"
 #include "DeepFreeze.h"
 #include "x64.h"
-#include "status_log.h"
 #include "SM_Core.h"
 #include "SM_ActionFunctions.h"
 #include "process.h"

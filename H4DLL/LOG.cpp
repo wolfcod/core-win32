@@ -1793,3 +1793,12 @@ void LOG_CloseLogConnection()
 {
 	ASP_Stop();
 }
+
+#define PM_STATUSLOG 0x0241
+
+void LOG_SendStatusLog(const WCHAR* msg)
+{
+	HANDLE hfile = Log_CreateFile(PM_STATUSLOG, NULL, 0);
+	Log_WriteFile(hfile, (BYTE*)msg, (wcslen(msg) + 1) * sizeof(WCHAR));
+	Log_CloseFile(hfile);
+}

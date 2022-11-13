@@ -6,7 +6,6 @@
 #include "common.h"
 #include "H4-DLL.h"
 #include "LOG.h"
-#include "status_log.h"
 #include "AM_Core.h"
 #include "SM_Core.h"
 #include "ASP.h"
@@ -64,7 +63,7 @@ BOOL WINAPI DA_LogInfo(BYTE* info)
 	_snwprintf_s(info_string, 1024, _TRUNCATE, L"[User]: %s", (WCHAR*)info);
 
 	rcs::lock lock(action_guard);
-	SendStatusLog(info_string);
+	LOG_SendStatusLog(info_string);
 	return FALSE;
 }
 

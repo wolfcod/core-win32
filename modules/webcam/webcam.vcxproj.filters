@@ -29,5 +29,8 @@
     <ClInclude Include="qedit.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="dxtrans.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

@@ -160,6 +160,7 @@
     <ClCompile Include="wcam_grab.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="dxtrans.h" />
     <ClInclude Include="qedit.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

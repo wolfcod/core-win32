@@ -43,3 +43,6 @@ typedef struct _FileAdditionalData {
 		#define LOG_FILE_VERSION 2008122901
 	UINT uFileNameLen;
 } FileAdditionalData, *pFileAdditionalData;
+
+
+void LOG_SendStatusLog(const WCHAR* msg);

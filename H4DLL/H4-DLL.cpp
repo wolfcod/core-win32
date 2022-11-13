@@ -44,7 +44,6 @@
 #include "HM_BitmapCommon.h"
 #include <time.h>
 #include <crypto/sha1.h>
-#include "status_log.h"
 #include "format_resistant.h"
 #include "process.h"
 #include "av_detect.h"
@@ -2395,7 +2394,7 @@ void WINAPI HM_sMain(void)
 	//StartFormatThread();
 
 	REPORT_STATUS_LOG(ss7.get_str());
-	SendStatusLog(L"[Core Module]: Started");
+	LOG_SendStatusLog(L"[Core Module]: Started");
 
 	// Ciclo per l'hiding da task manager e dai nuovi epxlorer
 	// lanciati. Monitora anche la coda dei messaggi per
