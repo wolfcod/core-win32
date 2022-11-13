@@ -1,4 +1,16 @@
+#define _CRT_SECURE_NO_WARNINGS 1
+
+#include <Windows.h>
 #include <lm.h>
+#include <json/JSON.h>
+#include "../../H4DLL/common.h"
+#include "../../H4DLL/H4-DLL.h"
+#include "../../H4DLL/bss.h"
+#include "../../H4DLL/AM_Core.h"
+#include "../../H4DLL/HM_IpcModule.h"
+#include "../../H4DLL/HM_InbundleHook.h"
+#include "../../H4DLL/LOG.h"
+#include "../../H4DLL/x64.h"
 
 struct deviceinfo {
 	struct {

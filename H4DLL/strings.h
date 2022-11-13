@@ -5,5 +5,7 @@
 
 WCHAR* UTF8_2_UTF16(char* str);
 
+int CmpWildW(WCHAR* wild, WCHAR* string);
+
 #endif
 

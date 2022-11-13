@@ -171,9 +171,6 @@
     <ClInclude Include="HM_IpcModule.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="HM_LogDevice.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="HM_PreamblePatch.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -189,34 +186,19 @@
     <ClInclude Include="HM_SafeProcedures.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="HM_SnapShot.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="HM_UrlLog.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="HM_VistaSpecific.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="HM_WebCam.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="HM_WiFiLocation.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="LOG.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="HM_MailAgent\MailAgent.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Social\NetworkHandler.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="DynamiCall\obfuscated_calls.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="HM_ContactAgent\OLABMAPI.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="PEB.h">
@@ -244,9 +226,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="x64.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="HM_MicAgent\XpMic.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="bss.h">
