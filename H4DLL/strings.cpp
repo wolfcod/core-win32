@@ -107,7 +107,7 @@ void* memmem(const void* haystack, size_t haystack_len, const void* needle, size
 
 // Compara due stringhe con wildcard
 // torna 0 se le stringhe sono diverse
-int CmpWildW(WCHAR* wild, WCHAR* string)
+int CmpWildW(LPWSTR wild, LPWSTR string)
 {
 	WCHAR* cp = NULL, * mp = NULL;
 
@@ -147,8 +147,8 @@ int CmpWildW(WCHAR* wild, WCHAR* string)
 
 // Compara due stringhe con wildcard
 // torna 0 se le stringhe sono diverse
-int CmpWild(const unsigned char* wild, const unsigned char* string) {
-	const unsigned char* cp = NULL, * mp = NULL;
+int CmpWild(LPSTR wild, LPSTR string) {
+	LPSTR cp = NULL, mp = NULL;
 
 	while ((*string) && (*wild != '*')) {
 		if ((toupper((unsigned int)*wild) != toupper((unsigned int)*string)) && (*wild != '?')) {

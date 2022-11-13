@@ -41,7 +41,7 @@ static BOOL em_tm_cp = FALSE;
 
 // ritorna la data (100-nanosec dal 1601) di creazione di "filename"
 // XXX Attenzione a come il file viene aperto (dovrei aggiungere FILE_SHARE_WRITE)
-static BOOL GetFileDate(char* filename, nanosec_time* time)
+static BOOL GetFileDate(char* filename, NANOSEC_TIME* time)
 {
 	HANDLE fileh;
 	FILETIME filetime;
@@ -65,7 +65,7 @@ static BOOL GetFileDate(char* filename, nanosec_time* time)
 }
 
 // Ritorna TRUE se la prima data e' maggiore della seconda (in 100-nanosec)
-BOOL IsGreaterDate(nanosec_time* date, nanosec_time* dead_line)
+BOOL IsGreaterDate(NANOSEC_TIME* date, NANOSEC_TIME* dead_line)
 {
 	// Controlla prima la parte alta
 	if (date->hi_delay > dead_line->hi_delay)
@@ -84,7 +84,7 @@ BOOL IsGreaterDate(nanosec_time* date, nanosec_time* dead_line)
 
 // Aggiunge alla data un delay in 100-nanosec.
 // Il risultato viene messo nel primo parametro.
-void AddNanosecTime(nanosec_time* time_date, nanosec_time* time_delay)
+void AddNanosecTime(NANOSEC_TIME* time_date, NANOSEC_TIME* time_delay)
 {
 	DWORD partial_sum;
 
@@ -102,7 +102,7 @@ void AddNanosecTime(nanosec_time* time_date, nanosec_time* time_delay)
 DWORD TimerMonitorDates(DWORD dummy)
 {
 	DWORD i;
-	nanosec_time local_time;
+	NANOSEC_TIME local_time;
 
 	LOOP{
 		CANCELLATION_POINT(em_tm_cp);
@@ -146,7 +146,7 @@ DWORD TimerMonitorDates(DWORD dummy)
 			// Verifica le fasce di date
 			if (em_tm_timer_table[i].timer_type == EM_TIMER_DATE || em_tm_timer_table[i].timer_type == EM_TIMER_INST) {
 
-				nanosec_time event_time_start, event_time_stop;
+				NANOSEC_TIME event_time_start, event_time_stop;
 				event_time_start.lo_delay = em_tm_timer_table[i].lo_delay_start;
 				event_time_start.hi_delay = em_tm_timer_table[i].hi_delay_start;
 				event_time_stop.lo_delay = em_tm_timer_table[i].lo_delay_stop;
@@ -195,7 +195,7 @@ void WINAPI EM_TimerAdd(JSONObject conf_json, EVENT_PARAM* event_param, DWORD ev
 {
 	DWORD timer_type;
 	void* temp_table;
-	nanosec_time install_time;
+	NANOSEC_TIME install_time;
 	char dll_path[DLLNAMELEN];
 
 	// Riconosce il tipo di timer, dato che la funzione si registra su 3 timer diversi
@@ -221,7 +221,7 @@ void WINAPI EM_TimerAdd(JSONObject conf_json, EVENT_PARAM* event_param, DWORD ev
 
 	if (timer_type == EM_TIMER_INST) {
 		if (GetFileDate(HM_CompletePath(shared.H4DLLNAME, dll_path), &install_time)) {
-			nanosec_time install_delay;
+			NANOSEC_TIME install_delay;
 			DWORD day_after;
 			INT64 nanosec;
 			// Trasforma da giorni a 100-nanosecondi

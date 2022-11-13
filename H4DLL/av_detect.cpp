@@ -8,6 +8,7 @@
 #include "LOG.h"
 #include <stdio.h>
 #include <scramblestring.h>
+
 BOOL IsDriverRunning(const WCHAR* driver_name)
 {
 	DWORD dummy;

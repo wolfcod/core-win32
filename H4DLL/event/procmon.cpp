@@ -9,11 +9,11 @@
 #include "../AM_Core.h"
 #include "../LOG.h"
 #include "../SM_EventHandlers.h"
+#include "../strings.h"
 
 #define EM_MP_SLEEPTIME 1000
 
-extern int CmpWild(const unsigned char*, const unsigned char*); // XXX Dichiarata in HM_ProcessMonitors.h
-extern int CmpWildW(WCHAR*, WCHAR*); // XXX Dichiarata in HM_ProcessMonitors.h
+
 HANDLE em_mp_monproc_thread = 0;
 DWORD em_mp_monitor_count = 0;
 monitored_proc* em_mp_process_table = NULL;
