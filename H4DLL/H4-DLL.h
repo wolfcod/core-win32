@@ -116,7 +116,14 @@ void WINAPI HM_CreateProcessAsUser(char *, DWORD, STARTUPINFO *, PROCESS_INFORMA
 //
 ////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////
-DWORD WINAPI HM_sCreateHookA(DWORD, char *, char *, BYTE *, DWORD, BYTE *, DWORD );
+DWORD WINAPI HM_sCreateHookA(DWORD dwPid,
+	char* APIName,
+	char* DLLAPIName,
+	BYTE* HookAdd,
+	DWORD HookSize,
+	BYTE* HookData,
+	DWORD HookDataSize);
+
 typedef DWORD (WINAPI *HM_CreateHook_t)(DWORD, HMServiceStruct *, BOOL);
 typedef DWORD (WINAPI *HM_CreateService_t)(DWORD, HMServiceStruct *);
 

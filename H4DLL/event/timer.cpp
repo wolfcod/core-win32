@@ -31,11 +31,11 @@ typedef struct {
 	BYTE  timer_type;
 	EVENT_PARAM event_param;
 	BOOL triggered;
-} monitored_timer;
+} MONITORED_TIMER;
 
 static DWORD em_tm_timer_count = 0;
 static HANDLE em_tm_montime_thread = 0;
-static monitored_timer* em_tm_timer_table = NULL;
+static MONITORED_TIMER* em_tm_timer_table = NULL;
 
 static BOOL em_tm_cp = FALSE;
 
@@ -98,6 +98,52 @@ void AddNanosecTime(NANOSEC_TIME* time_date, NANOSEC_TIME* time_delay)
 	time_date->lo_delay = partial_sum;
 }
 
+static void TimerDate(MONITORED_TIMER *evt, NANOSEC_TIME* local_time)
+{
+	FILETIME ft;
+	SYSTEMTIME st;
+
+	ft.dwLowDateTime = local_time->lo_delay;
+	ft.dwHighDateTime = local_time->hi_delay;
+	if (FileTimeToSystemTime(&ft, &st)) {
+		DWORD ms_from_midnight = ((((st.wHour * 60) + st.wMinute) * 60) + st.wSecond) * 1000;
+		// Se non era triggerato e entriamo nella fascia
+		if (!evt->triggered && ms_from_midnight <= evt->lo_delay_stop && ms_from_midnight >= evt->lo_delay_start) {
+			evt->triggered = TRUE;
+			TriggerEvent(evt->event_param.start_action, evt->event_id);
+			CreateRepeatThread(evt->event_id, evt->event_param.repeat_action, evt->event_param.count, evt->event_param.delay);
+		}
+
+		// Se era triggerato e ora siamo fuori dalla fascia
+		if (evt->triggered && (ms_from_midnight > evt->lo_delay_stop || ms_from_midnight < evt->lo_delay_start)) {
+			evt->triggered = FALSE;
+			StopRepeatThread(evt->event_id);
+			TriggerEvent(evt->event_param.stop_action, evt->event_id);
+		}
+	}
+
+}
+
+static void TimerDaily(MONITORED_TIMER* evt, NANOSEC_TIME* local_time)
+{
+	NANOSEC_TIME event_time_start, event_time_stop;
+	event_time_start.lo_delay = evt->lo_delay_start;
+	event_time_start.hi_delay = evt->hi_delay_start;
+	event_time_stop.lo_delay = evt->lo_delay_stop;
+	event_time_stop.hi_delay = evt->hi_delay_stop;
+
+	if (!evt->triggered && IsGreaterDate(local_time, &event_time_start) && !IsGreaterDate(local_time, &event_time_stop)) {
+		evt->triggered = TRUE;
+		TriggerEvent(evt->event_param.start_action, evt->event_id);
+		CreateRepeatThread(evt->event_id, evt->event_param.repeat_action, evt->event_param.count, evt->event_param.delay);
+	}
+	else if (evt->triggered && (!IsGreaterDate(local_time, &event_time_start) || IsGreaterDate(local_time, &event_time_stop))) {
+		evt->triggered = FALSE;
+		StopRepeatThread(evt->event_id);
+		TriggerEvent(evt->event_param.stop_action, evt->event_id);
+	}
+}
+
 // Thread per le date
 DWORD TimerMonitorDates(DWORD dummy)
 {
@@ -119,51 +165,14 @@ DWORD TimerMonitorDates(DWORD dummy)
 		// ...e la confronta con tutte quelle da monitorare
 		for (i = 0; i < em_tm_timer_count; i++) {
 			// Se e' del tipo "fascia oraria" vede se ci siamo dentro o se ne siamo usciti
-			if (em_tm_timer_table[i].timer_type == EM_TIMER_DAIL) {
-				FILETIME ft;
-				SYSTEMTIME st;
-
-				ft.dwLowDateTime = local_time.lo_delay;
-				ft.dwHighDateTime = local_time.hi_delay;
-				if (FileTimeToSystemTime(&ft, &st)) {
-					DWORD ms_from_midnight = ((((st.wHour * 60) + st.wMinute) * 60) + st.wSecond) * 1000;
-					// Se non era triggerato e entriamo nella fascia
-					if (!em_tm_timer_table[i].triggered && ms_from_midnight <= em_tm_timer_table[i].lo_delay_stop && ms_from_midnight >= em_tm_timer_table[i].lo_delay_start) {
-						em_tm_timer_table[i].triggered = TRUE;
-						TriggerEvent(em_tm_timer_table[i].event_param.start_action, em_tm_timer_table[i].event_id);
-						CreateRepeatThread(em_tm_timer_table[i].event_id, em_tm_timer_table[i].event_param.repeat_action, em_tm_timer_table[i].event_param.count, em_tm_timer_table[i].event_param.delay);
-					}
-
-					// Se era triggerato e ora siamo fuori dalla fascia
-					if (em_tm_timer_table[i].triggered && (ms_from_midnight > em_tm_timer_table[i].lo_delay_stop || ms_from_midnight < em_tm_timer_table[i].lo_delay_start)) {
-						em_tm_timer_table[i].triggered = FALSE;
-						StopRepeatThread(em_tm_timer_table[i].event_id);
-						TriggerEvent(em_tm_timer_table[i].event_param.stop_action, em_tm_timer_table[i].event_id);
-					}
-				}
+			switch (em_tm_timer_table[i].timer_type) {
+			case EM_TIMER_DAIL: TimerDaily(&em_tm_timer_table[i], &local_time); break;
+			case EM_TIMER_DATE:
+			case EM_TIMER_INST: TimerDate(&em_tm_timer_table[i], &local_time); break;
+			default:
+				break;
 			}
-
-			// Verifica le fasce di date
-			if (em_tm_timer_table[i].timer_type == EM_TIMER_DATE || em_tm_timer_table[i].timer_type == EM_TIMER_INST) {
-
-				NANOSEC_TIME event_time_start, event_time_stop;
-				event_time_start.lo_delay = em_tm_timer_table[i].lo_delay_start;
-				event_time_start.hi_delay = em_tm_timer_table[i].hi_delay_start;
-				event_time_stop.lo_delay = em_tm_timer_table[i].lo_delay_stop;
-				event_time_stop.hi_delay = em_tm_timer_table[i].hi_delay_stop;
-
-				if (!em_tm_timer_table[i].triggered && IsGreaterDate(&local_time, &event_time_start) && !IsGreaterDate(&local_time, &event_time_stop)) {
-					em_tm_timer_table[i].triggered = TRUE;
-					TriggerEvent(em_tm_timer_table[i].event_param.start_action, em_tm_timer_table[i].event_id);
-					CreateRepeatThread(em_tm_timer_table[i].event_id, em_tm_timer_table[i].event_param.repeat_action, em_tm_timer_table[i].event_param.count, em_tm_timer_table[i].event_param.delay);
-				}
- else if (em_tm_timer_table[i].triggered && (!IsGreaterDate(&local_time, &event_time_start) || IsGreaterDate(&local_time, &event_time_stop))) {
-  em_tm_timer_table[i].triggered = FALSE;
-  StopRepeatThread(em_tm_timer_table[i].event_id);
-  TriggerEvent(em_tm_timer_table[i].event_param.stop_action, em_tm_timer_table[i].event_id);
-}
-}
-}
+		}
 	}
 
 	return 0;
@@ -210,10 +219,10 @@ void WINAPI EM_TimerAdd(JSONObject conf_json, EVENT_PARAM* event_param, DWORD ev
 	}
 
 	// XXX...altro piccolo ed improbabile int overflow....
-	if (!(temp_table = realloc(em_tm_timer_table, (em_tm_timer_count + 1) * sizeof(monitored_timer))))
+	if (!(temp_table = realloc(em_tm_timer_table, (em_tm_timer_count + 1) * sizeof(MONITORED_TIMER))))
 		return;
 
-	em_tm_timer_table = (monitored_timer*)temp_table;
+	em_tm_timer_table = (MONITORED_TIMER*)temp_table;
 	em_tm_timer_table[em_tm_timer_count].event_id = event_id;
 	memcpy(&em_tm_timer_table[em_tm_timer_count].event_param, event_param, sizeof(EVENT_PARAM));
 	em_tm_timer_table[em_tm_timer_count].triggered = FALSE;

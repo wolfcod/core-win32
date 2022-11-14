@@ -5,19 +5,19 @@ typedef struct {
 } fs_browse_elem;
 
 // Funzioni esportate
-extern BOOL ASP_Start(char *, char *);
-extern void ASP_Stop(void);
-extern void ASP_Bye(void);
-extern BOOL ASP_Auth(char *, BYTE *, char *, BYTE *, DWORD *);
-extern BOOL ASP_Id(WCHAR *, WCHAR *, long long *, DWORD *, DWORD);
-extern BOOL ASP_GetUpload(BOOL, WCHAR *, DWORD, DWORD *);
-extern BOOL ASP_GetDownload(DWORD *, WCHAR ***);
-extern BOOL ASP_SendLog(char *, DWORD);
-extern BOOL ASP_ReceiveConf(char *);
-extern BOOL ASP_GetFileSystem(DWORD *, fs_browse_elem **);
-extern BOOL ASP_GetCommands(DWORD *, WCHAR ***);
-extern BOOL ASP_SendStatus(DWORD log_count, UINT64 log_size);
-extern BOOL ASP_HandlePurge(long long *purge_time, DWORD *purge_size);
+BOOL ASP_Start(char *, char *);
+void ASP_Stop(void);
+void ASP_Bye(void);
+BOOL ASP_Auth(char *, BYTE *, char *, BYTE *, DWORD *);
+BOOL ASP_Id(WCHAR *, WCHAR *, long long *, DWORD *, DWORD);
+BOOL ASP_GetUpload(BOOL, WCHAR *, DWORD, DWORD *);
+BOOL ASP_GetDownload(DWORD *, WCHAR ***);
+BOOL ASP_SendLog(char *, DWORD);
+BOOL ASP_ReceiveConf(char *);
+BOOL ASP_GetFileSystem(DWORD *, fs_browse_elem **);
+BOOL ASP_GetCommands(DWORD *, WCHAR ***);
+BOOL ASP_SendStatus(DWORD log_count, UINT64 log_size);
+BOOL ASP_HandlePurge(long long *purge_time, DWORD *purge_size);
 
 // Valori di ritorno della funzione ASP_Poll()
 #define ASP_POLL_FETCHING 0
@@ -46,42 +46,42 @@ extern BOOL ASP_HandlePurge(long long *purge_time, DWORD *purge_size);
 typedef struct {
 	DWORD server_addr;
 	DWORD server_port;
-} asp_reply_setup;
+} ASP_REPLY_SETUP;
 
 typedef struct {
 	DWORD upload_left;
 	WCHAR file_name[MAX_PATH];
-} asp_reply_upload;
+} ASP_REPLY_UPLOAD;
 
 typedef struct {
 	char backdoor_id[32];
 	BYTE instance_id[20];
 	char subtype[16];
 	BYTE conf_key[16];
-} asp_request_auth;
+} ASP_REQUEST_AUTH;
 
 typedef struct {
 	WCHAR username[80];
 	WCHAR device[80];
-} asp_request_id;
+} ASP_REQUEST_ID;
 
 typedef struct {
 	WCHAR file_name[MAX_PATH];
 	DWORD byte_per_second;
-} asp_request_log;
+} ASP_REQUEST_LOG;
 
 #pragma pack(4)
 typedef struct {
 	DWORD log_count;
 	UINT64 log_size;
-} asp_request_stat;
+} ASP_REQUEST_STAT;
 
 typedef struct {
 	long long purge_time;
 	DWORD purge_size;
-} asp_reply_purge;
+} ASP_REPLY_PURGE;
 #pragma pack()
 
 typedef struct {
 	WCHAR conf_path[MAX_PATH];
-}asp_request_conf;
+} ASP_REQUEST_CONF;

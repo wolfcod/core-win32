@@ -23,7 +23,7 @@ static __forceinline LIST_ENTRY* InsertHeadList(LIST_ENTRY* ListHead, LIST_ENTRY
 	return ListHead;
 }
 
-static __forceinline LIST_ENTRY* InsertyTailList(LIST_ENTRY* ListHead, LIST_ENTRY* Entry)
+static __forceinline LIST_ENTRY* InsertTailList(LIST_ENTRY* ListHead, LIST_ENTRY* Entry)
 {
 	Entry->Flink = ListHead;
 	Entry->Blink = ListHead->Blink;

@@ -384,7 +384,7 @@ void ActionTableInit(DWORD number)
 		EVENT_ACTION_ELEM *entry = AllocateEventAction();
 		if (entry != NULL) {
 			entry->is_fast_action = TRUE;
-			InsertyTailList(&event_action_array, &entry->entry);
+			InsertTailList(&event_action_array, &entry->entry);
 			event_action_count++;
 		}
 	}
