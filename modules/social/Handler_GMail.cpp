@@ -86,11 +86,9 @@ DWORD ParseMailBox(const char *mbox, char *cookie, char *ik_val, DWORD last_tsta
 	BYTE *r_buffer = NULL;
 	BYTE *r_buffer_inner = NULL;
 	DWORD response_len = 0;
-	char *ptr, *ptr_inner, *ptr_inner2;
+	char *ptr;
 	WCHAR mail_request[256];
 	char mail_id[17];
-	char src_add[1024], dest_add[1024], cc_add[1024], subject[1024];
-	char tmp_buff[256];
 	DWORD act_tstamp_hi=0, act_tstamp_lo=0;
 
 	CheckProcessStatus();

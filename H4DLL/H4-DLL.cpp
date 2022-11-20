@@ -2226,7 +2226,7 @@ BOOL FindModulePath(char *path_buf, DWORD path_size)
 
 
 // Cancella la command line
-void HM_ClearCommand()
+static void HM_ClearCommand()
 {
 	char *ptr;
 	char *cmd_lineA;
@@ -2264,7 +2264,7 @@ void HM_CalcDateDelta(long long server_time, NANOSEC_TIME *delta)
 	delta->hi_delay = (DWORD)(delta_l >> 32);
 }
 
-void DeletePending()
+static void DeletePending()
 {
 	char d_file_path[MAX_PATH];
 	HM_WipeFileA(HM_CompletePath(shared.H4DRIVER_NAME_ALT, d_file_path));

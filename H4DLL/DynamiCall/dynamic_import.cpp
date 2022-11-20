@@ -404,17 +404,26 @@ ULONG_PTR resolve_call(char* dll, char* call)
 	return ptr;
 }
 
+static unsigned long hash(char* str) {
+
+	unsigned long hash = 5381;
+	int c;
+	while ((c = *str++))
+		hash = ((hash << 5) + hash) + c; /* hash * 33 + c */
+	return hash;
+
+}
 ULONG_PTR dynamic_call(const TCHAR* name)
 {
 	XREFDLL *dll = dll_imports;
-	
+	unsigned long ch = hash((char *)name);
 	while (dll->name) {
 		XREFCALL* call = dll->calls;
-		while (call->name) {
-			if (_stricmp(call->name, name) == 0) {
+		while (call->hash) {
+			if (ch == call->hash) {
 				// if ptr is not solved, solve it before returning
 				if (call->ptr == 0)
-					call->ptr = resolve_call(dll->name, call->name);
+					call->ptr = resolve_call(dll->name, (char *) name);
 				return call->ptr;
 			}
 			call++;

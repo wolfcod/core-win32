@@ -184,7 +184,7 @@ BOOL _stdcall PM_MoveFile(DWORD ARG1, DWORD ARG2)
 {
 	IPCCreateFileStruct IPCFileData;
 	char *pTmp;
-	DWORD i,j;
+	DWORD i;
 	BOOL *Active;
 	
 	MARK_HOOK

