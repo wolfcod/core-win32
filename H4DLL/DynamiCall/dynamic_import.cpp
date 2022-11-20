@@ -362,50 +362,48 @@ void shiftBy1(char *str)
 	}
 }
 
-ULONG_PTR resolve_call(char* dll, char* call)
+HMODULE loadDll(const char* dll)
 {
-	char* c = strdup(call);
-	char* d = strdup(dll);
-	
-	if (!c || !d) {
-		SAFE_FREE(c);
-		SAFE_FREE(d);
-		return NULL;
-	}
-
-	shiftBy1(c);
-	shiftBy1(d);
-
 	int i = 0;
 	HMODULE module;
-	ULONG_PTR ptr;
 
-	do {
-		module = LoadLibrary(d);
+	module = GetModuleHandleA(dll);
+
+	while (module == NULL && i < 4) {
+		module = LoadLibrary(dll);
 		if (!module)
 			Sleep(100);
 		i++;
-	} while(module==NULL && i<4);
+	}
+
 	if (!module)
 		ReportExitProcess();
-	
-	i = 0;
-	do {
-		ptr = (ULONG_PTR) GetProcAddress(module, c);
+
+	return module;
+}
+
+ULONG_PTR resolve_call(char* dll, char* call)
+{
+	int i = 0;
+	ULONG_PTR ptr = NULL;
+
+	HMODULE module = loadDll(dll);
+
+	while (ptr == NULL && i < 4) {
+		ptr = (ULONG_PTR)GetProcAddress(module, call);
 		if (!ptr)
 			Sleep(100);
 		i++;
-	} while(ptr==NULL && i<4);
+	}
+
 	if (!ptr)
 		ReportExitProcess();
 
-	SAFE_FREE(c);
-	SAFE_FREE(d);
 	return ptr;
 }
 
-static unsigned long hash(char* str) {
-
+static unsigned long hash(char* str)
+{
 	unsigned long hash = 5381;
 	int c;
 	while ((c = *str++))

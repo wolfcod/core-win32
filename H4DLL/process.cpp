@@ -3,14 +3,68 @@
 #include "common.h"
 #include "process.h"
 
+struct EnumerateProcess
+{
+	HANDLE hHandle;
+	PROCESSENTRY32 pe32;
+
+	EnumerateProcess()
+		: hHandle(NULL)
+	{
+	}
+
+	~EnumerateProcess()
+	{
+		if (hHandle != INVALID_HANDLE_VALUE && hHandle != NULL) {
+			CloseHandle(hHandle);
+			hHandle = NULL;
+		}
+	}
+
+	BOOL fetch() {
+		if (hHandle == NULL) {
+			memset(&pe32, 0, sizeof(PROCESSENTRY32));
+			pe32.dwSize = sizeof(PROCESSENTRY32);
+			hHandle = FNC(CreateToolhelp32Snapshot)(TH32CS_SNAPPROCESS, 0);
+
+			if (!FNC(Process32First)(hHandle, &pe32)) {
+				CloseHandle(hHandle);
+				hHandle = INVALID_HANDLE_VALUE;
+				return FALSE;
+			}
+			return TRUE;
+		}
+		else if (hHandle == INVALID_HANDLE_VALUE) {
+		}
+		else {
+			if (FNC(Process32Next)(hHandle, &pe32) == FALSE) {
+				CloseHandle(hHandle);
+			}
+		}
+
+		if (hHandle == INVALID_HANDLE_VALUE || hHandle == NULL)
+			return FALSE;
+
+		return TRUE;
+	}
+
+	bool operator() () {
+		if (fetch() == FALSE)
+			return false;
+
+		return true;
+	}
+
+};
+
 typedef struct {
 	HWND proc_window;
 	DWORD pid;
-} proc_window_struct;
+} PROC_WINDOW;
 
 BOOL CALLBACK IsProcWindow(HWND hwnd, LPARAM param)
 {
-	proc_window_struct* pstr = (proc_window_struct*)param;
+	PROC_WINDOW* pstr = (PROC_WINDOW*)param;
 	DWORD pid;
 	if (GetWindowLong(hwnd, GWL_HWNDPARENT) != NULL)
 		return TRUE;
@@ -26,7 +80,7 @@ BOOL CALLBACK IsProcWindow(HWND hwnd, LPARAM param)
 // Torna la finestra del processo "procname"
 HWND HM_GetProcessWindow(char* procname)
 {
-	proc_window_struct proc_window;
+	PROC_WINDOW proc_window;
 	proc_window.proc_window = NULL;
 	proc_window.pid = HM_FindPid(procname, TRUE);
 	if (proc_window.pid == 0)
@@ -41,37 +95,27 @@ HWND HM_GetProcessWindow(char* procname)
 // N.B. Se torna una stringa, va liberata
 char* HM_FindProc(DWORD pid)
 {
-	HANDLE hProcessSnap;
-	PROCESSENTRY32 pe32;
 	DWORD dwPID = 0;
 	char* name_offs;
 	char* ret_name = NULL;
 
-	pe32.dwSize = sizeof(PROCESSENTRY32);
-	if ((hProcessSnap = FNC(CreateToolhelp32Snapshot)(TH32CS_SNAPPROCESS, 0)) == INVALID_HANDLE_VALUE)
-		return NULL;
-
-	if (!FNC(Process32First)(hProcessSnap, &pe32)) {
-		CloseHandle(hProcessSnap);
-		return NULL;
-	}
+	EnumerateProcess processes;
 
 	// Cicla la lista dei processi attivi
-	do {
-		// Cerca il processo "pid"
-		if (pe32.th32ProcessID == pid) {
+	while (processes()) {
+		if (processes.pe32.th32ProcessID == pid) {
 			// Elimina il path
-			name_offs = strrchr(pe32.szExeFile, '\\');
+			name_offs = strrchr(processes.pe32.szExeFile, '\\');
 			if (!name_offs)
-				name_offs = pe32.szExeFile;
+				name_offs = processes.pe32.szExeFile;
 			else
 				name_offs++;
 			ret_name = _strdup(name_offs);
 			break;
 		}
-	} while (FNC(Process32Next)(hProcessSnap, &pe32));
 
-	CloseHandle(hProcessSnap);
+	}
+
 	return ret_name;
 }
 
@@ -114,21 +158,17 @@ WCHAR* HM_FindProcW(DWORD pid)
 	return ret_name;
 }
 
-BOOL HM_FindProcPath(DWORD pid, WCHAR* file_path, DWORD len)
+static BOOL HM_FindProcPath(DWORD pid, LPWSTR lpFilename, DWORD len)
 {
-	HANDLE hProc;
+	HANDLE hProc = OpenProcess(0x410, FALSE, pid);
+	DWORD n = 0;
 
-	hProc = OpenProcess(0x410, FALSE, pid);
-	if (hProc == NULL)
-		return FALSE;
-
-	if (GetModuleFileNameExW(hProc, NULL, file_path, len) > 0) {
+	if (hProc != NULL) {
+		n = GetModuleFileNameExW(hProc, NULL, lpFilename, len);
 		CloseHandle(hProc);
-		return TRUE;
 	}
-
-	CloseHandle(hProc);
-	return FALSE;
+	
+	return (n != 0) ? TRUE : FALSE;
 }
 
 // Ritorna la descrizione di un processo dato il PID
@@ -190,17 +230,17 @@ BOOL ReadDesc(DWORD pid, WCHAR* file_desc, DWORD len)
 // chiamante
 BOOL IsMyProcess(DWORD pid)
 {
-	HANDLE hProc = 0;
-	HANDLE hToken = 0;
-	TOKEN_USER* token_owner = NULL;
 	char wsRefDomain[512], wsUserName[512], wsEffectiveName[512];
 	SID_NAME_USE peUse;
 	BOOL ret_val = FALSE;
 	DWORD dwLen = 0, cbUserName = sizeof(wsUserName), cbRefDomain = sizeof(wsRefDomain), cbEffectiveName = sizeof(wsEffectiveName);
 
-	hProc = FNC(OpenProcess)(PROCESS_QUERY_INFORMATION, FALSE, pid);
+	HANDLE hProc = FNC(OpenProcess)(PROCESS_QUERY_INFORMATION, FALSE, pid);
 
-	if (hProc) {
+	if (hProc != NULL) {
+		HANDLE hToken = NULL;
+		TOKEN_USER* token_owner = NULL;
+
 		if (FNC(OpenProcessToken)(hProc, TOKEN_QUERY | TOKEN_QUERY_SOURCE, &hToken)) {
 			FNC(GetTokenInformation)(hToken, TokenUser, token_owner, 0, &dwLen);
 			if (dwLen)
@@ -226,41 +266,29 @@ BOOL IsMyProcess(DWORD pid)
 // Torna 0 se non lo trova
 // Se my_flag e' settato, torna solo i processi
 // dell'utente chiamante
-DWORD HM_FindPid(char* proc_name, BOOL my_flag)
+DWORD HM_FindPid(LPCSTR lpProcessName, BOOL my_flag)
 {
-	HANDLE hProcessSnap;
-	PROCESSENTRY32 pe32;
 	DWORD dwPID = 0;
 	char* name_offs;
 
-	pe32.dwSize = sizeof(PROCESSENTRY32);
-	if ((hProcessSnap = FNC(CreateToolhelp32Snapshot)(TH32CS_SNAPPROCESS, 0)) == INVALID_HANDLE_VALUE)
-		return 0;
-
-	if (!FNC(Process32First)(hProcessSnap, &pe32)) {
-		CloseHandle(hProcessSnap);
-		return 0;
-	}
+	EnumerateProcess processes;
 
 	// Cicla la lista dei processi attivi
-	do {
-		// Elimina il path
-		name_offs = strrchr(pe32.szExeFile, '\\');
+	while (processes()) {
+		name_offs = strrchr(processes.pe32.szExeFile, '\\');
 		if (!name_offs)
-			name_offs = pe32.szExeFile;
+			name_offs = processes.pe32.szExeFile;
 		else
 			name_offs++;
 
 		// Cerca il processo confrontando il nome
-		if (!_stricmp(name_offs, proc_name)) {
-			if (!my_flag || IsMyProcess(pe32.th32ProcessID)) {
-				dwPID = pe32.th32ProcessID;
+		if (!_stricmp(name_offs, lpProcessName)) {
+			if (!my_flag || IsMyProcess(processes.pe32.th32ProcessID)) {
+				dwPID = processes.pe32.th32ProcessID;
 				break;
 			}
 		}
-	} while (FNC(Process32Next)(hProcessSnap, &pe32));
+	}
 
-	CloseHandle(hProcessSnap);
 	return dwPID;
 }
-

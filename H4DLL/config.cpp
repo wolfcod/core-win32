@@ -161,9 +161,6 @@ static void setup_bypass_list()
 // Legge le configurazioni globali
 void HM_UpdateGlobalConf()
 {
-	HANDLE h_conf_file;
-	DWORD readn;
-	char conf_path[DLLNAMELEN];
 	char* conf_memory;
 
 	// Se non riesce a leggere la configurazione, inizializza comunque

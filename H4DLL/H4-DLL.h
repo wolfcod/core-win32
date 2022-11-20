@@ -20,7 +20,7 @@ typedef struct {
 // Funzioni esportate
 extern void HM_InsertRegistryKey(char *, BOOL);
 char *HM_CompletePath(const char *, char *);
-extern WCHAR *HM_CompletePathW(WCHAR *, WCHAR *);
+WCHAR *HM_CompletePathW(const WCHAR *, WCHAR *);
 
 void HM_WipeFileA(LPCSTR lpFileName);
 void HM_WipeFileW(LPCWSTR lpFileName);
