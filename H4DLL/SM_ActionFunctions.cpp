@@ -8,7 +8,7 @@
 #include "LOG.h"
 #include "AM_Core.h"
 #include "SM_Core.h"
-#include "ASP.h"
+#include "asp/ASP.h"
 #include <scramblestring.h>
 #include "bss.h"
 #include "x64.h"

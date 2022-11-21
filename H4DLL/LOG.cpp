@@ -5,9 +5,10 @@
 #include <listentry.h>
 
 #include "common.h"
-#include "ASP.h"
 #include "LOG.h"
 #include "H4-DLL.h"
+#include "AM_Core.h"
+#include "asp/ASP.h"
 #include <crypto/sha1.h>
 #include <crypto/md5.h>
 #include "explore_directory.h"

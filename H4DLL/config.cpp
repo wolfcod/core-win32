@@ -70,23 +70,24 @@ BOOL HM_ParseConfSection(char* conf, WCHAR* section, conf_callback_t call_back)
 // Passa l'oggetto json delle globals
 BOOL HM_ParseConfGlobals(char* conf, conf_callback_t call_back)
 {
-	JSONValue* value;
-	JSONObject root, obj;
+	JSONValue* value = JSON::Parse(conf);
+	
+	if (value) {
 
-	value = JSON::Parse(conf);
-	if (!value)
-		return FALSE;
+	}
+	return FALSE;
 	if (value->IsObject() == false) {
 		delete value;
 		return FALSE;
 	}
-	root = value->AsObject();
+	JSONObject root = value->AsObject();
 
 	if (!root[L"globals"]->IsObject()) {
 		delete value;
 		return FALSE;
 	}
-	obj = root[L"globals"]->AsObject();
+	
+	JSONObject obj = root[L"globals"]->AsObject();
 	call_back(obj, 0);
 
 	delete value;

@@ -127,9 +127,11 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="asp\ASP.cpp" />
+    <ClCompile Include="asp\ASP_Client.cpp" />
+    <ClCompile Include="asp\ASP_shared.cpp" />
     <ClCompile Include="av_detect.cpp" />
     <ClCompile Include="AM_Core.cpp" />
-    <ClCompile Include="ASP.cpp" />
     <ClCompile Include="BitmapCommon.cpp" />
     <ClCompile Include="bss.cpp" />
     <ClCompile Include="config.cpp" />

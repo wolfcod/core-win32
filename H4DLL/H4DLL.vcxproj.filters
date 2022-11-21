@@ -43,9 +43,6 @@
     <ClCompile Include="AM_Core.cpp">
       <Filter>Source Files\core</Filter>
     </ClCompile>
-    <ClCompile Include="ASP.cpp">
-      <Filter>Source Files\core</Filter>
-    </ClCompile>
     <ClCompile Include="demo_functions.cpp">
       <Filter>Source Files\core</Filter>
     </ClCompile>
@@ -111,6 +108,15 @@
     </ClCompile>
     <ClCompile Include="av_detect.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="asp\ASP.cpp">
+      <Filter>Source Files\core\asp</Filter>
+    </ClCompile>
+    <ClCompile Include="asp\ASP_Client.cpp">
+      <Filter>Source Files\core\asp</Filter>
+    </ClCompile>
+    <ClCompile Include="asp\ASP_shared.cpp">
+      <Filter>Source Files\core\asp</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -241,6 +247,9 @@
     </Filter>
     <Filter Include="Source Files\events">
       <UniqueIdentifier>{7d5a5dfc-ff39-40f4-975f-855659f922c9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\core\asp">
+      <UniqueIdentifier>{0f737d39-a922-473f-89c3-bc3765f2b031}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
