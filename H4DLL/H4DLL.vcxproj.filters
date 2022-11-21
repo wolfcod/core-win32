@@ -129,9 +129,6 @@
     <ClInclude Include="av_detect.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="bin_string.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="cert.h">
       <Filter>Header Files</Filter>
     </ClInclude>

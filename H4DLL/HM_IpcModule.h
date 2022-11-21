@@ -31,24 +31,30 @@ typedef struct { DATA_SUPPORT; } Generic_data_support;
 									__asm REP MOVSB }
 
 
+#define STATUS_FREE 0 << 4	// available
+#define STATUS_BUSY 1 << 4	// taken
+#define STATUS_WRIT 2 << 4	// wrote
+
+#define IPC_LOW_PRIORITY 0x0
+#define IPC_DEF_PRIORITY 0x1
+#define IPC_HI_PRIORITY  0x2
+
 // Struttura di un messaggio scritto dai client
 // Il corpo del messaggio DEVE essere sempre l'ultimo elemento (vedi IPCServerRead)
 // XXX Se modifico va cabiato anche in AM_Core
 typedef struct {
-	BYTE status;
-#define STATUS_FREE 0 // Libero
-#define STATUS_BUSY 1 // In scrittura
-#define STATUS_WRIT 2 // Scritto
+	BYTE state;
 	FILETIME time_stamp;
 	DWORD wrapper_tag;
 	DWORD message_len;
 	DWORD flags;
-	DWORD priority;
-#define IPC_LOW_PRIORITY 0x0
-#define IPC_DEF_PRIORITY 0x10
-#define IPC_HI_PRIORITY  0x100
 	BYTE message[MAX_MSG_LEN];
 } IPC_MESSAGE;
+
+#define GET_PRIORITY(ipc) (ipc->state & 0x02)
+#define SET_PRIORITY(ipc, priority) ipc->state = (ipc->state & 0xfc) | priority
+#define GET_STATUS(ipc) (ipc->state >> 4)
+#define SET_STATUS(ipc, status) ipc->state = ipc->state & 0x02 | status
 
 extern BOOL IsVista(DWORD *integrity_level);
 void *FindTokenObject(HANDLE Handle);

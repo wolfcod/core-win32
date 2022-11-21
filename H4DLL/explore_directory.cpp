@@ -1,7 +1,7 @@
 #include <windows.h>
 #include <stdio.h>
 #include "common.h"
-#include "bin_string.h"
+#include <rcs/bin_string.h>
 #include "LOG.h"
 #include "bss.h"
 

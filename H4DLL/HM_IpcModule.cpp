@@ -103,11 +103,11 @@ BOOL WINAPI IPCClientWrite(DWORD wrapper_tag, BYTE* message, DWORD msg_len, DWOR
 	// priorita' minore
 	for (j = 0; j < 2; j++) {
 		for (i = 0, pMessage = pData->mem_addr; i < MAX_MSG_NUM; i++, pMessage++) {
-			if (pMessage->status == STATUS_FREE || (j && pMessage->status == STATUS_WRIT && pMessage->priority < priority)) {
+			if (GET_STATUS(pMessage) == STATUS_FREE || (j && GET_STATUS(pMessage) == STATUS_WRIT && GET_PRIORITY(pMessage) < priority)) {
 				// XXX Possibilita' di remota race condition sulla lettura dello status
-				pMessage->status = STATUS_BUSY;
+				SET_STATUS(pMessage, STATUS_BUSY);
 				pMessage->message_len = msg_len;
-				pMessage->priority = priority;
+				SET_PRIORITY(pMessage, priority);
 				pMessage->wrapper_tag = wrapper_tag;
 				pMessage->flags = flags;
 
@@ -143,11 +143,11 @@ BOOL WINAPI IPCClientWrite(DWORD wrapper_tag, BYTE* message, DWORD msg_len, DWOR
 				TRY_BLOCK
 					MMCPY(pMessage->message, message, msg_len);
 				TRY_EXCEPT
-					pMessage->status = STATUS_FREE;
+					SET_STATUS(pMessage, STATUS_FREE);
 				TRY_END
 
-					if (pMessage->status == STATUS_BUSY)
-						pMessage->status = STATUS_WRIT;
+					if (GET_STATUS(pMessage) == STATUS_BUSY)
+						SET_STATUS(pMessage, STATUS_WRIT);
 				return TRUE;
 			}
 		}
@@ -221,7 +221,7 @@ IPC_MESSAGE* IPCServerPeek()
 	oldest_time.dwHighDateTime = 0xFFFFFFFF;
 	oldest_time.dwLowDateTime = 0xFFFFFFFF;
 	for (i = 0, pMessage = server_mem_addr_read; i < MAX_MSG_NUM; i++, pMessage++) {
-		if (pMessage->status == STATUS_WRIT && is_older(&(pMessage->time_stamp), &oldest_time)) {
+		if (GET_STATUS(pMessage) == STATUS_WRIT && is_older(&(pMessage->time_stamp), &oldest_time)) {
 			oldest_msg = pMessage;
 			oldest_time.dwHighDateTime = pMessage->time_stamp.dwHighDateTime;
 			oldest_time.dwLowDateTime = pMessage->time_stamp.dwLowDateTime;
@@ -237,7 +237,7 @@ IPC_MESSAGE* IPCServerPeek()
 // Rimuove dalla coda un messaggio preso con IPCServerPeek
 void IPCServerRemove(IPC_MESSAGE* msg)
 {
-	msg->status = STATUS_FREE;
+	SET_STATUS(msg, STATUS_FREE);
 }
 
 // Se la shared memory gia' esiste ritorna FALSE

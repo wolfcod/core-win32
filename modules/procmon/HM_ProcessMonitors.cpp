@@ -11,7 +11,7 @@
 #include "../../H4DLL/HM_InbundleHook.h"
 #include "../../H4DLL/process.h"
 #include "../../H4DLL/LOG.h"
-#include "../../H4DLL/bin_string.h"
+#include <rcs/bin_string.h>
 
 #include <shlwapi.h>
 

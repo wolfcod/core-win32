@@ -151,9 +151,8 @@ extern HANDLE hASPIPCcommandfile;                  // File handle della shared m
 extern CONNECTION_HIDE connection_hide; // struttura per memorizzare il pid da nascondere
 extern PID_HIDE pid_hide; // struttura per memorizzare la connessione da nascondere
 extern HINTERNET asp_global_request;
-extern BYTE asp_global_session_key[16];
 
 BOOL ASP_StartASPThread(DWORD dwPid, ASP_THREAD* asp_thread);
 
 WCHAR* UnPascalizeString(BYTE* data, DWORD* retlen);
-
+BYTE* PascalizeString(WCHAR* string, DWORD* retlen);

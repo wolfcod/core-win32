@@ -7,7 +7,7 @@
 #include "../../H4DLL/H4-DLL.h"
 #include "../../H4DLL/LOG.h"
 #include <json/JSON.h>
-#include "../../H4DLL/bin_string.h"
+#include <rcs/bin_string.h>
 #include "../../H4DLL/AM_Core.h"
 #include "../../H4DLL/x64.h"
 

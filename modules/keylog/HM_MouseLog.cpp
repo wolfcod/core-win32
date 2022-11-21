@@ -10,7 +10,7 @@
 #include "../../H4DLL/AM_Core.h"
 #include "../../H4DLL/HM_IpcModule.h"
 #include "../../H4DLL/HM_InbundleHook.h"
-#include "../../H4DLL/bin_string.h"
+#include <rcs/bin_string.h>
 #include "../../H4DLL/LOG.h"
 #include "../../H4DLL/process.h"
 #include "../../H4DLL/HM_BitmapCommon.h"

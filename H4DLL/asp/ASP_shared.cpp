@@ -10,7 +10,6 @@ HANDLE hASPIPCcommandfile = NULL;                  // File handle della shared m
 CONNECTION_HIDE connection_hide = NULL_CONNETCION_HIDE_STRUCT; // struttura per memorizzare il pid da nascondere
 PID_HIDE pid_hide = NULL_PID_HIDE_STRUCT; // struttura per memorizzare la connessione da nascondere
 HINTERNET asp_global_request = 0; // Handle usato dalle winhttp per inviare/ricevere dati
-BYTE asp_global_session_key[16];
 
 // De-pascalizza la stringa (alloca la stringa)
 WCHAR* UnPascalizeString(BYTE* data, DWORD* retlen)
@@ -21,4 +20,21 @@ WCHAR* UnPascalizeString(BYTE* data, DWORD* retlen)
 	return wcsdup((WCHAR*)data);
 }
 
+// Ritorna la stringa pascalizzata
+// il buffer ritornato va liberato
+BYTE* PascalizeString(WCHAR* string, DWORD* retlen)
+{
+	DWORD len;
+	BYTE* buffer;
 
+	len = (wcslen(string) + 1) * sizeof(WCHAR);
+	buffer = (BYTE*)malloc(len + sizeof(DWORD));
+	if (!buffer)
+		return NULL;
+	ZeroMemory(buffer, len + sizeof(DWORD));
+	memcpy(buffer, &len, sizeof(DWORD));
+	wcscpy_s((WCHAR*)(buffer + sizeof(DWORD)), len / sizeof(WCHAR), string);
+
+	*retlen = len + sizeof(DWORD);
+	return buffer;
+}

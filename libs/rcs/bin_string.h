@@ -1,5 +1,6 @@
 #define ELEM_DELIMITER 0xABADC0DE
-class bin_buf {
+class bin_buf
+{
 public :
 	bin_buf(void) { buf_ptr = NULL; buf_len = 0; }
 	~bin_buf(void) { if (buf_ptr) free(buf_ptr); }
@@ -18,11 +19,11 @@ public :
 	}
 
 	BOOL add(const wchar_t* str) {
-		return add((void*)str, wcslen(str) * 2 + sizeof(wchar_t));
+		return add((void*)str, (wcslen(str) + 1) * 2);
 	}
 
 	BOOL add(const char* str) {
-		return add((void*)str, strlen(str) + sizeof(char));
+		return add((void*)str, strlen(str) + 1);
 	}
 
 	BYTE *get_buf(void) { return buf_ptr; }

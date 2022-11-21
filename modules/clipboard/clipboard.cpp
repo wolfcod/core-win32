@@ -2,7 +2,7 @@
 #include <json/json.h>
 #include <time.h>
 #include "../../H4DLL/common.h"
-#include "../../H4DLL/bin_string.h"
+#include <rcs/bin_string.h>
 #include "../../H4DLL/process.h"
 #include "../../H4DLL/HM_SafeProcedures.h"
 #include "../../H4DLL/LOG.h"

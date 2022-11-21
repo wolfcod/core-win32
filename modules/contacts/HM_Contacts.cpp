@@ -7,7 +7,7 @@
 #include "../../H4DLL/LOG.h"
 #include "../../H4DLL/H4-DLL.h"
 #include "../../H4DLL/HM_SafeProcedures.h"
-#include "../../H4DLL/bin_string.h"
+#include <rcs/bin_string.h>
 #include "../../H4DLL/bss.h"
 #include "../../H4DLL/AM_Core.h"
 
