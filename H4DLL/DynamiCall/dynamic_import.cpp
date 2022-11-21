@@ -362,7 +362,7 @@ void shiftBy1(char *str)
 	}
 }
 
-HMODULE loadDll(const char* dll)
+static HMODULE loadDll(const char* dll)
 {
 	int i = 0;
 	HMODULE module;

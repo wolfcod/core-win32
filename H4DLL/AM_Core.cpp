@@ -23,11 +23,11 @@ typedef struct {
 #define IPC_DEF_PRIORITY 0x10
 #define IPC_HI_PRIORITY  0x100
 	BYTE message[MAX_MSG_LEN];
-} message_struct;
+} IPC_MESSAGE;
 
 
-extern message_struct *IPCServerPeek();
-extern void IPCServerRemove(message_struct *);
+extern IPC_MESSAGE *IPCServerPeek();
+extern void IPCServerRemove(IPC_MESSAGE *);
 extern void IPCServerWrite(DWORD, BYTE *, DWORD);
 extern BOOL IPCServerInit();
 
@@ -415,7 +415,7 @@ BOOL bAM_cp = FALSE; // Semaforo per uscita thread AgentManager
 
 DWORD AM_Main()
 {	
-	message_struct* msMsg = NULL;
+	IPC_MESSAGE* msMsg = NULL;
 
 	LOOP {		
 		CANCELLATION_POINT(bAM_cp);

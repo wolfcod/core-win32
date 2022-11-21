@@ -11,8 +11,8 @@
 #define COMMONDATA	BYTE OriginalCode[STUB_SIZE]; \
 	                BYTE CallStub[STUB_SIZE]; \
                     BYTE *bAPIAdd; \
-					IPCClientRead_data_struct *ipc_read_data; \
-					IPCClientWrite_data_struct *ipc_write_data; \
+					IPC_CLIENT_READ *ipc_read_data; \
+					IPC_CLIENT_WRITE *ipc_write_data; \
 					IPCClientRead_t ipc_client_read; \
 					IPCClientWrite_t ipc_client_write;
 

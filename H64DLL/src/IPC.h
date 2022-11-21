@@ -17,30 +17,30 @@ typedef struct {
 #define IPC_DEF_PRIORITY 0x10
 #define IPC_HI_PRIORITY  0x100
 	BYTE message[MAX_MSG_LEN];
-} message_struct;
+} IPC_MESSAGE;
 
 typedef struct {
 	BYTE *mem_addr;
-} IPCClientRead_data_struct;
+} IPC_CLIENT_READ;
 
 typedef void (WINAPI *GetSystemTimeAsFileTime_t) (LPFILETIME);
 typedef struct {
-	message_struct *mem_addr;
+	IPC_MESSAGE *mem_addr;
 	GetSystemTimeAsFileTime_t pGetSystemTimeAsFileTime;
 	DWORD increment;
 	DWORD old_low_part;
 	DWORD old_hi_part;
-} IPCClientWrite_data_struct;
+} IPC_CLIENT_WRITE;
 
-typedef BOOL (WINAPI *IPCClientWrite_t)(DWORD wrapper_tag, IPCClientWrite_data_struct *pData, BYTE *message, DWORD msg_len, DWORD flags, DWORD priority);
-typedef BYTE *(WINAPI *IPCClientRead_t)(DWORD wrapper_tag, IPCClientRead_data_struct *pData);
+typedef BOOL (WINAPI *IPCClientWrite_t)(DWORD wrapper_tag, IPC_CLIENT_WRITE *pData, BYTE *message, DWORD msg_len, DWORD flags, DWORD priority);
+typedef BYTE *(WINAPI *IPCClientRead_t)(DWORD wrapper_tag, IPC_CLIENT_READ *pData);
 
-extern void IPCClientWrite_setup(IPCClientWrite_data_struct *data);
-extern void IPCClientRead_setup(IPCClientRead_data_struct *data);
-extern BOOL WINAPI IPCClientWrite(DWORD wrapper_tag, IPCClientWrite_data_struct *pData, BYTE *message, DWORD msg_len, DWORD flags, DWORD priority);
-extern BYTE * WINAPI IPCClientRead(DWORD wrapper_tag, IPCClientRead_data_struct *pData);
+extern void IPCClientWrite_setup(IPC_CLIENT_WRITE *data);
+extern void IPCClientRead_setup(IPC_CLIENT_READ *data);
+extern BOOL WINAPI IPCClientWrite(DWORD wrapper_tag, IPC_CLIENT_WRITE *pData, BYTE *message, DWORD msg_len, DWORD flags, DWORD priority);
+extern BYTE * WINAPI IPCClientRead(DWORD wrapper_tag, IPC_CLIENT_READ *pData);
 
-#define SHARE_MEMORY_WRITE_SIZE ((MAX_MSG_NUM * sizeof(message_struct))+2)
+#define SHARE_MEMORY_WRITE_SIZE ((MAX_MSG_NUM * sizeof(IPC_MESSAGE))+2)
 #define SHARE_MEMORY_READ_SIZE (WRAPPER_COUNT*WRAPPER_MAX_SHARED_MEM) // Dimensione spazio per la lettura delle configurazioni da parte dei wrapper                                
 //#define SHARE_MEMORY_READ_BASENAME "DPA"
 //#define SHARE_MEMORY_WRITE_BASENAME "DPB"

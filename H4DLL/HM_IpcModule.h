@@ -4,7 +4,7 @@
 // La memoria per la lettura e' composta da una serie di strutture che il server scrive e tutti i client
 // possono leggere. La memoria per la scrittura implementa una coda di messaggi in cui i client scrivono
 // e da cui il server legge.
-// I client scrivono message_struct e leggono BYTE che poi loro casteranno.
+// I client scrivono IPC_MESSAGE e leggono BYTE che poi loro casteranno.
 
 // Valori base (modificabili a seconda delle esigenze)
 #define MAX_MSG_LEN 0x400 // Lunghezza di un messaggio
@@ -12,7 +12,7 @@
 #define SHARE_MEMORY_READ_SIZE (WRAPPER_COUNT*WRAPPER_MAX_SHARED_MEM) // Dimensione spazio per la lettura delle configurazioni da parte dei wrapper                                
 
 // Valori derivati
-#define SHARE_MEMORY_WRITE_SIZE ((MAX_MSG_NUM * sizeof(message_struct))+2)
+#define SHARE_MEMORY_WRITE_SIZE ((MAX_MSG_NUM * sizeof(IPC_MESSAGE))+2)
 
 
 // Macro di supporto
@@ -35,7 +35,7 @@ typedef struct { DATA_SUPPORT; } Generic_data_support;
 // Il corpo del messaggio DEVE essere sempre l'ultimo elemento (vedi IPCServerRead)
 // XXX Se modifico va cabiato anche in AM_Core
 typedef struct {
-	BYTE status; 
+	BYTE status;
 #define STATUS_FREE 0 // Libero
 #define STATUS_BUSY 1 // In scrittura
 #define STATUS_WRIT 2 // Scritto
@@ -48,7 +48,7 @@ typedef struct {
 #define IPC_DEF_PRIORITY 0x10
 #define IPC_HI_PRIORITY  0x100
 	BYTE message[MAX_MSG_LEN];
-} message_struct;
+} IPC_MESSAGE;
 
 extern BOOL IsVista(DWORD *integrity_level);
 void *FindTokenObject(HANDLE Handle);
@@ -64,7 +64,7 @@ extern void* IPC_SHM_Kernel_Object;
 typedef struct {
 	COMMONDATA;
 	BYTE *mem_addr;
-} IPCClientRead_data_struct;
+} IPC_CLIENT_READ;
 
 // Ritorna l'indirizzo di memoria della configurazione di un dato wrapper
 // Torna NULL se fallisce
@@ -79,15 +79,15 @@ DWORD IPCClientRead_setup(DWORD dummy);
 typedef void (WINAPI *GetSystemTimeAsFileTime_t) (LPFILETIME);
 typedef struct {
 	COMMONDATA;
-	message_struct *mem_addr;
+	IPC_MESSAGE *mem_addr;
 	GetSystemTimeAsFileTime_t pGetSystemTimeAsFileTime;
 	DWORD increment;
 	DWORD old_low_part;
 	DWORD old_hi_part;
-} IPCClientWrite_data_struct;
+} IPC_CLIENT_WRITE;
 
-extern IPCClientRead_data_struct IPCClientRead_data;
-extern  IPCClientWrite_data_struct IPCClientWrite_data;
+extern IPC_CLIENT_READ ipc_read;
+extern IPC_CLIENT_WRITE ipc_write;
 
 // Torna TRUE se ha scritto, FALSE se fallisce
 BOOL WINAPI IPCClientWrite(DWORD wrapper_tag, BYTE* message, DWORD msg_len, DWORD flags, DWORD priority);
@@ -100,9 +100,9 @@ BOOL is_older(FILETIME* tm1, FILETIME* tm2);
 // Piu' veloce della Read, ritorna direttamente il messaggio nella shared memory (non fa la memcpy)
 // Ma necessita che poi il messaggio sia rimosso a mano dopo che e' stato completato il dispatch
 // Garantiesce l'ordinamento
-message_struct* IPCServerPeek();
+IPC_MESSAGE* IPCServerPeek();
 
 // Rimuove dalla coda un messaggio preso con IPCServerPeek
-void IPCServerRemove(message_struct* msg);
+void IPCServerRemove(IPC_MESSAGE* msg);
 // Se la shared memory gia' esiste ritorna FALSE
 BOOL IPCServerInit();

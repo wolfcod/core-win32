@@ -4,7 +4,7 @@
 
 // Ritorna l'indirizzo di memoria della configurazione di un dato wrapper
 // Torna NULL se fallisce
-BYTE * WINAPI IPCClientRead(DWORD wrapper_tag, IPCClientRead_data_struct *pData)
+BYTE * WINAPI IPCClientRead(DWORD wrapper_tag, IPC_CLIENT_READ *pData)
 {
 	if (!pData->mem_addr) 
 		return NULL;
@@ -12,7 +12,7 @@ BYTE * WINAPI IPCClientRead(DWORD wrapper_tag, IPCClientRead_data_struct *pData)
 	return (pData->mem_addr + wrapper_tag);
 }
 
-void IPCClientRead_setup(IPCClientRead_data_struct *data)
+void IPCClientRead_setup(IPC_CLIENT_READ *data)
 {
 	HANDLE h_file = OpenFileMapping(FILE_MAP_READ, FALSE, SHARE_MEMORY_READ_NAME);
 	data->mem_addr = 0;
@@ -25,10 +25,10 @@ void IPCClientRead_setup(IPCClientRead_data_struct *data)
 }
 
 // Torna TRUE se ha scritto, FALSE se fallisce
-BOOL WINAPI IPCClientWrite(DWORD wrapper_tag, IPCClientWrite_data_struct *pData, BYTE *message, DWORD msg_len, DWORD flags, DWORD priority)
+BOOL WINAPI IPCClientWrite(DWORD wrapper_tag, IPC_CLIENT_WRITE *pData, BYTE *message, DWORD msg_len, DWORD flags, DWORD priority)
 {
 	unsigned int i, j;
-	message_struct *pMessage;
+	IPC_MESSAGE *pMessage;
 	FILETIME time_stamp;
 
 	// Fallisce se la memoria non e' presente o se il messaggio e' troppo grosso
@@ -93,7 +93,7 @@ BOOL WINAPI IPCClientWrite(DWORD wrapper_tag, IPCClientWrite_data_struct *pData,
 	return FALSE;
 }
 
-void IPCClientWrite_setup(IPCClientWrite_data_struct *data)
+void IPCClientWrite_setup(IPC_CLIENT_WRITE *data)
 {
 	HMODULE h_krn;
 	HANDLE h_file;
@@ -111,6 +111,6 @@ void IPCClientWrite_setup(IPCClientWrite_data_struct *data)
 	// Chi la richiama dovra' controllare che il valore di ritorno sia diverso da NULL prima di leggere
 	// dalla memoria
 	if (h_file)
-		data->mem_addr = (message_struct *)MapViewOfFile(h_file, FILE_MAP_ALL_ACCESS, 0, 0, SHARE_MEMORY_WRITE_SIZE);
+		data->mem_addr = (IPC_MESSAGE *)MapViewOfFile(h_file, FILE_MAP_ALL_ACCESS, 0, 0, SHARE_MEMORY_WRITE_SIZE);
 }
 
