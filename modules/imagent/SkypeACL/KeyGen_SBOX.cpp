@@ -223,7 +223,7 @@ DWORD SALT()
 	return 0x00000000;
 }
 
-void SBOX_Encrypt(LPBYTE lpOutBuffer, const char* username, int length)
+void SBOX_Encrypt(LPBYTE lpOutBuffer, const char* username, int capacity)
 {
 	// INTERNAL SBOX is 0x00000000
 
@@ -251,7 +251,7 @@ void SBOX_Encrypt(LPBYTE lpOutBuffer, const char* username, int length)
 	};
 
 	// initialize sbox
-	for(int i=0; i < length && i < sizeof(sbox) ; i++)
+	for(int i=0; i < capacity && i < sizeof(sbox) ; i++)
 	{
 		sbox[i] ^= username[i];
 	}

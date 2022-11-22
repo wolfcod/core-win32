@@ -8,7 +8,7 @@
 	#define __KEYGEN_SBOX_H__
 
 
-void SBOX_Encrypt(LPBYTE lpOutBuffer, const char* username, int length);
+void SBOX_Encrypt(LPBYTE lpOutBuffer, const char* username, int capacity);
 char *Encrypt(char *lpUsername, char *lpMessage);
 
 #endif

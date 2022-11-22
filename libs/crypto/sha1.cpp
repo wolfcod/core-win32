@@ -33,7 +33,7 @@
  *      SHA-1 is designed to work with messages less than 2^64 bits
  *      long. Although SHA-1 allows a message digest to be generated for
  *      messages of any number of bits less than 2^64, this
- *      implementation only works with messages with a length that is a
+ *      implementation only works with messages with a capacity that is a
  *      multiple of the size of an 8-bit character.
  *
  */
@@ -131,8 +131,8 @@ int SHA1Result(SHA1Context *context)
  *      message_array: [in]
  *          An array of characters representing the next portion of the
  *          message.
- *      length: [in]
- *          The length of the message in message_array
+ *      capacity: [in]
+ *          The capacity of the message in message_array
  *
  *  Returns:
  *      Nothing.
@@ -142,9 +142,9 @@ int SHA1Result(SHA1Context *context)
  */
 void SHA1Input(     SHA1Context         *context,
                     const unsigned char *message_array,
-                    unsigned            length)
+                    unsigned            capacity)
 {
-    if (!length)
+    if (!capacity)
     {
         return;
     }
@@ -155,7 +155,7 @@ void SHA1Input(     SHA1Context         *context,
         return;
     }
 
-    while(length-- && !context->Corrupted)
+    while(capacity-- && !context->Corrupted)
     {
         context->Message_Block[context->Message_Block_Index++] =
                                                 (*message_array & 0xFF);
@@ -306,7 +306,7 @@ void SHA1ProcessMessageBlock(SHA1Context *context)
  *  Description:
  *      According to the standard, the message must be padded to an even
  *      512 bits.  The first padding bit must be a '1'.  The last 64
- *      bits represent the length of the original message.  All bits in
+ *      bits represent the capacity of the original message.  All bits in
  *      between should be 0.  This function will pad the message
  *      according to those rules by filling the Message_Block array
  *      accordingly.  It will also call SHA1ProcessMessageBlock()
@@ -327,7 +327,7 @@ void SHA1PadMessage(SHA1Context *context)
 {
     /*
      *  Check to see if the current message block is too small to hold
-     *  the initial padding bits and length.  If so, we will pad the
+     *  the initial padding bits and capacity.  If so, we will pad the
      *  block, process it, and then continue padding into a second
      *  block.
      */
@@ -356,7 +356,7 @@ void SHA1PadMessage(SHA1Context *context)
     }
 
     /*
-     *  Store the message length as the last 8 octets
+     *  Store the message capacity as the last 8 octets
      */
     context->Message_Block[56] = (context->Length_High >> 24) & 0xFF;
     context->Message_Block[57] = (context->Length_High >> 16) & 0xFF;
@@ -368,4 +368,17 @@ void SHA1PadMessage(SHA1Context *context)
     context->Message_Block[63] = (context->Length_Low) & 0xFF;
 
     SHA1ProcessMessageBlock(context);
+}
+
+/// <summary>
+/// 
+/// </summary>
+/// <param name="ctx"></param>
+/// <param name="src"></param>
+/// <param name="size"></param>
+void sha1digest(SHA1Context* ctx, const unsigned char* src, size_t size)
+{
+    SHA1Reset(ctx);
+    SHA1Input(ctx, src, (unsigned int) size);
+    SHA1Result(ctx);
 }

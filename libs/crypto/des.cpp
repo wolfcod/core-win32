@@ -489,7 +489,7 @@ void DES_decrypt3(DES_LONG *data, DES_key_schedule *ks1,
 }
 
 void DES_ede3_cbc_encrypt(const unsigned char *input, unsigned char *output,
-						  long length, DES_key_schedule *ks1,
+						  long capacity, DES_key_schedule *ks1,
 						  DES_key_schedule *ks2, DES_key_schedule *ks3,
 						  DES_cblock *ivec, int enc)
 {
@@ -497,7 +497,7 @@ void DES_ede3_cbc_encrypt(const unsigned char *input, unsigned char *output,
 	register DES_LONG tout0,tout1,xor0,xor1;
 	register const unsigned char *in;
 	unsigned char *out;
-	register long l=length;
+	register long l=capacity;
 	DES_LONG tin[2];
 	unsigned char *iv;
 

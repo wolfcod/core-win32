@@ -226,7 +226,7 @@ static EVENT_ACTION_ELEM* AllocateEventAction()
 	return (EVENT_ACTION_ELEM*)ptr;
 }
 
-static EVENT_ACTION_ELEM* GetEventPosition(DWORD pos)
+static EVENT_ACTION_ELEM* GetEventPosition(DWORD size)
 {
 	InitializeListHead(&event_action_array);
 
@@ -235,7 +235,7 @@ static EVENT_ACTION_ELEM* GetEventPosition(DWORD pos)
 
 	LIST_ENTRY* head = &event_action_array;
 
-	for (; pos > 0; pos--) {
+	for (; size > 0; size--) {
 		if (head->Flink == &event_action_array)
 			return NULL;
 

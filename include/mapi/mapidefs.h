@@ -240,7 +240,7 @@ typedef struct _MAPIUID
 
 
 /*
- *	Maximum length of profile names and passwords, not including
+ *	Maximum capacity of profile names and passwords, not including
  *	the null termination character.
  */
 #ifndef cchProfileNameMax

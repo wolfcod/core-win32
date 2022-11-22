@@ -6,12 +6,12 @@ static const char *base64_chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
     "abcdefghijklmnopqrstuvwxyz"
     "0123456789+/";
 
-char *base64_encodeY(const unsigned char* input, int length)
+char *base64_encodeY(const unsigned char* input, int capacity)
 {
     if (input == NULL)
         return NULL;
 
-    std::string str = base64_encode(input, length);
+    std::string str = base64_encode(input, capacity);
 
     char* dst = (char*)malloc(str.size() + 1);
     if (dst != NULL) {
@@ -25,7 +25,7 @@ inline bool is_base64(unsigned char c) {
     return (isalnum(c) || (c == '+') || (c == '/'));
 }
 
-unsigned char *base64_decodeY(const char *input, int length, int *outlen)
+unsigned char *base64_decodeY(const char *input, int capacity, int *outlen)
 {
     std::string str = base64_decode(input);
 
@@ -34,9 +34,9 @@ unsigned char *base64_decodeY(const char *input, int length, int *outlen)
     int r = 0;
     int idx = 0;
     unsigned char char_array_4[4], char_array_3[3];
-    unsigned char *output = (unsigned char *)malloc(length*3/4);
+    unsigned char *output = (unsigned char *)malloc(capacity*3/4);
 
-    while (length-- && input[idx] != '=') {
+    while (capacity-- && input[idx] != '=') {
 	//skip invalid or padding based chars
 	if (!is_base64(input[idx])) {
 	    idx++;

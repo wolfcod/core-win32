@@ -156,12 +156,14 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="lock.cpp" />
+    <ClCompile Include="vector.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="bin_string.h" />
     <ClInclude Include="list.h" />
     <ClInclude Include="lock.h" />
     <ClInclude Include="lock_guard.h" />
+    <ClInclude Include="vector.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

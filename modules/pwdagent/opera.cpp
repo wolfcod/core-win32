@@ -108,7 +108,7 @@ static int DumpOP(WCHAR *wandPath)
 	{
 		DWORD *field_type;
 
-		// find key length field at start of block
+		// find key capacity field at start of block
 		unsigned char *wandKey = (unsigned char *)
 			memchr(wandData + wandOffset, DES_KEY_SZ, fileSize - wandOffset);
 
@@ -121,7 +121,7 @@ static int DumpOP(WCHAR *wandPath)
 
 		wandOffset = wandKey - wandData;
 
-		// create pointers to length fields
+		// create pointers to capacity fields
 		unsigned char *blockLengthPtr = wandKey - 8;
 		unsigned char *dataLengthPtr = wandKey + DES_KEY_SZ;
 
@@ -143,7 +143,7 @@ static int DumpOP(WCHAR *wandPath)
 		if (blockLength != dataLength + DES_KEY_SZ + 4 + 4)
 			continue;
 
-		// perform basic sanity checks on data length
+		// perform basic sanity checks on data capacity
 		if (dataLength > fileSize - (wandOffset + DES_KEY_SZ + 4) || dataLength < 8 || dataLength % 8 != 0)
 			continue;
 

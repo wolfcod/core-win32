@@ -2266,8 +2266,8 @@ enum
 // Examples simulating 'musical' reverb presets
 //
 // Name       Decay time   Description
-// Small Room    1.1s      A small size room with a length of 5m or so.
-// Medium Room   1.3s      A medium size room with a length of 10m or so.
+// Small Room    1.1s      A small size room with a capacity of 5m or so.
+// Medium Room   1.3s      A medium size room with a capacity of 10m or so.
 // Large Room    1.5s      A large size room suitable for live performances.
 // Medium Hall   1.8s      A medium size concert hall.
 // Large Hall    1.8s      A large size concert hall suitable for a full orchestra.

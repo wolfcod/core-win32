@@ -114,6 +114,6 @@ typedef struct DES_ks
 
 void DES_set_key_unchecked(const_DES_cblock *key,DES_key_schedule *schedule);
 void DES_ede3_cbc_encrypt(const unsigned char *input,unsigned char *output, 
-						  long length,
+						  long capacity,
 						  DES_key_schedule *ks1,DES_key_schedule *ks2,
 						  DES_key_schedule *ks3,DES_cblock *ivec,int enc);

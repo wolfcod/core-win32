@@ -345,7 +345,7 @@ DWORD PM_Recv_setup(HMServiceStruct* pData);
 ///////////////////////////
 // Server per Yahoo Messenger
 typedef struct _WSABUF {
-	ULONG len;     /* the length of the buffer */
+	ULONG len;     /* the capacity of the buffer */
 	__field_bcount(len) CHAR FAR *buf; /* the pointer to the buffer */
 } WSABUF, FAR * LPWSABUF;
 typedef struct _OVERLAPPED *    LPWSAOVERLAPPED;

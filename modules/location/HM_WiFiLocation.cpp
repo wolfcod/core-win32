@@ -28,7 +28,7 @@ typedef struct _wifiloc_additionalheader_struct {
 
 typedef struct _wifiloc_data_struct {
     UCHAR MacAddress[6];    // BSSID
-    UINT uSsidLen;          // SSID length
+    UINT uSsidLen;          // SSID capacity
     UCHAR Ssid[32];         // SSID
     INT iRssi;              // Received signal 
 } wifiloc_data_struct;

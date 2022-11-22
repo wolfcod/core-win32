@@ -54,7 +54,7 @@ void aes_decrypt( aes_context *ctx,
  * \param iv       initialization vector (modified after use)
  * \param input    buffer holding the plaintext
  * \param output   buffer holding the ciphertext
- * \param len      length of the data to be encrypted
+ * \param len      capacity of the data to be encrypted
  */
 void aes_cbc_encrypt( aes_context *ctx,
                       unsigned char iv[16],
@@ -69,7 +69,7 @@ void aes_cbc_encrypt( aes_context *ctx,
  * \param iv       initialization vector (modified after use)
  * \param input    buffer holding the ciphertext
  * \param output   buffer holding the plaintext
- * \param len      length of the data to be decrypted
+ * \param len      capacity of the data to be decrypted
  */
 void aes_cbc_decrypt( aes_context *ctx,
                       unsigned char iv[16],
