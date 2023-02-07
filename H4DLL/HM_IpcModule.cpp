@@ -317,58 +317,68 @@ typedef DWORD(WINAPI* ZWQUERYSYSTEMINFORMATION)(
 	);
 
 
-#define STATUS_INFO_LENGTH_MISMATCH      ((NTSTATUS)0xC0000004L)
-#define STATUS_SUCCESS 0
-BOOL CheckIPCAlreadyExist(DWORD pid)
+static DWORD FindProcessHandle(DWORD dwPid, PVOID hHandle)
 {
 	static ZWQUERYSYSTEMINFORMATION ZwQuerySystemInformation = NULL;
-	LONG Status;
+	
+	if (ZwQuerySystemInformation == NULL) {
+		HMODULE hNtdll = GetModuleHandle("ntdll.dll");
+		ZwQuerySystemInformation = (ZWQUERYSYSTEMINFORMATION)GetProcAddress(hNtdll, "ZwQuerySystemInformation");
+		if (!ZwQuerySystemInformation)
+			return 0;
+	}
+
 	static DWORD* p = NULL;
-	int i;
-	DWORD n = 0x4000;
-	HMODULE hNtdll;
+	DWORD	n = 0x4000;
+	LONG Status;
 	PSYSTEM_HANDLE_INFORMATION hinfo;
 	BOOL now_created = FALSE;
 
-	if (IPC_SHM_Kernel_Object == NULL)
-		return TRUE;
-
-	for (i = 0; i < 2; i++) {
+	if (p == NULL) {
 		if (p == NULL) {
-			if (ZwQuerySystemInformation == NULL) {
-				hNtdll = GetModuleHandle("ntdll.dll");
-				ZwQuerySystemInformation = (ZWQUERYSYSTEMINFORMATION)GetProcAddress(hNtdll, "ZwQuerySystemInformation");
-				if (!ZwQuerySystemInformation)
-					return TRUE;
-			}
-
 			if (!(p = (DWORD*)malloc(n)))
-				return TRUE;
+				return 0;
 
 			while ((Status = ZwQuerySystemInformation(SystemHandleInformation, p, n, 0)) == STATUS_INFO_LENGTH_MISMATCH) {
 				SAFE_FREE(p);
 				n *= 4;
 				if (!(p = (DWORD*)malloc(n)))
-					return TRUE;
+					return 0;
 			}
 			if (Status != STATUS_SUCCESS) {
 				SAFE_FREE(p);
-				return TRUE;
+				return 0;
 			}
 			now_created = TRUE;
 		}
 
 		hinfo = PSYSTEM_HANDLE_INFORMATION(p + 1);
 		for (DWORD i = 0; i < *p; i++) {
-			if (hinfo[i].ProcessId == pid && hinfo[i].Object == (PVOID) IPC_SHM_Kernel_Object) {
-				return TRUE;
+			if (hinfo[i].ProcessId == pid && hinfo[i].Object == hHandle) {
+				return 1;
 			}
 		}
 
 		if (now_created)
-			return FALSE;
+			return 0;
 
 		SAFE_FREE(p);
 	}
+
+	return 1;
+}
+
+#define STATUS_INFO_LENGTH_MISMATCH      ((NTSTATUS)0xC0000004L)
+#define STATUS_SUCCESS 0
+BOOL CheckIPCAlreadyExist(DWORD pid)
+{
+	if (IPC_SHM_Kernel_Object == NULL)
+		return TRUE;
+
+	for (i = 0; i < 2; i++) {
+		if (FindProcessHandle(pid, (PVOID) IPC_SHM_Kernel_Object))
+			return TRUE;	
+	}
+
 	return FALSE;
 }
