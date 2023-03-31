@@ -15,6 +15,7 @@
 #define SAFE_CLOSE(x) { if(x) FNC(CloseEventLog)(x); x = 0; }
 
 typedef struct {
+	LIST_ENTRY	entry;
 	DWORD event_monitored;
 	DWORD event_triggered;
 	DWORD event_id;
