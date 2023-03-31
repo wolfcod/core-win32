@@ -1,5 +1,7 @@
 #include <windows.h>
-#include <json/JSON.h>
+#include <stdio.h>
+#include <cJSON/cJSON.h>
+//#include <json/JSON.h>
 #include "common.h"
 #include "bss.h"
 #include "H4-DLL.h"
@@ -40,119 +42,103 @@ static const char* bypass_json_list = R"(
 static HANDLE conf_file_handle = NULL;
 
 // Passa alla callback tutti i sotto-oggetti dell'oggetto "section" nella configurazione json
-typedef void (WINAPI* conf_callback_t)(JSONObject, DWORD counter);
-BOOL HM_ParseConfSection(char* conf, WCHAR* section, conf_callback_t call_back)
+typedef void (WINAPI* conf_callback_t)(cJSON *, DWORD counter);
+BOOL HM_ParseConfSection(char* conf, const char* section, conf_callback_t call_back)
 {
-	JSONValue* value;
-	JSONObject root;
 	DWORD counter = 0;
+	
+	cJSON* root = cJSON_Parse(conf);
 
-	value = JSON::Parse(conf);
-	if (!value)
-		return FALSE;
-	if (value->IsObject() == false) {
-		delete value;
+	if (cJSON_IsObject(root) == false) {
+		if (root != NULL)
+			cJSON_Delete(root);
 		return FALSE;
 	}
-	root = value->AsObject();
 
-	if (root.find(section) != root.end() && root[section]->IsArray()) {
-		JSONArray jarray = root[section]->AsArray();
-		for (unsigned int i = 0; i < jarray.size(); i++) {
-			if (jarray[i]->IsObject())
-				call_back(jarray[i]->AsObject(), counter++);
-		}
+	cJSON* arr = cJSON_GetObjectItem(root, section);
+
+	if (cJSON_IsArray(arr)) {
+		cJSON* n = NULL;
+		cJSON_ArrayForEach(n, arr)
+			call_back(n, counter++);
 	}
-	delete value;
+
+	cJSON_Delete(root);
 	return TRUE;
 }
 
 // Passa l'oggetto json delle globals
 BOOL HM_ParseConfGlobals(char* conf, conf_callback_t call_back)
 {
-	JSONValue* value = JSON::Parse(conf);
-	
-	if (value) {
+	cJSON* root = cJSON_Parse(conf);
 
+	if (cJSON_IsObject(root)) {
+		cJSON* globals = cJSON_GetObjectItem(root, "globals");
+		if (globals != NULL)
+			call_back(globals, 0);
 	}
-	return FALSE;
-	if (value->IsObject() == false) {
-		delete value;
-		return FALSE;
-	}
-	JSONObject root = value->AsObject();
 
-	if (!root[L"globals"]->IsObject()) {
-		delete value;
-		return FALSE;
-	}
-	
-	JSONObject obj = root[L"globals"]->AsObject();
-	call_back(obj, 0);
-
-	delete value;
+	cJSON_Delete(root);
 	return TRUE;
 }
 
-BOOL HM_CountConfSection(char* conf, WCHAR* section, DWORD* count)
+BOOL HM_CountConfSection(char* conf, const char* sectionName, DWORD* count)
 {
-	JSONValue* value;
-	JSONObject root;
-
 	*count = 0;
-	value = JSON::Parse(conf);
-	if (!value)
-		return FALSE;
-	if (value->IsObject() == false) {
-		delete value;
-		return FALSE;
+	cJSON* root = cJSON_Parse(conf);
+	
+	if (cJSON_IsObject(root)) {
+		cJSON* section = cJSON_GetObjectItem(root, sectionName);
+		*count = cJSON_GetArraySize(section);
 	}
-	root = value->AsObject();
-
-	if (root.find(section) != root.end() && root[section]->IsArray()) {
-		JSONArray jarray = root[section]->AsArray();
-		*count = jarray.size();
-	}
-	delete value;
+	
+	cJSON_Delete(root);
 	if (*count != 0)
 		return TRUE;
 	return FALSE;
 }
 
 
-void WINAPI ParseBypassCallback(JSONObject conf_json, DWORD dummy)
+void WINAPI ParseBypassCallback(cJSON* conf_json, DWORD dummy)
 {
 	DWORD index;
-	JSONArray bypass_array = conf_json[L"nohide"]->AsArray();
-	shared.process_bypassed = bypass_array.size();
+	cJSON* bypass_array = cJSON_GetObjectItem(conf_json, "nohide");
+
+	shared.process_bypassed = cJSON_GetArraySize(bypass_array);
 	if (shared.process_bypassed > MAX_DYNAMIC_BYPASS)
 		shared.process_bypassed = MAX_DYNAMIC_BYPASS;
 	shared.process_bypassed += EMBEDDED_BYPASS; // Inserisce i processi hardcoded
 
 	// Legge i processi rimanenti dal file di configurazione
-	for (index = 0; index < bypass_array.size(); index++)
-		_snprintf_s(shared.process_bypass_list[index + EMBEDDED_BYPASS], MAX_PBYPASS_LEN, _TRUNCATE, "%S", bypass_array[index]->AsString().c_str());
+	for (index = 0; index < cJSON_GetArraySize(bypass_array); index++) {
+		cJSON* node = cJSON_GetArrayItem(bypass_array, index);
+		const char* value = cJSON_GetStringValue(node);
+		_snprintf_s(shared.process_bypass_list[index + EMBEDDED_BYPASS], MAX_PBYPASS_LEN, _TRUNCATE, "%s", value);
+	}
 }
 
-void WINAPI ParseDriverHandling(JSONObject conf_json, DWORD dummy)
+void WINAPI ParseDriverHandling(cJSON* conf_json, DWORD dummy)
 {
-	shared.g_remove_driver = (BOOL)conf_json[L"remove_driver"]->AsBool();
+	cJSON* remove_driver = cJSON_GetObjectItem(conf_json, "remove_driver");
+	shared.g_remove_driver = (BOOL)cJSON_IsTrue(remove_driver);
 }
 
 
 static void setup_bypass_list()
 {
-	JSONValue* value = JSON::Parse(bypass_json_list);
-	if (value != NULL && value->IsArray()) {
-		JSONArray arr = value->AsArray();
-		for (int i = 0; i < arr.size(); i++) {
-			JSONObject& obj = const_cast<JSONObject&>(arr[i]->AsObject());
-			sprintf_s(shared.process_bypass_list[i], "%S", obj[L"processName"]->AsString().c_str());
+	cJSON* value = cJSON_Parse(bypass_json_list);
 
-			if (obj[L"description"] != NULL) {
-				wcscpy(shared.process_bypass_desc[i], obj[L"description"]->AsString().c_str());
-			}
-			//strcpy(shared.process_bypass_list[i], r[L"processName"].
+	if (value != NULL && cJSON_IsArray(value)) {
+		cJSON* ptr = NULL;
+		int i = 0;
+
+		cJSON_ArrayForEach(ptr, value) {
+			cJSON* processName = cJSON_GetObjectItem(ptr, "processName");
+			cJSON* description = cJSON_GetObjectItem(ptr, "description");
+
+			sprintf_s(shared.process_bypass_list[i], "%s", cJSON_GetStringValue(processName));
+			if (description != NULL) {};
+				//wcscpy(shared.process_bypass_desc[i], obj[L"description"]->AsString().c_str());
 		}
 	}
 
@@ -196,7 +182,6 @@ void LockConfFile()
 
 void UnlockConfFile()
 {
-	DWORD i;
 	char conf_path[DLLNAMELEN];
 
 	HM_CompletePath(shared.H4_CONF_FILE, conf_path);
@@ -205,7 +190,7 @@ void UnlockConfFile()
 		CloseHandle(conf_file_handle);
 	conf_file_handle = NULL;
 
-	for (i = 0; i < MAX_DELETE_TRY; i++) {
+	for (DWORD i = 0; i < MAX_DELETE_TRY; i++) {
 		if (FNC(SetFileAttributesA)(conf_path, FILE_ATTRIBUTE_NORMAL))
 			break;
 		Sleep(DELETE_SLEEP_TIME);
