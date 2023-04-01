@@ -1,5 +1,5 @@
 #include <Windows.h>
-#include <json/JSON.h>
+#include <cJSON/cJSON.h>
 #include "../common.h"
 #include "../bss.h"
 #include "../H4-DLL.h"
@@ -122,15 +122,15 @@ void MonEventAddEvent(MONITORED_SOURCE* source_entry, DWORD event_monitored, DWO
 }
 
 
-void WINAPI EM_MonEventAdd(JSONObject conf_json, EVENT_PARAM* event_param, DWORD event_id)
+void WINAPI EM_MonEventAdd(cJSON *conf_json, EVENT_PARAM* event_param, DWORD event_id)
 {
 	void* temp_table;
 	char source_name[260];
 	DWORD event_monitored;
 	DWORD i;
 
-	sprintf_s(source_name, "%S", conf_json[L"source"]->AsString().c_str());
-	event_monitored = conf_json[L"id"]->AsNumber();
+	sprintf_s(source_name, "%s", cJSON_GetStringValue(cJSON_GetObjectItem(conf_json, "source")));
+	event_monitored = cJSON_GetNumberValue(cJSON_GetObjectItem(conf_json, "id"));
 
 	// Se la sorgente e' gia' monitorata aggiunge un evento...
 	for (i = 0; i < em_me_source_count; i++)
@@ -273,7 +273,7 @@ void EventMonitorLog::onStop()
 	em_me_source_count = 0;
 }
 
-void EventMonitorLog::onAdd(JSONObject json, EVENT_PARAM* event_param, DWORD event_id)
+void EventMonitorLog::onAdd(cJSON* json, EVENT_PARAM* event_param, DWORD event_id)
 {
 	EM_MonEventAdd(json, event_param, event_id);
 }

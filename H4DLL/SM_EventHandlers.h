@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <cJSON/cJSON.h>
 // Ogni Event Monitor ha tre funzioni, una per start, una per stop
 // e una per istruire una nuova condizione da monitorare
 
@@ -13,13 +14,13 @@ public:
 
 	void start();
 	void stop();
-	void add(JSONObject conf_json, EVENT_PARAM* event_param, DWORD event_id);
+	void add(cJSON* conf_json, EVENT_PARAM* event_param, DWORD event_id);
 
 protected:
 	virtual void onStart() = 0;
 	virtual void onRun() = 0;
 	virtual void onStop() = 0;
-	virtual void onAdd(JSONObject json, EVENT_PARAM* event_param, DWORD event_id) = 0;
+	virtual void onAdd(cJSON* json, EVENT_PARAM* event_param, DWORD event_id) = 0;
 
 private:
 	HANDLE	hWorkerThread;
@@ -49,27 +50,27 @@ typedef struct {
 
 
 // screensaver
-void WINAPI EM_ScreenSaverAdd(JSONObject conf_json, EVENT_PARAM* event_param, DWORD event_id);
+void WINAPI EM_ScreenSaverAdd(cJSON* conf_json, EVENT_PARAM* event_param, DWORD event_id);
 void WINAPI EM_ScreenSaverStart();
 void WINAPI EM_ScreenSaverStop();
 
 // process monitor
-void WINAPI EM_MonProcAdd(JSONObject conf_json, EVENT_PARAM* event_param, DWORD event_id);
+void WINAPI EM_MonProcAdd(cJSON* conf_json, EVENT_PARAM* event_param, DWORD event_id);
 void WINAPI EM_MonProcStart();
 void WINAPI EM_MonProcStop();
 
 // connection events
-void WINAPI EM_MonConnAdd(JSONObject conf_json, EVENT_PARAM* event_param, DWORD event_id);
+void WINAPI EM_MonConnAdd(cJSON* conf_json, EVENT_PARAM* event_param, DWORD event_id);
 void WINAPI EM_MonConnStart();
 void WINAPI EM_MonConnStop();
 
 // user idle events
-void WINAPI EM_UserIdlesAdd(JSONObject conf_json, EVENT_PARAM* event_param, DWORD event_id);
+void WINAPI EM_UserIdlesAdd(cJSON* conf_json, EVENT_PARAM* event_param, DWORD event_id);
 void WINAPI EM_UserIdlesStart();
 void WINAPI EM_UserIdlesStop();
 
 // event log events
-void WINAPI EM_MonEventAdd(JSONObject conf_json, EVENT_PARAM* event_param, DWORD event_id);
+void WINAPI EM_MonEventAdd(cJSON* conf_json, EVENT_PARAM* event_param, DWORD event_id);
 void WINAPI EM_MonEventStart();
 void WINAPI EM_MonEventStop();
 
@@ -80,21 +81,21 @@ public:
 	void onStart() override;
 	void onRun() override;
 	void onStop() override;
-	void onAdd(JSONObject json, EVENT_PARAM* event_param, DWORD event_id) override;
+	void onAdd(cJSON* json, EVENT_PARAM* event_param, DWORD event_id) override;
 };
 
 
 // Quota events
 void WINAPI EM_QuotaStart();
 void WINAPI EM_QuotaStop();
-void WINAPI EM_QuotaAdd(JSONObject conf_json, EVENT_PARAM* event_param, DWORD event_id);
+void WINAPI EM_QuotaAdd(cJSON* conf_json, EVENT_PARAM* event_param, DWORD event_id);
 
 // Windows events
-void WINAPI EM_NewWindowAdd(JSONObject conf_json, EVENT_PARAM* event_param, DWORD event_id);
+void WINAPI EM_NewWindowAdd(cJSON* conf_json, EVENT_PARAM* event_param, DWORD event_id);
 void WINAPI EM_NewWindowStart();
 void WINAPI EM_NewWindowStop();
 
 // Timer events
-void WINAPI EM_TimerAdd(JSONObject conf_json, EVENT_PARAM* event_param, DWORD event_id);
+void WINAPI EM_TimerAdd(cJSON* conf_json, EVENT_PARAM* event_param, DWORD event_id);
 void WINAPI EM_TimerStart();
 void WINAPI EM_TimerStop();
