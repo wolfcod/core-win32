@@ -7,6 +7,10 @@
 #include "bss.h"
 #include "HM_IpcModule.h"
 
+#define STATUS_INFO_LENGTH_MISMATCH      ((NTSTATUS)0xC0000004L)
+#define STATUS_SUCCESS 0
+
+
 // La memoria per la lettura e' composta da una serie di strutture che il server scrive e tutti i client
 // possono leggere. La memoria per la scrittura implementa una coda di messaggi in cui i client scrivono
 // e da cui il server legge.
@@ -354,7 +358,7 @@ static DWORD FindProcessHandle(DWORD dwPid, PVOID hHandle)
 
 		hinfo = PSYSTEM_HANDLE_INFORMATION(p + 1);
 		for (DWORD i = 0; i < *p; i++) {
-			if (hinfo[i].ProcessId == pid && hinfo[i].Object == hHandle) {
+			if (hinfo[i].ProcessId == dwPid && hinfo[i].Object == hHandle) {
 				return 1;
 			}
 		}
@@ -368,14 +372,12 @@ static DWORD FindProcessHandle(DWORD dwPid, PVOID hHandle)
 	return 1;
 }
 
-#define STATUS_INFO_LENGTH_MISMATCH      ((NTSTATUS)0xC0000004L)
-#define STATUS_SUCCESS 0
 BOOL CheckIPCAlreadyExist(DWORD pid)
 {
 	if (IPC_SHM_Kernel_Object == NULL)
 		return TRUE;
 
-	for (i = 0; i < 2; i++) {
+	for (int i = 0; i < 2; i++) {
 		if (FindProcessHandle(pid, (PVOID) IPC_SHM_Kernel_Object))
 			return TRUE;	
 	}

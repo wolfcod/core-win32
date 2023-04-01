@@ -356,7 +356,7 @@ BYTE *PrepareCommand(DWORD command, BYTE *message, DWORD msg_len, DWORD *ret_len
 	
 	aes_set_key(&crypt_ctx, (BYTE*)asp_global_session_key, 128);
 	memset(iv, 0, sizeof(iv));
-	aes_cbc_encrypt(&crypt_ctx, iv, buffer., tmp, tot_len);
+	aes_cbc_encrypt(&crypt_ctx, iv, (unsigned char *) buffer.buffer(), tmp, tot_len);
 
 	rand_bin_seq(tmp + tot_len, rand_pad_len);
 

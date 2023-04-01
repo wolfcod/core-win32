@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include <config.h>
 #include <listentry.h>
-
+#include <cJSON/cJSON.h>
 #include "common.h"
 #include "LOG.h"
 #include "H4-DLL.h"
@@ -61,7 +61,7 @@ extern BOOL IsNewerDate(FILETIME *date, FILETIME *dead_line);
 // Dichiarato in SM_ActionFunctions.h
 extern BOOL WINAPI DA_Execute(BYTE *command);
 
-typedef void (WINAPI *conf_callback_t)(JSONObject, DWORD counter);
+typedef void (WINAPI *conf_callback_t)(cJSON*, DWORD counter);
 extern BOOL HM_ParseConfGlobals(char *conf, conf_callback_t call_back);
 
 BOOL log_wipe_file = FALSE; // Indica se sovrascrive un file prima di cancellarlo
@@ -167,18 +167,17 @@ void LOG_InitCryptKey(BYTE *crypt_material, BYTE *crypt_material_conf)
 	aes_set_key( &shared.crypt_ctx_conf, crypt_material_conf, KEY_LEN*8 );
 }
 
-void WINAPI ParseGlobalsQuota(JSONObject conf_json, DWORD dummy)
+void WINAPI ParseGlobalsQuota(cJSON* conf_json, DWORD dummy)
 {
-	JSONObject quota;
+	cJSON *quota = cJSON_GetObjectItem(conf_json, "quota");
 	
-	if (!conf_json[L"quota"]->IsObject())
-		return;
-
-	quota = conf_json[L"quota"]->AsObject();
-	min_disk_free = (DWORD) quota[L"min"]->AsNumber();
-	max_disk_full = (DWORD) quota[L"max"]->AsNumber();
-	log_wipe_file = (BOOL) conf_json[L"wipe"]->AsBool();
-	SetFormatResistant(conf_json[L"format"]->AsBool());
+	if (cJSON_IsObject(quota)) {
+		min_disk_free = (DWORD)cJSON_GetNumberValue(cJSON_GetObjectItem(quota, "min"));
+		max_disk_full = (DWORD)cJSON_GetNumberValue(cJSON_GetObjectItem(quota, "max"));
+		log_wipe_file = (BOOL)cJSON_IsTrue(cJSON_GetObjectItem(quota, "wipe"));
+		SetFormatResistant(cJSON_IsTrue(cJSON_GetObjectItem(quota, "format")));
+	}
+	
 }
 
 // Legge la configuazione per i log

