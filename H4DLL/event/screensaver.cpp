@@ -73,7 +73,7 @@ DWORD MonitorScreenSaver(DWORD dummy)
 }
 
 
-void WINAPI EM_ScreenSaverAdd(JSONObject conf_json, EVENT_PARAM* event_param, DWORD event_id)
+void WINAPI EM_ScreenSaverAdd(cJSON *conf_json, EVENT_PARAM* event_param, DWORD event_id)
 {
 	void* temp_table;
 

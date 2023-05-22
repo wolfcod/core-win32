@@ -201,7 +201,7 @@ else {
 }
 
 
-void WINAPI EM_MonProcAdd(JSONObject conf_json, EVENT_PARAM* event_param, DWORD event_id)
+void WINAPI EM_MonProcAdd(cJSON *conf_json, EVENT_PARAM* event_param, DWORD event_id)
 {
 	void* temp_table;
 

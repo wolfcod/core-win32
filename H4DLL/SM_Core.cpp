@@ -472,6 +472,28 @@ void WINAPI ParseEvents(cJSON *conf_json, DWORD counter)
 		conf_json, &event_param, counter, cJSON_IsTrue(cJSON_GetObjectItem(conf_json, "enabled")));
 }
 
+static wchar_t* wstrFromCfg(cJSON* root, const char* key)
+{
+	if (cJSON_GetObjectItem(root, key) == NULL)
+		return NULL;
+
+	cJSON* node = cJSON_GetObjectItem(root, key);
+
+	size_t len = strlen(cJSON_GetStringValue(node));
+	if (len > 0)
+		len++;
+
+	if (!len)
+		return NULL;
+
+	wchar_t* dst = (wchar_t*)malloc(len * 2);
+	if (!dst)
+		return NULL;
+
+	swprintf_s(dst, len, L"%S", cJSON_GetStringValue(node));
+
+	return dst;
+}
 BYTE *ParseActionParameter(cJSON* conf_json, DWORD *tag)
 {
 	char action[64];
@@ -484,7 +506,7 @@ BYTE *ParseActionParameter(cJSON* conf_json, DWORD *tag)
 
 	if (!strcmp(action, "log")) {
 		*tag = AF_LOGINFO;
-		param = (BYTE *)wcsdup(conf_json[L"text"]->AsString().c_str());
+		param = (BYTE *)wstrFromCfg(conf_json, "text");
 
 	} else if (!strcmp(action, "synchronize")) {
 		typedef struct {
@@ -496,7 +518,7 @@ BYTE *ParseActionParameter(cJSON* conf_json, DWORD *tag)
 		} sync_conf_struct;
 		sync_conf_struct *sync_conf;
 		*tag = AF_SYNCRONIZE;
-		param = (BYTE *)malloc(sizeof(sync_conf_struct) + wcslen(conf_json[L"host"]->AsString().c_str())*2);
+		param = (BYTE *)malloc(sizeof(sync_conf_struct) + strlen(cJSON_GetStringValue(cJSON_GetObjectItem(conf_json, "host"))));
 		if (param) {
 			sync_conf = (sync_conf_struct *)param;
 			sync_conf->min_sleep = cJSON_GetNumberValue(cJSON_GetObjectItem(conf_json, "mindelay"));
