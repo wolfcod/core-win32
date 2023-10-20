@@ -106,6 +106,24 @@ CJSON_PUBLIC(char*) cJSON_GetStringValue(const cJSON* const item)
     return item->valuestring;
 }
 
+CJSON_PUBLIC(wchar_t*) cJSON_GetWideStringValue(const cJSON* const item)
+{
+    if (!cJSON_IsString(item))
+    {
+        return NULL;
+    }
+    
+    size_t length = sizeof(wchar_t) * strlen(item->valuestring) + sizeof(L"");
+    wchar_t* value = malloc(length);
+    if (value != NULL)
+    {
+        memset(value, 0, length);
+        swprintf_s(value, length, L"%S", item->valuestring);
+        return value;
+    }
+    return NULL;
+}
+
 CJSON_PUBLIC(double) cJSON_GetNumberValue(const cJSON* const item)
 {
     if (!cJSON_IsNumber(item))

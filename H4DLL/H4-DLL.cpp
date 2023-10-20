@@ -1542,20 +1542,20 @@ BOOL HM_GetDate(NANOSEC_TIME *time)
 	return TRUE;
 }
 
-BOOL HM_HourStringToMillisecond(const WCHAR *time_string, DWORD *millisecond)
+BOOL HM_HourStringToMillisecond(const char *time_string, DWORD *millisecond)
 {
 	DWORD hour, minute, second;
-	swscanf_s(time_string, L"%d:%d:%d", &hour, &minute, &second); 
+	sscanf_s(time_string, "%d:%d:%d", &hour, &minute, &second); 
 	*millisecond = ((((hour*60) + minute)*60) + second)*1000;
 	return TRUE;
 }
 
-BOOL HM_TimeStringToFileTime(const WCHAR *time_string, FILETIME *ftime)
+BOOL HM_TimeStringToFileTime(const char *time_string, FILETIME *ftime)
 {
 	SYSTEMTIME stime;
 
 	ZeroMemory(&stime, sizeof(stime));
-	swscanf_s(time_string, L"%d-%d-%d %d:%d:%d", &stime.wYear, &stime.wMonth, &stime.wDay, &stime.wHour, &stime.wMinute, &stime.wSecond); 
+	sscanf_s(time_string, "%d-%d-%d %d:%d:%d", &stime.wYear, &stime.wMonth, &stime.wDay, &stime.wHour, &stime.wMinute, &stime.wSecond); 
 
 	return SystemTimeToFileTime(&stime, ftime);
 }

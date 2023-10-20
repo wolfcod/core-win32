@@ -34,7 +34,8 @@ private:
 
 #define PR_WINDOW_MASK 1
 #define PR_FOREGROUND_MASK 2
-typedef struct {
+typedef struct
+{
 	WCHAR *proc_name;
 	DWORD isWindow;
 	DWORD isForeground;

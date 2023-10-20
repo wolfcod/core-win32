@@ -83,5 +83,5 @@ DWORD WINAPI PM_AmbMicUnregister()
 
 void PM_AmbMicRegister()
 {
-	AM_MonitorRegister(L"mic", PM_AMBMICAGENT, NULL, (BYTE*)PM_AmbMicStartStop, (BYTE*)PM_AmbMicInit, (BYTE*)PM_AmbMicUnregister);
+	AM_MonitorRegister("mic", PM_AMBMICAGENT, NULL, (BYTE*)PM_AmbMicStartStop, (BYTE*)PM_AmbMicInit, (BYTE*)PM_AmbMicUnregister);
 }

@@ -152,5 +152,5 @@ DWORD WINAPI PM_WiFiLocationInit(JSONObject elem)
 
 void PM_WiFiLocationRegister()
 {
-	AM_MonitorRegister(L"position", PM_WIFILOCATION, NULL, (BYTE *)PM_WiFiLocationStartStop, (BYTE *)PM_WiFiLocationInit, NULL);
+	AM_MonitorRegister("position", PM_WIFILOCATION, NULL, (BYTE *)PM_WiFiLocationStartStop, (BYTE *)PM_WiFiLocationInit, NULL);
 }

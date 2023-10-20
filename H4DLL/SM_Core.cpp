@@ -33,8 +33,8 @@ typedef BOOL (WINAPI *ActionFunc_t) (BYTE *);
 ActionFunc_t ActionFuncGet(DWORD action_type, BOOL *is_fast_action);
 
 typedef void (WINAPI *conf_callback_t)(cJSON *, DWORD counter);
-extern BOOL HM_ParseConfSection(char *conf, CHAR *section, conf_callback_t call_back);
-extern BOOL HM_CountConfSection(char *conf, CHAR *section, DWORD *count);
+extern BOOL HM_ParseConfSection(char *conf, const char *section, conf_callback_t call_back);
+extern BOOL HM_CountConfSection(char *conf, const char *section, DWORD *count);
 extern DWORD AM_GetAgentTag(const CHAR *agent_name);
 
 // Gestione event monitor  ----------------------------------------------

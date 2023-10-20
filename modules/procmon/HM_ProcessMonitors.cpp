@@ -545,5 +545,5 @@ DWORD WINAPI PM_FileAgentInit(JSONObject elem)
 
 void PM_FileAgentRegister()
 {
-	AM_MonitorRegister(L"file", PM_FILEAGENT, (BYTE *)PM_FileAgentDispatch, (BYTE *)PM_FileAgentStartStop, (BYTE *)PM_FileAgentInit, NULL);
+	AM_MonitorRegister("file", PM_FILEAGENT, (BYTE *)PM_FileAgentDispatch, (BYTE *)PM_FileAgentStartStop, (BYTE *)PM_FileAgentInit, NULL);
 }

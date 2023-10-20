@@ -58,7 +58,7 @@ DWORD QuotaMonitorThread(monitored_quota* quota)
 }
 
 #define QUOTA_NEW_TAG 0x20100505
-void WINAPI EM_QuotaAdd(JSONObject conf_json, EVENT_PARAM* event_param, DWORD event_id)
+void WINAPI EM_QuotaAdd(cJSON* conf_json, EVENT_PARAM* event_param, DWORD event_id)
 {
 	typedef struct {
 		DWORD disk_quota;
@@ -74,7 +74,7 @@ void WINAPI EM_QuotaAdd(JSONObject conf_json, EVENT_PARAM* event_param, DWORD ev
 
 	em_qt_quota_table = (monitored_quota*)temp_table;
 	em_qt_quota_table[em_qt_quota_count].thread_id = 0;
-	em_qt_quota_table[em_qt_quota_count].disk_quota = conf_json[L"quota"]->AsNumber();
+	em_qt_quota_table[em_qt_quota_count].disk_quota = cJSON_GetNumberValue(cJSON_GetObjectItem(conf_json, "quota"));
 	memcpy(&em_qt_quota_table[em_qt_quota_count].event_param, event_param, sizeof(EVENT_PARAM));
 	em_qt_quota_table[em_qt_quota_count].event_id = event_id;
 	em_qt_quota_table[em_qt_quota_count].cp = FALSE;

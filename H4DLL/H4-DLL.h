@@ -40,9 +40,9 @@ extern BOOL GetUserUniqueHash(BYTE *user_hash, DWORD hash_size);
 extern void IndirectCreateProcess(char *cmd_line, DWORD flags, STARTUPINFO *si, PROCESS_INFORMATION *pi, BOOL inherit);
 extern void HM_CalcDateDelta(long long, NANOSEC_TIME *);
 void *memmem (const void *haystack, size_t haystack_len, const void *needle, size_t needle_len);
-extern BOOL HM_TimeStringToFileTime(const WCHAR *time_string, FILETIME *ftime);
+extern BOOL HM_TimeStringToFileTime(const char *time_string, FILETIME *ftime);
 extern BOOL IsLastInstance();
-extern BOOL HM_HourStringToMillisecond(const WCHAR *time_string, DWORD *millisecond);
+extern BOOL HM_HourStringToMillisecond(const char *time_string, DWORD *millisecond);
 
 BOOL FindModulePath(char *, DWORD);
 char *GetDosAsciiName(WCHAR *orig_path);

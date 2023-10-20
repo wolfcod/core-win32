@@ -22,7 +22,8 @@
 #define	NETWORK_CRISIS	0x1
 #define SYSTEM_CRISIS	0x80
 
-typedef struct _bss_seg {
+typedef struct _bss_seg 
+{
 	BOOL is_demo_version;
 	BYTE crypt_key[KEY_LEN];		// Chiave di cifratura
 	BYTE crypt_key_conf[KEY_LEN];   // Chiave di cifratura per la conf

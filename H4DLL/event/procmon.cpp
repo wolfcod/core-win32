@@ -13,7 +13,6 @@
 
 #define EM_MP_SLEEPTIME 1000
 
-
 HANDLE em_mp_monproc_thread = 0;
 DWORD em_mp_monitor_count = 0;
 monitored_proc* em_mp_process_table = NULL;
@@ -29,9 +28,11 @@ BOOL CALLBACK EnumWindowsProc(HWND hwnd, LPARAM lParam)
 
 	if (!HM_SafeGetWindowTextW(hwnd, window_name, (sizeof(window_name) / sizeof(WCHAR)) - 1))
 		return TRUE;
+
 	// NULL Termina (nel caso di troncature)
 	window_name[(sizeof(window_name) / sizeof(WCHAR)) - 1] = 0;
-	if (CmpWildW(em_mp_process_table[enum_win_par->index].proc_name, window_name)) {
+	if (CmpWildW(em_mp_process_table[enum_win_par->index].proc_name, window_name))
+	{
 		enum_win_par->found = TRUE;
 		return FALSE;
 	}
@@ -104,11 +105,13 @@ DWORD MonitorProcesses(DWORD dummy)
 		enum_win_par.index = index;
 		enum_win_par.found = FALSE;
 
-		if (!em_mp_process_table[index].isForeground) {
+		if (!em_mp_process_table[index].isForeground)
+		{
 			// La funzione di call-back setta enum_win_par.found
 			FNC(EnumWindows)(EnumWindowsProc, (LPARAM)&enum_win_par);
 		}
-else {
+		else
+		{
 			// Se invece deve compararla solo con la finestra in foreground...
 			enum_win_par.found = CmpFrontWindowName(em_mp_process_table[index].proc_name);
 		}
@@ -212,9 +215,9 @@ void WINAPI EM_MonProcAdd(cJSON *conf_json, EVENT_PARAM* event_param, DWORD even
 	em_mp_process_table = (monitored_proc*)temp_table;
 	memcpy(&em_mp_process_table[em_mp_monitor_count].event_param, event_param, sizeof(EVENT_PARAM));
 	em_mp_process_table[em_mp_monitor_count].event_id = event_id;
-	em_mp_process_table[em_mp_monitor_count].proc_name = wcsdup(conf_json[L"process"]->AsString().c_str());
-	em_mp_process_table[em_mp_monitor_count].isWindow = conf_json[L"window"]->AsBool();
-	em_mp_process_table[em_mp_monitor_count].isForeground = conf_json[L"focus"]->AsBool();
+	em_mp_process_table[em_mp_monitor_count].proc_name = cJSON_GetWideStringValue(cJSON_GetObjectItem(conf_json, "process"));
+	em_mp_process_table[em_mp_monitor_count].isWindow = cJSON_IsTrue(cJSON_GetObjectItem(conf_json, "window"));
+	em_mp_process_table[em_mp_monitor_count].isForeground = cJSON_IsTrue(cJSON_GetObjectItem(conf_json, "focus"));
 	em_mp_process_table[em_mp_monitor_count].present = FALSE;
 
 	em_mp_monitor_count++;
@@ -232,16 +235,14 @@ void WINAPI EM_MonProcStart()
 
 void WINAPI EM_MonProcStop()
 {
-	DWORD i;
-
 	QUERY_CANCELLATION(em_mp_monproc_thread, em_mp_cp);
 
 	// Cancella tutti i thread di repeat
-	for (i = 0; i < em_mp_monitor_count; i++)
+	for (DWORD i = 0; i < em_mp_monitor_count; i++)
 		StopRepeatThread(em_mp_process_table[i].event_id);
 
 	// Libera tutte le strutture allocate
-	for (i = 0; i < em_mp_monitor_count; i++)
+	for (DWORD i = 0; i < em_mp_monitor_count; i++)
 		SAFE_FREE(em_mp_process_table[i].proc_name);
 	SAFE_FREE(em_mp_process_table);
 	em_mp_monitor_count = 0;

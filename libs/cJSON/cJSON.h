@@ -177,6 +177,7 @@ extern "C"
 
     /* Check item type and return its value */
     CJSON_PUBLIC(char*) cJSON_GetStringValue(const cJSON* const item);
+    CJSON_PUBLIC(wchar_t*) cJSON_GetWideStringValue(const cJSON* const item);
     CJSON_PUBLIC(double) cJSON_GetNumberValue(const cJSON* const item);
 
     /* These functions check the type of an item */

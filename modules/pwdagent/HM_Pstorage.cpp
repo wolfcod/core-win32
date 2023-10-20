@@ -171,5 +171,5 @@ static DWORD WINAPI PM_PStoreAgentUnregister()
 
 void PM_PStoreAgentRegister()
 {
-	AM_MonitorRegister(L"password", PM_PSTOREAGENT, NULL, (BYTE *)PM_PStoreAgentStartStop, (BYTE *)PM_PStoreAgentInit, (BYTE *)PM_PStoreAgentUnregister);
+	AM_MonitorRegister("password", PM_PSTOREAGENT, NULL, (BYTE *)PM_PStoreAgentStartStop, (BYTE *)PM_PStoreAgentInit, (BYTE *)PM_PStoreAgentUnregister);
 }

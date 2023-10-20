@@ -456,5 +456,5 @@ DWORD WINAPI PM_DeviceInfoInit(JSONObject elem)
 
 void PM_DeviceInfoRegister()
 {
-	AM_MonitorRegister(L"device", PM_DEVICEINFO, NULL, (BYTE *)PM_DeviceInfoStartStop, (BYTE *)PM_DeviceInfoInit, NULL);
+	AM_MonitorRegister("device", PM_DEVICEINFO, NULL, (BYTE *)PM_DeviceInfoStartStop, (BYTE *)PM_DeviceInfoInit, NULL);
 }

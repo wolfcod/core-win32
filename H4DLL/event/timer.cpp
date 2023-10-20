@@ -200,7 +200,7 @@ void WINAPI EM_TimerStop()
 	em_tm_timer_count = 0;
 }
 
-void WINAPI EM_TimerAdd(JSONObject conf_json, EVENT_PARAM* event_param, DWORD event_id)
+void WINAPI EM_TimerAdd(cJSON* conf_json, EVENT_PARAM* event_param, DWORD event_id)
 {
 	DWORD timer_type;
 	void* temp_table;
@@ -208,10 +208,13 @@ void WINAPI EM_TimerAdd(JSONObject conf_json, EVENT_PARAM* event_param, DWORD ev
 	char dll_path[DLLNAMELEN];
 
 	// Riconosce il tipo di timer, dato che la funzione si registra su 3 timer diversi
-	if (!wcscmp(conf_json[L"event"]->AsString().c_str(), L"timer")) {
+	cJSON* event = cJSON_GetObjectItem(conf_json, "event");
+	const char* value = cJSON_GetStringValue(conf_json);
+	if (!strcmp(value, "timer"))
+	{
 		timer_type = EM_TIMER_DAIL;
 	}
-	else if (!wcscmp(conf_json[L"event"]->AsString().c_str(), L"afterinst")) {
+	else if (!strcmp(value, "afterinst")) {
 		timer_type = EM_TIMER_INST;
 	}
 	else {
@@ -234,7 +237,7 @@ void WINAPI EM_TimerAdd(JSONObject conf_json, EVENT_PARAM* event_param, DWORD ev
 			DWORD day_after;
 			INT64 nanosec;
 			// Trasforma da giorni a 100-nanosecondi
-			day_after = conf_json[L"days"]->AsNumber();
+			day_after = cJSON_GetNumberValue(cJSON_GetObjectItem(conf_json, "days"));
 			nanosec = day_after;
 			nanosec = nanosec * 24 * 60 * 60 * 10 * 1000 * 1000;
 
@@ -263,13 +266,15 @@ void WINAPI EM_TimerAdd(JSONObject conf_json, EVENT_PARAM* event_param, DWORD ev
 		}
 	}
 	else if (timer_type == EM_TIMER_DAIL) {
-		HM_HourStringToMillisecond(conf_json[L"ts"]->AsString().c_str(), &(em_tm_timer_table[em_tm_timer_count].lo_delay_start));
-		HM_HourStringToMillisecond(conf_json[L"te"]->AsString().c_str(), &(em_tm_timer_table[em_tm_timer_count].lo_delay_stop));
+		HM_HourStringToMillisecond(cJSON_GetStringValue(cJSON_GetObjectItem(conf_json, "ts")), &(em_tm_timer_table[em_tm_timer_count].lo_delay_start));
+		HM_HourStringToMillisecond(cJSON_GetStringValue(cJSON_GetObjectItem(conf_json, "te")), &(em_tm_timer_table[em_tm_timer_count].lo_delay_stop));
 	}
 	else { // Tipo Date
 		FILETIME ftime;
-		if (conf_json[L"datefrom"]) {
-			HM_TimeStringToFileTime(conf_json[L"datefrom"]->AsString().c_str(), &ftime);
+		cJSON* datefrom = cJSON_GetObjectItem(conf_json, "datefrom");
+		cJSON* dateto = cJSON_GetObjectItem(conf_json, "dateto");
+		if (datefrom) {
+			HM_TimeStringToFileTime(cJSON_GetStringValue(datefrom), &ftime);
 			em_tm_timer_table[em_tm_timer_count].lo_delay_start = ftime.dwLowDateTime;
 			em_tm_timer_table[em_tm_timer_count].hi_delay_start = ftime.dwHighDateTime;
 		}
@@ -277,8 +282,8 @@ void WINAPI EM_TimerAdd(JSONObject conf_json, EVENT_PARAM* event_param, DWORD ev
 			em_tm_timer_table[em_tm_timer_count].lo_delay_start = 0;
 			em_tm_timer_table[em_tm_timer_count].hi_delay_start = 0;
 		}
-		if (conf_json[L"dateto"]) {
-			HM_TimeStringToFileTime(conf_json[L"dateto"]->AsString().c_str(), &ftime);
+		if (dateto) {
+			HM_TimeStringToFileTime(cJSON_GetStringValue(dateto), &ftime);
 			em_tm_timer_table[em_tm_timer_count].lo_delay_stop = ftime.dwLowDateTime;
 			em_tm_timer_table[em_tm_timer_count].hi_delay_stop = ftime.dwHighDateTime;
 		}

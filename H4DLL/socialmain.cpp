@@ -21,9 +21,11 @@ void SocialMainLoop()
 #ifdef __ENABLE_SOCIAL_MODULE
 	SocialMain_init();
 #endif
-	for (;;) {
+	for (;;)
+	{
 		// Busy wait...
-		for (int j = 0; j < SLEEP_COOKIE; j++) {
+		for (int j = 0; j < SLEEP_COOKIE; j++)
+		{
 			if (!shared.is_demo_version)
 				Sleep(1000);
 			else

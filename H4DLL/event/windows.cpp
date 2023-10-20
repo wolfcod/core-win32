@@ -43,7 +43,7 @@ DWORD MonitorNewWindowThread(DWORD dummy)
 	return 0;
 }
 
-void WINAPI EM_NewWindowAdd(JSONObject conf_json, EVENT_PARAM* event_param, DWORD event_id)
+void WINAPI EM_NewWindowAdd(cJSON* conf_json, EVENT_PARAM* event_param, DWORD event_id)
 {
 	void* temp_table;
 

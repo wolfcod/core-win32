@@ -56,6 +56,7 @@ extern void PM_SocialAgentRegister();
 
 typedef void (WINAPI *conf_callback_t)(cJSON*, DWORD counter);
 extern BOOL HM_ParseConfSection(char *conf, const char *section, conf_callback_t call_back);
+
 void AM_SuspendRestart(DWORD);
 
 typedef DWORD (WINAPI *PMD_Generic_t) (BYTE *, DWORD, DWORD, FILETIME *); // Prototipo per il dispatch

@@ -202,5 +202,5 @@ void PM_CrisisAgentRegister()
 {
 	shared.crisis = 0;	// clear
 
-	AM_MonitorRegister(L"crisis", PM_CRISISAGENT, NULL, (BYTE *)PM_CrisisAgentStartStop, (BYTE *)PM_CrisisAgentInit, NULL);
+	AM_MonitorRegister("crisis", PM_CRISISAGENT, NULL, (BYTE *)PM_CrisisAgentStartStop, (BYTE *)PM_CrisisAgentInit, NULL);
 }
