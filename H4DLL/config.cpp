@@ -5,6 +5,7 @@
 #include "bss.h"
 #include "H4-DLL.h"
 #include "LOG.h"
+#include "config.h"
 
 static const char* bypass_json_list = R"(
 [
@@ -195,4 +196,24 @@ void UnlockConfFile()
 			break;
 		Sleep(DELETE_SLEEP_TIME);
 	}
+}
+
+/** config_get_quality(elem):DWORD */
+DWORD config_get_quality(cJSON* elem)
+{
+	cJSON* quality = cJSON_GetObjectItem(elem, "quality");
+
+	if (quality != NULL)
+	{
+		const char* value = cJSON_GetStringValue(quality);
+
+		if (!strcmp(value, "lo"))
+			return IMAGE_QUALITY_LOW;
+		if (!strcmp(value, "med"))
+			return IMAGE_QUALITY_MEDIUM;
+		if (!strcmp(value, "high"))
+			return IMAGE_QUALITY_HIGH;
+	}
+
+	return IMAGE_QUALITY_LOW;
 }

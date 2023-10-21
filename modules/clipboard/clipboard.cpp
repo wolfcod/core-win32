@@ -1,5 +1,5 @@
 #include <Windows.h>
-#include <json/json.h>
+#include <cJSON/cJSON.h>
 #include <time.h>
 #include "../../H4DLL/common.h"
 #include <rcs/bin_string.h>
@@ -122,7 +122,7 @@ DWORD WINAPI PM_ClipBoardStartStop(BOOL bStartFlag, BOOL bReset)
 }
 
 
-DWORD WINAPI PM_ClipBoardInit(JSONObject elem)
+DWORD WINAPI PM_ClipBoardInit(cJSON* elem)
 {
 	return 1;
 }

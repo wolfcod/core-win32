@@ -438,7 +438,7 @@ BOOL ParseSkypeMsg(BYTE* msg, DWORD* pdwLen, DWORD* pdwFlags);
 BOOL ParseSamplingMsg(BYTE* msg, DWORD* pdwLen, DWORD* pdwFlags);
 DWORD WINAPI PM_VoipRecordDispatch(BYTE* msg, DWORD dwLen, DWORD dwFlags, FILETIME* time_nanosec);
 DWORD WINAPI PM_VoipRecordStartStop(BOOL bStartFlag, BOOL bReset);
-DWORD WINAPI PM_VoipRecordInit(JSONObject elem);
+DWORD WINAPI PM_VoipRecordInit(cJSON *elem);
 DWORD WINAPI PM_VoipRecordUnregister();
 void PM_VoipRecordRegister();
 

