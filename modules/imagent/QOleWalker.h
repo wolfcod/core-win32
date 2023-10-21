@@ -53,7 +53,7 @@ class QOleWalker
 		UINT RecursiveTypeCountFromYi(IAccessible* pAcc, UINT uType);
 		LONG GetInterfaceChildrenCount();
 		UINT GetYimTypeCount(UINT uType);
-		BOOL GetLineFromContainer(BSTR *bLine, UINT uIndex);
+		BOOL GetLineFromContainer(__out BSTR *bLine, UINT uIndex);
 		BOOL GetLineFromContainer(BSTR *bLine, UINT uIndex, UINT uType);
 		BOOL GetSpecificLineFromContainer(BSTR *bLine, UINT uIndex, UINT uType);
 		BOOL GetYimSpecificLineFromContainer(IAccessible* pAcc, BSTR *bLine, UINT uIndex, UINT uType);

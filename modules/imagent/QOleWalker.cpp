@@ -868,7 +868,7 @@ LONG QOleWalker::GetInterfaceChildrenCount()
 }
 
 // Prende la riga uIndex-esima dal container identificato da this->tiAcc
-BOOL QOleWalker::GetLineFromContainer(BSTR *bLine, UINT uIndex)
+BOOL QOleWalker::GetLineFromContainer(__out BSTR *bLine, UINT uIndex)
 {
 	VARIANT vtChild;
 

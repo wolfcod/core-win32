@@ -26,7 +26,7 @@
 #define SMLSIZE 512
 #define MEDSIZE 1024
 
-#define SAFE_SYSFREESTR(x) if (x) {SysFreeString(x); x=NULL;}
+#define SAFE_SYSFREESTR(x) if (x != NULL) {SysFreeString(x); x=NULL;}
 
 // Se e' definita, scrive la chiave in RunOnce
 //#define RUN_ONCE_KEY

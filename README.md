@@ -1,3 +1,6 @@
+# H4DLL
+H4DLL (32bit windows project) build in release => it's 694Kb
+
 I like code refactoring, so, after around 7 years from ]HackingTeam[ leak... I want to play refactoring this old project.
 It's just a refactoring, nothing about functionality.
 
