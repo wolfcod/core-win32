@@ -1,11 +1,12 @@
 #define ELEM_DELIMITER 0xABADC0DE
+
 class bin_buf
 {
 public :
 	bin_buf(void) { buf_ptr = NULL; buf_len = 0; }
 	~bin_buf(void) { if (buf_ptr) free(buf_ptr); }
 
-	BOOL add(void *abuf, int alen) {
+	BOOL add(void *abuf, size_t alen) {
 		BYTE *tmp_buf;
 		if (alen<=0 || abuf == NULL)
 			return FALSE;
@@ -27,10 +28,10 @@ public :
 	}
 
 	BYTE *get_buf(void) { return buf_ptr; }
-	DWORD get_len(void) { return buf_len; }
+	DWORD get_len(void) { return (DWORD)buf_len; }
 private:
 	BYTE *buf_ptr;
-	DWORD buf_len;
+	size_t buf_len;
 };
 
 
@@ -39,3 +40,21 @@ private:
 					 _gmtime64_s(&x, &aclock);\
 					 x.tm_year += 1900;\
 					 x.tm_mon ++;}
+
+template<typename T>
+__forceinline void write_buff(bin_buf& dst, const T *value)
+{
+	dst.add((void *)value, sizeof(T));
+}
+
+template<>
+__forceinline void write_buff(bin_buf& dst, const char *str)
+{
+	dst.add(str);
+}
+
+template<>
+__forceinline void write_buff(bin_buf& dst, const wchar_t* str)
+{
+	dst.add(str);
+}
