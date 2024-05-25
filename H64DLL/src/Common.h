@@ -34,12 +34,12 @@
 					      } else is_equal = FALSE; \
                           if (is_equal)
 
-typedef BOOL		(__stdcall *FreeLibrary_t) (HMODULE);
-typedef FARPROC		(__stdcall *GetProcAddress_t) (HMODULE, char *);
-typedef HINSTANCE	(__stdcall *LoadLibrary_t) (WCHAR *);
-typedef DWORD		(__stdcall *GetCurrentProcessId_t) (void);
-typedef BOOL		(__stdcall *IsWindow_t) (HWND);
-typedef BOOL		(__stdcall *IsWow64Process_t) (HANDLE InProc, BOOL *OutResult);
+typedef BOOL		(WINAPI *FreeLibrary_t) (HMODULE);
+typedef FARPROC		(WINAPI *GetProcAddress_t) (HMODULE, char *);
+typedef HINSTANCE	(WINAPI *LoadLibrary_t) (WCHAR *);
+typedef DWORD		(WINAPI *GetCurrentProcessId_t) (void);
+typedef BOOL		(WINAPI *IsWindow_t) (HWND);
+typedef BOOL		(WINAPI *IsWow64Process_t) (HANDLE InProc, BOOL *OutResult);
 
 extern BOOL FindModulePath(WCHAR *path_buf, DWORD path_size);
 extern BOOL IsX64Process(DWORD pid);

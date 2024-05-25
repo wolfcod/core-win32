@@ -1,0 +1,48 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup Label="Globals">
+    <MSBuildAllProjects Condition="'$(MSBuildVersion)' == '' Or '$(MSBuildVersion)' &lt; '16.0'">$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
+    <HasSharedItems>true</HasSharedItems>
+    <ItemsProjectGuid>{e688d7b2-266d-49c2-88e7-81c862f3186e}</ItemsProjectGuid>
+  </PropertyGroup>
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(MSBuildThisFileDirectory)</AdditionalIncludeDirectories>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ProjectCapability Include="SourceItemsFromImports" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="$(MSBuildThisFileDirectory)config.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)crypto\aes_alg.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)crypto\des.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)crypto\md5.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)crypto\RotateDefs.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)crypto\sha1.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)crypto\sha256.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)listentry.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)mapi\mapi.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)mapi\mapicode.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)mapi\mapidbg.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)mapi\mapidefs.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)mapi\mapiform.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)mapi\mapiguid.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)mapi\mapihook.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)mapi\mapinls.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)mapi\mapioid.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)mapi\mapispi.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)mapi\mapitags.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)mapi\mapiutil.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)mapi\mapival.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)mapi\mapiwin.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)mapi\mapiwz.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)mapi\mapix.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)scramblestring.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)speex\speex.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)speex\speex_bits.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)speex\speex_callbacks.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)speex\speex_header.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)speex\speex_stereo.h" />
+  </ItemGroup>
+</Project>

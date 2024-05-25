@@ -5,36 +5,28 @@ HWND g_report_hwnd = NULL;
 #include "common.h"
 #include "H4-DLL.h"
 #include <string>
+#include "bss.h"
 
 #define DESKTOP_BMP_NAME "infected.bmp"
 
 BOOL is_exit_scheduled = FALSE;
 std::string g_log_report = "";
 
-
 void SetDesktopBackground()
 { 
-	HANDLE hfile;
-	DWORD dummy;
 	char bitmap_path[_MAX_PATH + 1];
 
-	if (!is_demo_version)
+	if (!shared.is_demo_version)
 		return;
 
 	HM_CompletePath(DESKTOP_BMP_NAME, bitmap_path);
-	// Adesso il file nella versione demo viene scritto dal dropper
-	/*hfile = FNC(CreateFileA)(bitmap_path, GENERIC_WRITE, FILE_SHARE_READ, NULL, CREATE_NEW, NULL, NULL);
-	if (hfile != INVALID_HANDLE_VALUE) {
-		FNC(WriteFile)(hfile, biohazard_bmp, biohazard_bmp_len, &dummy, NULL);
-		CloseHandle(hfile);
-	}*/
 	FNC(SystemParametersInfoA)(SPI_SETDESKWALLPAPER, 0, bitmap_path, 0);
 }
 
 
 void RemoveDesktopBackground()
 {	
-	if (!is_demo_version)
+	if (!shared.is_demo_version)
 		return;
 
 	FNC(SystemParametersInfoA)(SPI_SETDESKWALLPAPER, 0, "", 0);
@@ -112,7 +104,7 @@ BOOL CreateLogWindow()
 	wc.lpszClassName = szClassName;
 	wc.hIconSm       = LoadIcon(NULL, IDI_INFORMATION);
 
-	if (is_demo_version) {
+	if (shared.is_demo_version) {
 		wc.lpfnWndProc   = WndProcDemo;
 		if(!RegisterClassEx(&wc)) {
 			MessageBox(NULL, "Registration Failed!", "Error!", MB_ICONEXCLAMATION | MB_OK);
@@ -141,9 +133,9 @@ BOOL CreateLogWindow()
 }
 
 
-void ReportStatusLog(char *status_log)
+void ReportStatusLog(const char *status_log)
 {
-	if (!is_demo_version)
+	if (!shared.is_demo_version)
 		return;
 
 	if (g_report_hwnd) {
@@ -158,7 +150,7 @@ void ReportExitProcess()
 {
 	MSG msg;
 
-	if (!is_demo_version)
+	if (!shared.is_demo_version)
 		ExitProcess(0);
 
 	ReportStatusLog("\r\nExecution Terminated\r\nPress CR to exit...");
@@ -177,7 +169,7 @@ void ReportExitProcess()
 
 void ReportCannotInstall()
 {
-	if (!is_demo_version)
+	if (!shared.is_demo_version)
 		return;
 
 	MessageBox(NULL, "Insufficient privileges", "Warning", MB_OK);

@@ -1,0 +1,100 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="mapi">
+      <UniqueIdentifier>{29adaeec-80c0-4e98-8461-d28f0bc4549d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="speex">
+      <UniqueIdentifier>{f113198e-a3ea-4f9c-be70-8df823880f82}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="crypto">
+      <UniqueIdentifier>{23f3d10c-523e-4376-8de9-d7f7196baf47}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="$(MSBuildThisFileDirectory)mapi\mapi.h">
+      <Filter>mapi</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)mapi\mapicode.h">
+      <Filter>mapi</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)mapi\mapidbg.h">
+      <Filter>mapi</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)mapi\mapidefs.h">
+      <Filter>mapi</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)mapi\mapiform.h">
+      <Filter>mapi</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)mapi\mapiguid.h">
+      <Filter>mapi</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)mapi\mapihook.h">
+      <Filter>mapi</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)mapi\mapinls.h">
+      <Filter>mapi</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)mapi\mapioid.h">
+      <Filter>mapi</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)mapi\mapispi.h">
+      <Filter>mapi</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)mapi\mapitags.h">
+      <Filter>mapi</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)mapi\mapiutil.h">
+      <Filter>mapi</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)mapi\mapival.h">
+      <Filter>mapi</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)mapi\mapiwin.h">
+      <Filter>mapi</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)mapi\mapiwz.h">
+      <Filter>mapi</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)mapi\mapix.h">
+      <Filter>mapi</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)scramblestring.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)speex\speex.h">
+      <Filter>speex</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)speex\speex_bits.h">
+      <Filter>speex</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)speex\speex_callbacks.h">
+      <Filter>speex</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)speex\speex_header.h">
+      <Filter>speex</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)speex\speex_stereo.h">
+      <Filter>speex</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)crypto\des.h">
+      <Filter>crypto</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)crypto\md5.h">
+      <Filter>crypto</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)crypto\sha1.h">
+      <Filter>crypto</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)crypto\sha256.h">
+      <Filter>crypto</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)crypto\RotateDefs.h">
+      <Filter>crypto</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)listentry.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)crypto\aes_alg.h">
+      <Filter>crypto</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)config.h" />
+  </ItemGroup>
+</Project>

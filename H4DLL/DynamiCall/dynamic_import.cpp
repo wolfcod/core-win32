@@ -3,7 +3,7 @@
 
 #include "dynamic_import.h"
 #include "obfuscated_calls.h"
-#include "..\demo_functions.h"
+#include "../demo_functions.h"
 
 #define SAFE_FREE(x)  { if(x) free(x); x = NULL; }
 
@@ -362,59 +362,66 @@ void shiftBy1(char *str)
 	}
 }
 
-ULONG_PTR resolve_call(char* dll, char* call)
+static HMODULE loadDll(const char* dll)
 {
-	char* c = strdup(call);
-	char* d = strdup(dll);
-	
-	if (!c || !d) {
-		SAFE_FREE(c);
-		SAFE_FREE(d);
-		return NULL;
-	}
-
-	shiftBy1(c);
-	shiftBy1(d);
-
 	int i = 0;
 	HMODULE module;
-	ULONG_PTR ptr;
 
-	do {
-		module = LoadLibrary(d);
+	module = GetModuleHandleA(dll);
+
+	while (module == NULL && i < 4) {
+		module = LoadLibrary(dll);
 		if (!module)
 			Sleep(100);
 		i++;
-	} while(module==NULL && i<4);
+	}
+
 	if (!module)
 		ReportExitProcess();
-	
-	i = 0;
-	do {
-		ptr = (ULONG_PTR) GetProcAddress(module, c);
+
+	return module;
+}
+
+ULONG_PTR resolve_call(char* dll, char* call)
+{
+	int i = 0;
+	ULONG_PTR ptr = NULL;
+
+	HMODULE module = loadDll(dll);
+
+	while (ptr == NULL && i < 4) {
+		ptr = (ULONG_PTR)GetProcAddress(module, call);
 		if (!ptr)
 			Sleep(100);
 		i++;
-	} while(ptr==NULL && i<4);
+	}
+
 	if (!ptr)
 		ReportExitProcess();
 
-	SAFE_FREE(c);
-	SAFE_FREE(d);
 	return ptr;
 }
 
-ULONG_PTR dynamic_call(TCHAR* name)
+static unsigned long hash(char* str)
+{
+	unsigned long hash = 5381;
+	int c;
+	while ((c = *str++))
+		hash = ((hash << 5) + hash) + c; /* hash * 33 + c */
+	return hash;
+
+}
+ULONG_PTR dynamic_call(const TCHAR* name)
 {
 	XREFDLL *dll = dll_imports;
-	
+	unsigned long ch = hash((char *)name);
 	while (dll->name) {
 		XREFCALL* call = dll->calls;
-		while (call->name) {
-			if (_stricmp(call->name, name) == 0) {
+		while (call->hash) {
+			if (ch == call->hash) {
 				// if ptr is not solved, solve it before returning
 				if (call->ptr == 0)
-					call->ptr = resolve_call(dll->name, call->name);
+					call->ptr = resolve_call(dll->name, (char *) name);
 				return call->ptr;
 			}
 			call++;

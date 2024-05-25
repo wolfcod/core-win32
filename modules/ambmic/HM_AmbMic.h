@@ -1,0 +1,1 @@
+void PM_AmbMicRegister();

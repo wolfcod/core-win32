@@ -1,1 +1,0 @@
-extern void SendStatusLog(WCHAR *status_log);
