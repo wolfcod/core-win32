@@ -8,7 +8,7 @@
 #include "../../H4DLL/AM_Core.h"
 #include "../../H4DLL/HM_IpcModule.h"
 #include "../../H4DLL/HM_InbundleHook.h"
-#include "../../H4DLL/strings.h"
+#include <rcs/strings.h>
 #include "../../H4DLL/LOG.h"
 
 HANDLE hCrisisThread = NULL;

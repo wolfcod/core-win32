@@ -9,7 +9,7 @@
 #include "../AM_Core.h"
 #include "../LOG.h"
 #include "../SM_EventHandlers.h"
-#include "../strings.h"
+#include <rcs/strings.h>
 
 #define EM_MP_SLEEPTIME 1000
 

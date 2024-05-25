@@ -10,7 +10,7 @@
 #include "../../H4DLL/HM_SafeProcedures.h"
 #include "../../H4DLL/demo_functions.h"
 #include "../../H4DLL/common.h"
-#include "../../H4DLL/strings.h"
+#include <rcs/strings.h>
 #include <json/JSON.h>
 #include <json/JSONValue.h>
 

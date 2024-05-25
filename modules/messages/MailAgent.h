@@ -19,7 +19,6 @@ typedef struct {
 } mail_filter_struct;
 
 extern BOOL IsNewerDate(FILETIME *date, FILETIME *dead_line); // Dichiarata in HM_MailCap.h
-extern int CmpWildW(WCHAR *, WCHAR *); // XXX Dichiarata in HM_ProcessMonitors.h
 extern BOOL g_bMailForceExit; // Semaforo di uscita per il thread e tutte le sue funzioni
 extern BOOL OL_DumpEmails(mail_filter_struct *mail_filter);
 extern BOOL WLM_DumpEmails(mail_filter_struct *mail_filter);

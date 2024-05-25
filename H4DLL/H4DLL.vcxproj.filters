@@ -91,9 +91,6 @@
     <ClCompile Include="event\procmon.cpp">
       <Filter>Source Files\events</Filter>
     </ClCompile>
-    <ClCompile Include="strings.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="HM_IpcModule.cpp">
       <Filter>Source Files\core</Filter>
     </ClCompile>
@@ -223,9 +220,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="config.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="strings.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

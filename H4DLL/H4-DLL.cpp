@@ -50,7 +50,7 @@
 #include <tchar.h>
 #include <Strsafe.h>
 #include "config.h"
-#include "strings.h"
+#include <rcs/strings.h>
 #include  <scramblestring.h>
 
 // modules
@@ -65,7 +65,6 @@
 #endif
 
 // Prototipi usati per comodita'
-void HM_U2A(char *buffer);
 void LockConfFile();
 void UnlockConfFile();
 

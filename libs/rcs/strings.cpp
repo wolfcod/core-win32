@@ -24,41 +24,13 @@ WCHAR* UTF8_2_UTF16(char* str)
 	return wcstr;
 }
 
-
-// Converte Unicode in ascii
-void HM_U2A(char* buffer)
+void HM_A2U(char* src, wchar_t* dst)
 {
-	DWORD i = 0, j = 0;
-	if (!buffer || buffer[1] != 0)
-		return;
-
-	do {
-		i++;
-		j += 2;
-		buffer[i] = buffer[j];
-	} while (buffer[i] != 0);
-}
-
-void HM_A2U(char* src, char* dst)
-{
-	DWORD i = 0;
-	do {
-		dst[i * 2] = src[i];
-		dst[i * 2 + 1] = 0;
-	} while (src[i++]);
-}
-
-// Ritorna il puntatore a dopo una stringa trovata in memoria
-char* HM_memstr(char* memory, char* string)
-{
-	char* ptr;
-	ptr = memory;
-
-	for (;;) {
-		if (!strcmp(ptr, string))
-			return (ptr + strlen(string) + 1);
-		ptr++;
+	while (*src != 0)
+	{
+		*dst++ = *src++;
 	}
+	*dst = 0;
 }
 
 /* Return the first occurrence of NEEDLE in HAYSTACK. */
@@ -105,14 +77,13 @@ void* memmem(const void* haystack, size_t haystack_len, const void* needle, size
 	return NULL;
 }
 
-// Compara due stringhe con wildcard
-// torna 0 se le stringhe sono diverse
-int CmpWildW(LPWSTR wild, LPWSTR string)
+template<typename T, typename Fn>
+int __cmp_wild(Fn fn, T *wild, T *string)
 {
-	WCHAR* cp = NULL, * mp = NULL;
+	T* cp = NULL, * mp = NULL;
 
 	while ((*string) && (*wild != '*')) {
-		if ((towupper((WCHAR)*wild) != towupper((WCHAR)*string)) && (*wild != '?')) {
+		if ((fn((WCHAR)*wild) != fn((T)*string)) && (*wild != (T)'?')) {
 			return 0;
 		}
 		wild++;
@@ -120,7 +91,7 @@ int CmpWildW(LPWSTR wild, LPWSTR string)
 	}
 
 	while (*string) {
-		if (*wild == '*') {
+		if (*wild == (T)'*') {
 			if (!*++wild) {
 				return 1;
 			}
@@ -128,7 +99,7 @@ int CmpWildW(LPWSTR wild, LPWSTR string)
 			mp = wild;
 			cp = string + 1;
 		}
-		else if ((towupper((WCHAR)*wild) == towupper((WCHAR)*string)) || (*wild == '?')) {
+		else if ((fn((WCHAR)*wild) == fn((WCHAR)*string)) || (*wild == (T)'?')) {
 			wild++;
 			string++;
 		}
@@ -138,7 +109,7 @@ int CmpWildW(LPWSTR wild, LPWSTR string)
 		}
 	}
 
-	while (*wild == '*') {
+	while (*wild == (T)'*') {
 		wild++;
 	}
 
@@ -147,37 +118,14 @@ int CmpWildW(LPWSTR wild, LPWSTR string)
 
 // Compara due stringhe con wildcard
 // torna 0 se le stringhe sono diverse
-int CmpWild(LPSTR wild, LPSTR string) {
-	LPSTR cp = NULL, mp = NULL;
+int CmpWildW(LPWSTR wild, LPWSTR string)
+{
+	return __cmp_wild<WCHAR>(towupper, wild, string);
+}
 
-	while ((*string) && (*wild != '*')) {
-		if ((toupper((unsigned int)*wild) != toupper((unsigned int)*string)) && (*wild != '?')) {
-			return 0;
-		}
-		wild++;
-		string++;
-	}
-
-	while (*string) {
-		if (*wild == '*') {
-			if (!*++wild) {
-				return 1;
-			}
-			mp = wild;
-			cp = string + 1;
-		}
-		else if ((toupper((unsigned int)*wild) == toupper((unsigned int)*string)) || (*wild == '?')) {
-			wild++;
-			string++;
-		}
-		else {
-			wild = mp;
-			string = cp++;
-		}
-	}
-
-	while (*wild == '*') {
-		wild++;
-	}
-	return !*wild;
+// Compara due stringhe con wildcard
+// torna 0 se le stringhe sono diverse
+int CmpWild(LPSTR wild, LPSTR string)
+{
+	return __cmp_wild<CHAR>(toupper, wild, string);
 }

