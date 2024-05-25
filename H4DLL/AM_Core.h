@@ -34,5 +34,5 @@ extern BOOL AM_IsHidden(DWORD type, void *elem_par);
 extern DWORD AM_Startup(void);
 extern void AM_SuspendRestart(DWORD);
 extern DWORD AM_MonitorStartStop(DWORD, BOOL);
-extern DWORD AM_MonitorRegister(const char*, DWORD, BYTE *, BYTE *, BYTE *, BYTE *);
+extern DWORD AM_MonitorRegister(const CHAR* agent_name, DWORD agent_tag, BYTE* pDispatch, BYTE* pStartStop, BYTE* pInit, BYTE* pUnRegister);
 extern void AM_IPCAgentStartStop(DWORD, BOOL);

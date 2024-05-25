@@ -59,15 +59,15 @@ JSONValue *JSONValue::Parse(const wchar_t **data)
 	}
 	
 	// Is it a boolean?
-	else if ((simplejson_wcsnlen(*data, 4) && wcsncasecmp(*data, L"true", 4) == 0) || (simplejson_wcsnlen(*data, 5) && wcsncasecmp(*data, L"false", 5) == 0))
+	else if ((simplejson_wcsnlen(*data, 4) && _wcsnicmp(*data, L"true", 4) == 0) || (simplejson_wcsnlen(*data, 5) && _wcsnicmp(*data, L"false", 5) == 0))
 	{
-		bool value = wcsncasecmp(*data, L"true", 4) == 0;
+		bool value = _wcsnicmp(*data, L"true", 4) == 0;
 		(*data) += value ? 4 : 5;
 		return new JSONValue(value);
 	}
 	
 	// Is it a null?
-	else if (simplejson_wcsnlen(*data, 4) && wcsncasecmp(*data, L"null", 4) == 0)
+	else if (simplejson_wcsnlen(*data, 4) && _wcsnicmp(*data, L"null", 4) == 0)
 	{
 		(*data) += 4;
 		return new JSONValue();

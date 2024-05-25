@@ -114,7 +114,7 @@ void SendRequestContacts(HWND skype_api_wnd, HWND skype_pm_wnd)
 {
 	char req_buf[256];
 	COPYDATASTRUCT cd_struct;
-	DWORD dummy;
+	ULONG_PTR dummy;
 
 	sprintf(req_buf, "GET AUTH_CONTACTS_PROFILES");
 	cd_struct.dwData = 0;

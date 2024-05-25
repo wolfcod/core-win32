@@ -155,6 +155,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="list.cpp" />
     <ClCompile Include="lock.cpp" />
     <ClCompile Include="vector.cpp" />
   </ItemGroup>

@@ -2,7 +2,8 @@
 #include "lock_guard.h"
 #include "lock.h"
 
-namespace rcs {
+namespace rcs
+{
 	
 	lock::lock(lock_guard& guard)
 	{

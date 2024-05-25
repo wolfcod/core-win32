@@ -1,11 +1,10 @@
-#pragma once
+#include <Windows.h>
 
-#ifndef __LISTENTRY_H
-#define __LISTENTRY_H
-
-static __forceinline  LIST_ENTRY* InitializeListHead(LIST_ENTRY* ListHead)
+#include "list.h"
+LIST_ENTRY* InitializeListHead(LIST_ENTRY* ListHead)
 {
-	if (ListHead->Blink == NULL && ListHead->Flink == NULL) {
+	if (ListHead->Blink == NULL && ListHead->Flink == NULL)
+	{
 		ListHead->Blink = ListHead;
 		ListHead->Flink = ListHead;
 	}
@@ -13,7 +12,7 @@ static __forceinline  LIST_ENTRY* InitializeListHead(LIST_ENTRY* ListHead)
 	return ListHead;
 }
 
-static __forceinline LIST_ENTRY* InsertHeadList(LIST_ENTRY* ListHead, LIST_ENTRY* Entry)
+LIST_ENTRY* InsertHeadList(LIST_ENTRY* ListHead, LIST_ENTRY* Entry)
 {
 	Entry->Flink = ListHead->Flink;
 	Entry->Blink = ListHead;
@@ -23,7 +22,7 @@ static __forceinline LIST_ENTRY* InsertHeadList(LIST_ENTRY* ListHead, LIST_ENTRY
 	return ListHead;
 }
 
-static __forceinline LIST_ENTRY* InsertTailList(LIST_ENTRY* ListHead, LIST_ENTRY* Entry)
+LIST_ENTRY* InsertTailList(LIST_ENTRY* ListHead, LIST_ENTRY* Entry)
 {
 	Entry->Flink = ListHead;
 	Entry->Blink = ListHead->Blink;
@@ -32,12 +31,12 @@ static __forceinline LIST_ENTRY* InsertTailList(LIST_ENTRY* ListHead, LIST_ENTRY
 	return Entry;
 }
 
-static __forceinline BOOL IsListEmpty(LIST_ENTRY* ListHead)
+BOOL IsListEmpty(LIST_ENTRY* ListHead)
 {
 	return (BOOL)(ListHead->Flink == ListHead);
 }
 
-static __forceinline LIST_ENTRY* RemoveEntryList(LIST_ENTRY* Entry)
+LIST_ENTRY* RemoveEntryList(LIST_ENTRY* Entry)
 {
 	if (IsListEmpty(Entry))
 		return NULL;
@@ -47,4 +46,17 @@ static __forceinline LIST_ENTRY* RemoveEntryList(LIST_ENTRY* Entry)
 	return Entry->Flink;
 }
 
-#endif
+size_t list_size(LIST_ENTRY* head)
+{
+	size_t i = 0;
+
+	LIST_ENTRY* entry = head->Flink;
+
+	while (entry != head)
+	{
+		i++;
+		entry = entry->Flink;
+	}
+
+	return i;
+}
