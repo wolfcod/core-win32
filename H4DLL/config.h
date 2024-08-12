@@ -7,7 +7,7 @@ struct cJSON;
 
 typedef void (WINAPI* conf_callback_t)(cJSON*, DWORD counter);
 
-BOOL HM_ParseConfGlobals(char* conf, conf_callback_t call_back);
+BOOL HM_ParseConfGlobals(cJSON *root, conf_callback_t call_back);
 void HM_UpdateGlobalConf();
 void UnlockConfFile();
 

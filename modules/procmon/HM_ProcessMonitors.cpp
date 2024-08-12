@@ -16,8 +16,6 @@
 
 #include <shlwapi.h>
 
-#define MAXFILELEN (_MAX_PATH * 2 + 2) // Lunghezza per un nome widechar
-
 // Struttura usata internamente  per
 // i pattern di cattura file
 typedef struct {

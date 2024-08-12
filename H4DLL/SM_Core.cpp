@@ -33,8 +33,8 @@ typedef BOOL (WINAPI *ActionFunc_t) (BYTE *);
 ActionFunc_t ActionFuncGet(DWORD action_type, BOOL *is_fast_action);
 
 typedef void (WINAPI *conf_callback_t)(cJSON *, DWORD counter);
-extern BOOL HM_ParseConfSection(char *conf, const char *section, conf_callback_t call_back);
-extern BOOL HM_CountConfSection(char *conf, const char *section, DWORD *count);
+extern BOOL HM_ParseConfSection(cJSON *conf, const char *section, conf_callback_t call_back);
+extern BOOL HM_CountConfSection(cJSON *root, const char *section, DWORD *count);
 extern DWORD AM_GetAgentTag(const CHAR *agent_name);
 
 // Gestione event monitor  ----------------------------------------------
@@ -63,14 +63,18 @@ typedef struct {
 } EVENT_TABLE;
 
 // Tabella degli event monitor attualmente registrati
-DWORD event_monitor_count = 0;
-EVENT_MONITOR event_monitor_array[MAX_EVENT_MONITOR];
+static DWORD _evt_monitor_count = 0;
+static EVENT_MONITOR _evt_monitor[MAX_EVENT_MONITOR];
 
 // Tabella contenente lo stato di attivazione di tutti gli eventi nel file di configurazione
 EVENT_TABLE *event_table = NULL;
 DWORD event_count = 0;
 
-DWORD WINAPI RepeatThread(LPVOID lpParameter)
+/**
+ * RepeatThread
+ * suspend execution of a thread according to delay time specified, and trigger an event "count" times or forever (delay * -1)
+ */
+static DWORD WINAPI RepeatThread(LPVOID lpParameter)
 {
 	REPEATED_EVENT* repeated_event = (REPEATED_EVENT*)lpParameter;
 
@@ -119,38 +123,38 @@ void StopRepeatThread(DWORD event_id)
 }
 
 // Registra un nuovo event monitor
-void EventMonitorRegister(CHAR *event_type, EventMonitorAdd_t pEventMonitorAdd, 
+static void EventMonitorRegister(CHAR *event_type, EventMonitorAdd_t pEventMonitorAdd, 
 						  EventMonitorStart_t pEventMonitorStart,
 						  EventMonitorStop_t pEventMonitorStop)
 {
-	if (event_monitor_count >= MAX_EVENT_MONITOR)
+	if (_evt_monitor_count >= MAX_EVENT_MONITOR)
 		return;
 
-	sprintf_s(event_monitor_array[event_monitor_count].event_type, "%s", event_type);
-	event_monitor_array[event_monitor_count].pEventMonitorAdd = pEventMonitorAdd;
-	event_monitor_array[event_monitor_count].pEventMonitorStop = pEventMonitorStop;
-	event_monitor_array[event_monitor_count].pEventMonitorStart = pEventMonitorStart;
+	sprintf_s(_evt_monitor[_evt_monitor_count].event_type, "%s", event_type);
+	_evt_monitor[_evt_monitor_count].pEventMonitorAdd = pEventMonitorAdd;
+	_evt_monitor[_evt_monitor_count].pEventMonitorStop = pEventMonitorStop;
+	_evt_monitor[_evt_monitor_count].pEventMonitorStart = pEventMonitorStart;
 
-	event_monitor_count++;
+	_evt_monitor_count++;
 }
 
 void EventMonitorStartAll()
 {
 	DWORD i;
-	for (i=0; i<event_monitor_count; i++)
-		if (event_monitor_array[i].pEventMonitorStart)
-			event_monitor_array[i].pEventMonitorStart();
+	for (i=0; i<_evt_monitor_count; i++)
+		if (_evt_monitor[i].pEventMonitorStart)
+			_evt_monitor[i].pEventMonitorStart();
 }
 
 void EventMonitorStopAll()
 {
 	DWORD i;
-	for (i=0; i<event_monitor_count; i++)
-		if (event_monitor_array[i].pEventMonitorStop)
-			event_monitor_array[i].pEventMonitorStop();
+	for (i=0; i<_evt_monitor_count; i++)
+		if (_evt_monitor[i].pEventMonitorStop)
+			_evt_monitor[i].pEventMonitorStop();
 }
 
-void EventTableInit()
+static void EventTableInit()
 {
 	SAFE_FREE(event_table);
 	event_count = 0;
@@ -181,9 +185,9 @@ void EventMonitorAddLine(const CHAR *event_type, cJSON* conf_json, EVENT_PARAM *
 	// Inizializza lo stato attivo/disattivo dell'evento
 	SM_EventTableState(event_id, event_state);
 
-	for (i=0; i<event_monitor_count; i++)
-		if (!stricmp(event_monitor_array[i].event_type, event_type)) {
-			event_monitor_array[i].pEventMonitorAdd(conf_json, event_param, event_id);
+	for (i=0; i<_evt_monitor_count; i++)
+		if (!stricmp(_evt_monitor[i].event_type, event_type)) {
+			_evt_monitor[i].pEventMonitorAdd(conf_json, event_param, event_id);
 			break;
 		}
 }
@@ -598,12 +602,17 @@ void UpdateEventConf()
 
 	// Legge gli eventi
 	EventTableInit();
-	HM_ParseConfSection(conf_memory, "events", &ParseEvents);
+
+	cJSON* root = cJSON_Parse(conf_memory);
+
+	HM_ParseConfSection(root, "events", &ParseEvents);
 
 	// Legge le azioni
-	HM_CountConfSection(conf_memory, "actions", &action_count);
+	HM_CountConfSection(root, "actions", &action_count);
 	ActionTableInit(action_count);
-	HM_ParseConfSection(conf_memory, "actions", &ParseActions);
+	HM_ParseConfSection(root, "actions", &ParseActions);
+
+	cJSON_Delete(root);
 
 	SAFE_FREE(conf_memory);
 }

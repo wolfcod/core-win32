@@ -6,6 +6,8 @@ typedef struct {
 } CreateFileStruct;
 extern CreateFileStruct CreateFileData;
 
+#define MAXFILELEN (_MAX_PATH * 2 + 2) // Lunghezza per un nome widechar
+
 typedef struct {
 	char szFileName[MAXFILELEN];
 	DWORD dwOperation;
