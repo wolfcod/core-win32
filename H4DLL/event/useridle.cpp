@@ -24,7 +24,7 @@ monitored_user_idles* user_idles_table = NULL;
 HANDLE em_ui_thread = 0;
 BOOL em_ui_cp = FALSE;
 
-DWORD MonitorUserIdles(DWORD dummy)
+static DWORD WINAPI MonitorUserIdles(LPVOID lpParameter)
 {
 	LASTINPUTINFO lii;
 	DWORD last_time = 0;

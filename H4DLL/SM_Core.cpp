@@ -70,8 +70,10 @@ EVENT_MONITOR event_monitor_array[MAX_EVENT_MONITOR];
 EVENT_TABLE *event_table = NULL;
 DWORD event_count = 0;
 
-DWORD WINAPI RepeatThread(REPEATED_EVENT *repeated_event)
+DWORD WINAPI RepeatThread(LPVOID lpParameter)
 {
+	REPEATED_EVENT* repeated_event = (REPEATED_EVENT*)lpParameter;
+
 	DWORD i = 0;
 	LOOP {
 		CANCELLATION_SLEEP(repeated_event->semaphore, repeated_event->delay);
@@ -436,36 +438,26 @@ ActionFunc_t ActionFuncGet(DWORD action_type, BOOL *is_fast_action)
 }
 
 //-----------------------------------------------------------------------------------
+
+#define GET_NUMBER(dst, value, conf, number) do { \
+	dst = value; \
+	cJSON *tmp = cJSON_GetObjectItem(conf, number); \
+	if (tmp == NULL) break; \
+	dst = cJSON_GetNumberValue(tmp); \
+} while(0)
+
+
 void WINAPI ParseEvents(cJSON *conf_json, DWORD counter)
 {
 	EVENT_PARAM event_param;
 
-	if (cJSON_GetObjectItem(conf_json, "start"))
-		event_param.start_action = cJSON_GetNumberValue(cJSON_GetObjectItem(conf_json, "start"));
-	else
-		event_param.start_action = AF_NONE;
-
-	if (cJSON_GetObjectItem(conf_json, "end"))
-		event_param.stop_action = cJSON_GetNumberValue(cJSON_GetObjectItem(conf_json, "end"));
-	else
-		event_param.stop_action = AF_NONE;
-
-	if (cJSON_GetObjectItem(conf_json, "repeat"))
-		event_param.repeat_action = cJSON_GetNumberValue(cJSON_GetObjectItem(conf_json, "repeat"));
-	else
-		event_param.repeat_action = AF_NONE;
-
-	if (cJSON_GetObjectItem(conf_json, "iter"))
-		event_param.count = cJSON_GetNumberValue(cJSON_GetObjectItem(conf_json, "iter"));
-	else
-		event_param.count = 0xFFFFFFFF;
-
-	if (cJSON_GetObjectItem(conf_json, "delay")) {
-		event_param.delay = cJSON_GetNumberValue(cJSON_GetObjectItem(conf_json, "delay")) * 1000;
-		if (event_param.delay == 0)
-			event_param.delay = 1;
-	} else
-		event_param.delay = 1;
+	GET_NUMBER(event_param.start_action, AF_NONE, conf_json, "start");
+	GET_NUMBER(event_param.stop_action, AF_NONE, conf_json, "end");
+	GET_NUMBER(event_param.repeat_action, AF_NONE, conf_json, "repeat");
+	GET_NUMBER(event_param.count, 0xffffffff, conf_json, "iter");
+	GET_NUMBER(event_param.delay, 1000, conf_json, "delay");
+	
+	event_param.delay = max(event_param.delay, 1000);	// set minimum level to 1sec
 
 	EventMonitorAddLine(
 		cJSON_GetStringValue(cJSON_GetObjectItem(conf_json, "event")), 
