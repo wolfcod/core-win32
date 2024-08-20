@@ -411,7 +411,7 @@ static unsigned long hash(char* str)
 	return hash;
 
 }
-ULONG_PTR dynamic_call(const TCHAR* name)
+ULONG_PTR dynamic_call(const CHAR* name)
 {
 	XREFDLL *dll = dll_imports;
 	unsigned long ch = hash((char *)name);

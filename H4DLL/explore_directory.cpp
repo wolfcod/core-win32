@@ -5,12 +5,13 @@
 #include "LOG.h"
 #include "bss.h"
 
-typedef struct {
-#define DIR_EXP_VERSION 2010031501
-	DWORD version;
-	DWORD path_len;
 #define PATH_IS_DIRECTORY 1
 #define PATH_IS_EMPTY     2
+#define DIR_EXP_VERSION 2010031501
+
+typedef struct {
+	DWORD version;
+	DWORD path_len;
 	DWORD flags;
 	DWORD file_size_lo;
 	DWORD file_size_hi;

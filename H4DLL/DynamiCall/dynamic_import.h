@@ -1,5 +1,5 @@
-#ifndef dynamic_import_h__
-#define dynamic_import_h__
+#ifndef __DYNAMIC_IMPORT_H
+#define __DYNAMIC_IMPORT_H
 
 #include <Windows.h>
 #include "obfuscated_calls.h"
@@ -85,7 +85,7 @@ typedef struct _XREF_DLL
 
 #define END_IMPORTING { NULL, { NULL } }
 
-ULONG_PTR dynamic_call(const TCHAR* name);
+ULONG_PTR dynamic_call(const CHAR* name);
 
 // #define FNC(x) ((PROTO_##x) dynamic_call( STRINGIFY(x) ))
 #define FNC(x) ((PROTO_##x) dynamic_call( ShiftBy1<char, sizeof(#x)>(#x).get() ))
