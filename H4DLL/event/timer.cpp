@@ -111,7 +111,7 @@ static void TimerDate(MONITORED_TIMER *evt, NANOSEC_TIME* local_time)
 		if (!evt->triggered && ms_from_midnight <= evt->lo_delay_stop && ms_from_midnight >= evt->lo_delay_start) {
 			evt->triggered = TRUE;
 			TriggerEvent(evt->event_param.start_action, evt->event_id);
-			CreateRepeatThread(evt->event_id, evt->event_param.repeat_action, evt->event_param.count, evt->event_param.delay);
+			CreateRepeatThread(evt->event_id, &evt->event_param);
 		}
 
 		// Se era triggerato e ora siamo fuori dalla fascia
@@ -135,7 +135,7 @@ static void TimerDaily(MONITORED_TIMER* evt, NANOSEC_TIME* local_time)
 	if (!evt->triggered && IsGreaterDate(local_time, &event_time_start) && !IsGreaterDate(local_time, &event_time_stop)) {
 		evt->triggered = TRUE;
 		TriggerEvent(evt->event_param.start_action, evt->event_id);
-		CreateRepeatThread(evt->event_id, evt->event_param.repeat_action, evt->event_param.count, evt->event_param.delay);
+		CreateRepeatThread(evt->event_id, &evt->event_param);
 	}
 	else if (evt->triggered && (!IsGreaterDate(local_time, &event_time_start) || IsGreaterDate(local_time, &event_time_stop))) {
 		evt->triggered = FALSE;

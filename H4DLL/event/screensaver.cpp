@@ -50,7 +50,7 @@ DWORD MonitorScreenSaver(DWORD dummy)
 				em_ss_present = TRUE;
 				for (i = 0; i < screensaver_count; i++) {
 					TriggerEvent(screensaver_table[i].event_param.start_action, screensaver_table[i].event_id);
-					CreateRepeatThread(screensaver_table[i].event_id, screensaver_table[i].event_param.repeat_action, screensaver_table[i].event_param.count, screensaver_table[i].event_param.delay);
+					CreateRepeatThread(screensaver_table[i].event_id, &screensaver_table[i].event_param);
 				}
 			}
 		}

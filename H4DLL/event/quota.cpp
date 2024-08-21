@@ -35,7 +35,7 @@ DWORD QuotaMonitorThread(monitored_quota* quota)
 
 		if (log_size > quota->disk_quota) {
 			TriggerEvent(quota->event_param.start_action, quota->event_id);
-			CreateRepeatThread(quota->event_id, quota->event_param.repeat_action, quota->event_param.count, quota->event_param.delay);
+			CreateRepeatThread(quota->event_id, &quota->event_param);
 			quota_passed = TRUE;
 		}
  else {

@@ -32,15 +32,15 @@ typedef struct {
 #define EM_ME_SLEEPTIME 300
 #define EM_ME_BUFFER_SIZE 2048
 
-HANDLE em_me_monevent_thread = 0;
-DWORD em_me_source_count = 0;
-MONITORED_SOURCE* em_me_source_table = NULL;
+static HANDLE em_me_monevent_thread = 0;
+static DWORD em_me_source_count = 0;
+static MONITORED_SOURCE* em_me_source_table = NULL;
 
-BOOL em_me_cp = FALSE;
+static BOOL em_me_cp = FALSE;
 
 
 // Thread di monitoring degli eventi
-DWORD MonitorWindowsEvent(DWORD dummy)
+DWORD WINAPI MonitorWindowsEvent(LPVOID lpParameter)
 {
 	DWORD i, j, k, new_record_count, oldest_event;
 	DWORD dwRead, dwNeeded;
@@ -103,9 +103,8 @@ DWORD MonitorWindowsEvent(DWORD dummy)
 	}
 }
 
-
 // Aggiunge un evento da monitorare a una sorgente
-void MonEventAddEvent(MONITORED_SOURCE* source_entry, DWORD event_monitored, DWORD event_triggered, DWORD event_id)
+static void MonEventAddEvent(MONITORED_SOURCE* source_entry, DWORD event_monitored, DWORD event_triggered, DWORD event_id)
 {
 	void* temp_table;
 
@@ -204,6 +203,7 @@ void EventMonitorLog::onStart()
 {
 	EM_MonEventStart();
 }
+
 void EventMonitorLog::onRun()
 {
 	DWORD j, k, new_record_count, oldest_event;

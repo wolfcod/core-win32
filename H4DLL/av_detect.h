@@ -1,3 +1,6 @@
+#ifndef __AVDETECT_H
+#define __AVDETECT_H
+
 BOOL IsDriverRunning(const WCHAR* driver_name);
 BOOL DriverExists(LPCSTR lpDriverName);
 BOOL IsEndPoint();
@@ -31,3 +34,5 @@ BOOL CopySystemDriver(WCHAR* drv_path);
 BOOL IsGData();
 BOOL IsBlackList();
 BOOL doUnhook();
+
+#endif

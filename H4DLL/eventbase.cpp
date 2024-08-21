@@ -36,7 +36,7 @@ void EventMonitorBase::stop()
 	onStop();
 }
 
-void EventMonitorBase::add(JSONObject conf_json, EVENT_PARAM* event_param, DWORD event_id)
+void EventMonitorBase::add(cJSON *conf_json, EVENT_PARAM* event_param, DWORD event_id)
 {
 	onAdd(conf_json, event_param, event_id);
 }

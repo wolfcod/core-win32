@@ -34,7 +34,7 @@ BOOL WINAPI DA_StartEvent(BYTE* event_id);
 BOOL WINAPI DA_StopEvent(BYTE* event_id);
 
 // Dichiarazione del thread che puo' essere ristartato dalla sync
-DWORD WINAPI FastActionsThread(DWORD);
+DWORD WINAPI FastActionsThread(LPVOID lpParameter);
 
 //
 extern BOOL bInstantActionThreadSemaphore;

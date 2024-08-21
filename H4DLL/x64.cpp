@@ -16,7 +16,7 @@ extern BOOL IsMyProcess(DWORD pid);
 
 #define INVALID_FUNC_PTR (void *)0xFFFFFFFF
 
-HANDLE core64_process = NULL;
+static HANDLE core64_process = NULL;
 
 BOOL IsX64Process(DWORD InProcessId)
 {

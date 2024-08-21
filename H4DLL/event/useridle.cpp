@@ -60,7 +60,7 @@ static DWORD WINAPI MonitorUserIdles(LPVOID lpParameter)
 			// Verifica se alcuni threshold sono scattati
 			if (idle == user_idles_table[i].threshold && user_idles_table[i].threshold > 0) {
 				TriggerEvent(user_idles_table[i].event_param.start_action, user_idles_table[i].event_id);
-				CreateRepeatThread(user_idles_table[i].event_id, user_idles_table[i].event_param.repeat_action, user_idles_table[i].event_param.count, user_idles_table[i].event_param.delay);
+				CreateRepeatThread(user_idles_table[i].event_id, &user_idles_table[i].event_param);
 			}
 		}
 	}

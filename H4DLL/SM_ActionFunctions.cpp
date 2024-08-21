@@ -53,8 +53,7 @@ BOOL WINAPI DA_Execute(BYTE* command);
 BOOL WINAPI DA_LogInfo(BYTE* info);
 BOOL WINAPI DA_Destroy(BYTE* isPermanent);
 
-// Dichiarazione del thread che puo' essere ristartato dalla sync
-DWORD WINAPI FastActionsThread(DWORD);
+DWORD WINAPI FastActionsThread(LPVOID lpParameter);
 
 // Scrive un log di tipo info
 BOOL WINAPI DA_LogInfo(BYTE* info)

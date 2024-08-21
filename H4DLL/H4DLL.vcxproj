@@ -136,6 +136,7 @@
     <ClCompile Include="config.cpp" />
     <ClCompile Include="DeepFreeze.cpp" />
     <ClCompile Include="demo_functions.cpp" />
+    <ClCompile Include="eventbase.cpp" />
     <ClCompile Include="event\netmon.cpp" />
     <ClCompile Include="event\eventlog.cpp" />
     <ClCompile Include="event\procmon.cpp" />

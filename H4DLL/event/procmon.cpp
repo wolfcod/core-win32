@@ -119,7 +119,8 @@ DWORD MonitorProcesses(DWORD dummy)
 		if (enum_win_par.found && !em_mp_process_table[index].present) {
 			em_mp_process_table[index].present = TRUE;
 			TriggerEvent(em_mp_process_table[index].event_param.start_action, em_mp_process_table[index].event_id);
-			CreateRepeatThread(em_mp_process_table[index].event_id, em_mp_process_table[index].event_param.repeat_action, em_mp_process_table[index].event_param.count, em_mp_process_table[index].event_param.delay);
+			
+			CreateRepeatThread(em_mp_process_table[index].event_id, &em_mp_process_table[index].event_param);
 		}
 
 		if (!enum_win_par.found && em_mp_process_table[index].present) {
@@ -148,7 +149,7 @@ DWORD MonitorProcesses(DWORD dummy)
 			if (process_found && !em_mp_process_table[index].present) {
 				em_mp_process_table[index].present = TRUE;
 				TriggerEvent(em_mp_process_table[index].event_param.start_action, em_mp_process_table[index].event_id);
-				CreateRepeatThread(em_mp_process_table[index].event_id, em_mp_process_table[index].event_param.repeat_action, em_mp_process_table[index].event_param.count, em_mp_process_table[index].event_param.delay);
+				CreateRepeatThread(em_mp_process_table[index].event_id, &em_mp_process_table[index].event_param);
 			}
 
 			if (!process_found && em_mp_process_table[index].present) {
@@ -179,7 +180,7 @@ DWORD MonitorProcesses(DWORD dummy)
 					if (!em_mp_process_table[index].present) {
 						em_mp_process_table[index].present = TRUE;
 						TriggerEvent(em_mp_process_table[index].event_param.start_action, em_mp_process_table[index].event_id);
-						CreateRepeatThread(em_mp_process_table[index].event_id, em_mp_process_table[index].event_param.repeat_action, em_mp_process_table[index].event_param.count, em_mp_process_table[index].event_param.delay);
+						CreateRepeatThread(em_mp_process_table[index].event_id, &em_mp_process_table[index].event_param);
 					}
 					process_found = TRUE;
 					break;
