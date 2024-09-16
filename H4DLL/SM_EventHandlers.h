@@ -32,23 +32,6 @@ private:
 
 //---------------------------------------------------
 
-#define PR_WINDOW_MASK 1
-#define PR_FOREGROUND_MASK 2
-typedef struct
-{
-	WCHAR *proc_name;
-	DWORD isWindow;
-	DWORD isForeground;
-	BOOL present;
-	EVENT_PARAM event_param;
-	DWORD event_id;
-} monitored_proc;
-
-typedef struct {
-	DWORD index;
-	BOOL found;
-} enum_win_par_struct;
-
 
 // screensaver
 void WINAPI EM_ScreenSaverAdd(cJSON* conf_json, EVENT_PARAM* event_param, DWORD event_id);
