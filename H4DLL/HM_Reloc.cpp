@@ -32,7 +32,7 @@ static BOOL readPEInfo(char *modulePos, IMAGE_DOS_HEADER *outMZ, IMAGE_NT_HEADER
 //
 //*******************************************************************************************************
 
-int calcTotalImageSize(IMAGE_DOS_HEADER *inMZ, IMAGE_NT_HEADERS32 *inPE, IMAGE_SECTION_HEADER *inSecHdr)
+static int calcTotalImageSize(IMAGE_DOS_HEADER *inMZ, IMAGE_NT_HEADERS32 *inPE, IMAGE_SECTION_HEADER *inSecHdr)
 {
 	int result = 0;
 	int alignment = inPE->OptionalHeader.SectionAlignment;
@@ -69,7 +69,7 @@ int calcTotalImageSize(IMAGE_DOS_HEADER *inMZ, IMAGE_NT_HEADERS32 *inPE, IMAGE_S
 //
 //*******************************************************************************************************
 
-ULONG getAlignedSize(unsigned long curSize, unsigned long alignment)
+static ULONG getAlignedSize(unsigned long curSize, unsigned long alignment)
 {	
 	if(curSize % alignment == 0)
 		return curSize;
@@ -86,7 +86,7 @@ ULONG getAlignedSize(unsigned long curSize, unsigned long alignment)
 //
 //*******************************************************************************************************
 
-BOOL loadPE(char *exePtr, IMAGE_DOS_HEADER *inMZ, IMAGE_NT_HEADERS32 *inPE,
+static BOOL loadPE(char *exePtr, IMAGE_DOS_HEADER *inMZ, IMAGE_NT_HEADERS32 *inPE,
 			IMAGE_SECTION_HEADER *inSecHdr, LPVOID ptrLoc)
 {
 	char *outPtr = (char *)ptrLoc;
@@ -126,7 +126,7 @@ LPVOID loadDLL(char *dllName)
 	IMAGE_SECTION_HEADER *secHdr2;
 
 	FNC(GetSystemDirectoryA)(moduleFilename, MAX_PATH);
-	if((myStrlenA(moduleFilename) + myStrlenA(dllName)) >= MAX_PATH)
+	if((strlen(moduleFilename) + strlen(dllName)) >= MAX_PATH)
 		return NULL;
 
 	strncat_s(moduleFilename, MAX_PATH, dllName, MAX_PATH);
@@ -172,18 +172,6 @@ LPVOID loadDLL(char *dllName)
 	}
 
 	return ptrLoc;
-}
-
-DWORD myStrlenA(char *ptr)
-{
-	DWORD len = 0;
-	while(*ptr)
-	{
-		len++;
-		ptr++;
-	}
-
-	return len;
 }
 
 DWORD GetHeaders(PCHAR ibase,

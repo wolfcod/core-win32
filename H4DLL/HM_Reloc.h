@@ -8,7 +8,8 @@ typedef struct {
     WORD    type:4;
 } IMAGE_FIXUP_ENTRY, *PIMAGE_FIXUP_ENTRY;
 
-struct FixupBlock {
+struct FixupBlock
+{
 	unsigned long pageRVA;
 	unsigned long blockSize;
 };
@@ -20,5 +21,4 @@ extern DWORD GetHeaders(PCHAR ibase,
 extern DWORD FindKiServiceTable(HMODULE hModule,DWORD dwKSDT);
 extern BOOL RelocImage(PVOID exeAddr, PVOID newAddr);
 LPVOID loadDLL(char *dllName);
-DWORD myStrlenA(char *ptr);
 
