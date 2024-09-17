@@ -26,10 +26,8 @@ void SocialMainLoop()
 		// Busy wait...
 		for (int j = 0; j < SLEEP_COOKIE; j++)
 		{
-			if (!shared.is_demo_version)
-				Sleep(1000);
-			else
-				Sleep(40);
+			DWORD ms = (!shared.is_demo_version) ? 1000 : 40;
+			Sleep(ms);
 			CheckProcessStatus();
 		}
 #ifdef __ENABLE_SOCIAL_MODULE

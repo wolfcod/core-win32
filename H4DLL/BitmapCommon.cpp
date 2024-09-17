@@ -28,37 +28,42 @@ static BOOL IsAero()
 	return TRUE;
 }
 
-int GetEncoderClsid(const WCHAR* format, CLSID* pClsid)
+static int GetEncoderClsid(const WCHAR* format, CLSID* pClsid)
 {
    UINT  num = 0;          // number of image encoders
    UINT  size = 0;         // size of the image encoder array in bytes
 
    ImageCodecInfo* pImageCodecInfo = NULL;
+   int r = -1;
 
-   GetImageEncodersSize(&num, &size);
-   if(size == 0)
-      return -1;  // Failure
+   do
+   {
+	   GetImageEncodersSize(&num, &size);
+	   if (size == 0)
+		   break;
 
-   pImageCodecInfo = (ImageCodecInfo*)(malloc(size));
-   if(pImageCodecInfo == NULL)
-      return -1;  // Failure
+	   pImageCodecInfo = (ImageCodecInfo*)(malloc(size));
+	   if (pImageCodecInfo == NULL)
+		   break;
 
-   GetImageEncoders(num, size, pImageCodecInfo);
+	   GetImageEncoders(num, size, pImageCodecInfo);
 
-   for(UINT j = 0; j < num; ++j) {
-      if( wcscmp(pImageCodecInfo[j].MimeType, format) == 0 )
-      {
-         *pClsid = pImageCodecInfo[j].Clsid;
-         free(pImageCodecInfo);
-         return j;  // Success
-      }    
-   }
+	   for (UINT j = 0; j < num; ++j) {
+		   if (wcscmp(pImageCodecInfo[j].MimeType, format) == 0)
+		   {
+			   *pClsid = pImageCodecInfo[j].Clsid;
+			   r = j;
+			   break;
+		   }
+	   }
+	   free(pImageCodecInfo);
 
-   free(pImageCodecInfo);
-   return -1;  // Failure
+   } while (0);
+
+   return r;
 }
 
-BYTE *JpgConvert(BYTE *dataptr, DWORD imageSize, DWORD *sizeDst, DWORD quality)
+static BYTE *JpgConvert(BYTE *dataptr, DWORD imageSize, DWORD *sizeDst, DWORD quality)
 {
 	HGLOBAL hBuffer = NULL, hBufferDst = NULL;
 	void *pBuffer = NULL, *pBufferDst = NULL;
