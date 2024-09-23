@@ -129,3 +129,28 @@ int CmpWild(LPSTR wild, LPSTR string)
 {
 	return __cmp_wild<CHAR>(toupper, wild, string);
 }
+
+WCHAR* ascii_to_wstr(const char* src)
+{
+	WCHAR* dst = NULL;
+
+	do
+	{
+		if (src == NULL)
+			break;
+
+		dst = (WCHAR*)malloc((strlen(src) + 1) * sizeof(WCHAR));
+
+		if (dst == NULL)
+			break;
+
+		WCHAR* ptr = dst;
+		while (*src != 0)
+		{
+			*ptr++ = *src++;
+		}
+		*ptr = NULL;
+	} while (0);
+
+	return dst;
+}

@@ -9,10 +9,9 @@
 #include "../../H4DLL/HM_IpcModule.h"
 #include "../../H4DLL/HM_InbundleHook.h"
 #include "../../H4DLL/config.h"
+#include "../../H4DLL/HM_BitmapCommon.h"
 
 #include "screenshot.h"
-
-void TakeSnapShot(HWND grabwind, BOOL only_window, DWORD quality);
 
 extern BOOL g_newwindow_created;
 

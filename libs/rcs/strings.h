@@ -11,5 +11,6 @@ int CmpWildW(LPWSTR  wild, LPWSTR string);
 
 int CmpWild(LPSTR wild, LPSTR string);
 
+WCHAR* ascii_to_wstr(const char* src);
 #endif
 

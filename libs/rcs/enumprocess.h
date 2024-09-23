@@ -9,12 +9,26 @@ struct EnumerateProcess
 
 	~EnumerateProcess();
 	PROCESSENTRY32* operator*();
-BOOL fetch();
+	BOOL fetch();
 
-bool operator() ();
-
+	bool operator() ();
 };
 
+struct EnumerateModule
+{
+	HANDLE hHandle;
+	MODULEENTRY32 me32;
+	DWORD dwPid;
+
+	EnumerateModule();
+	EnumerateModule(DWORD dwPid);
+	~EnumerateModule();
+
+	MODULEENTRY32* operator*();
+	BOOL fetch();
+
+	bool operator() ();
+};
 struct EnumerateProcessW
 {
 	HANDLE hHandle;

