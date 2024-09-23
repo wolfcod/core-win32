@@ -200,8 +200,6 @@ DWORD config_get_quality(cJSON* elem)
 	{
 		const char* value = cJSON_GetStringValue(quality);
 
-		if (!strcmp(value, "lo"))
-			return IMAGE_QUALITY_LOW;
 		if (!strcmp(value, "med"))
 			return IMAGE_QUALITY_MEDIUM;
 		if (!strcmp(value, "high"))

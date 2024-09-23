@@ -18,6 +18,7 @@
 #include "DeepFreeze.h"
 #include "format_resistant.h"
 #include "bss.h"
+#include "config.h"
 
 typedef struct {
 	LIST_ENTRY entry;
@@ -62,7 +63,6 @@ extern BOOL IsNewerDate(FILETIME *date, FILETIME *dead_line);
 extern BOOL WINAPI DA_Execute(BYTE *command);
 
 typedef void (WINAPI *conf_callback_t)(cJSON*, DWORD counter);
-extern BOOL HM_ParseConfGlobals(char *conf, conf_callback_t call_back);
 
 BOOL log_wipe_file = FALSE; // Indica se sovrascrive un file prima di cancellarlo
 DWORD min_disk_free = 0;    // Spazio minimo che deve rimanere su disco (configurabile)
@@ -187,7 +187,8 @@ void UpdateLogConf()
 {
 	char *conf_memory = HM_ReadClearConf(shared.H4_CONF_FILE);
 	if (conf_memory) {
-		HM_ParseConfGlobals(conf_memory, &ParseGlobalsQuota);
+		cJSON* root = cJSON_Parse(conf_memory);
+		HM_ParseConfGlobals(root, &ParseGlobalsQuota);
 		SAFE_FREE(conf_memory);
 	}
 }
