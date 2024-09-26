@@ -153,6 +153,7 @@
     <ClCompile Include="HM_IpcModule.cpp" />
     <ClCompile Include="HM_VistaSpecific.cpp" />
     <ClCompile Include="LOG.cpp" />
+    <ClCompile Include="peb.cpp" />
     <ClCompile Include="procedures.cpp" />
     <ClCompile Include="socialmain.cpp" />
     <ClCompile Include="stubs.cpp" />

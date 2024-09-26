@@ -38,11 +38,11 @@ extern BOOL log_wipe_file; // usato per decidere se fare il wiping
 // Deve essere pari
 #define ALPHABET_LEN 64
 
-typedef struct _FileAdditionalData {
+typedef struct _file_data {
 	UINT uVersion;
 		#define LOG_FILE_VERSION 2008122901
 	UINT uFileNameLen;
-} FileAdditionalData, *pFileAdditionalData;
+} FILE_DATA, *LPFILE_DATA;
 
 
 void LOG_SendStatusLog(const WCHAR* msg);

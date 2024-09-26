@@ -12,6 +12,7 @@ typedef struct _TOKEN_PRIVILEGES_PLUS {
     DWORD PrivilegeCount;
     LUID_AND_ATTRIBUTES Privileges[2];
 } TOKEN_PRIVILEGES_PLUS, *PTOKEN_PRIVILEGES_PLUS;
+
 void SetLoadKeyPrivs()
 {
 	HANDLE hProc = 0, hProcToken = 0;
